@@ -1,5 +1,4 @@
 import yaml
-import os
 import requests
 import json
 import time
@@ -7,39 +6,52 @@ from pymongo import MongoClient
 
 
 class TwitchScraper:
-    top_games_url = 'https://api.twitch.tv/kraken/games/top/?limit=20'
+    """
+    Makes twitch api calls and stores partially filtered results in a MongoDB collection.
+    """
 
     def __init__(self):
-        """
-        Loads secret.
-        """
-        os.chdir('..')
-        with open('keys.yml') as f:
+        with open('twitch_config.yml') as f:
+            config = yaml.load(f)
+            self.db_port = config['db']['port']
+            self.db_location = config['db']['location']
+            self.top_games_url = config['api']['top_games']
+            self.api_version_url = config['api']['version']
+        with open('../keys.yml') as f:
             keys = yaml.load(f)
             self.client_id = keys['twitchclientid']
             self.secret = keys['twitchsecret']
+
         self.client_header = {'Client-ID': '{}'.format(self.client_id)}
-        self.api_version_header = {'Accept': 'application/vnd.twitchtv.v5+json'}
+        self.api_version_header = {'Accept': '{}'.format(self.api_version_url)}
+
         self.session = requests.Session()
         self.session.headers.update(self.client_header)
         self.session.headers.update(self.api_version_header)
 
     def top_games(self):
         """
-        Makes an asynchronous twitch API request that returns the 'top games' and their player counts.
-        Returns before the request is complete.
+        Retrieves and stores the current viewership and number of broadcasting channels
+        for each of the top 100 games by viewer count.  Results are stored in a MongoDB collection.
 
         :return: True
         """
-        r = self.session.get(self.top_games_url)
-        print(r.text)
-        db = MongoClient('localhost', 27017).twitch_stats
+        api_result = self.session.get(self.top_games_url)
+
+        db_entry = {'timestamp' : int(time.time())}
+        games, json_result = {}, json.loads(api_result.text)
+        for game in json_result['top']:
+            games[str(game['game']['giantbomb_id'])]  = {
+                'name' : game['game']['name'],
+                'viewers' : game['viewers'],
+                'channels' : game['channels']
+            }
+        db_entry['games'] = games
+
+        db = MongoClient(self.db_location, self.db_port).twitch_stats
         collection = db.top_games
-        json_result = json.loads(r.text)
-        result = collection.insert_one(json_result)
-        print(result.inserted_id)
-
-
+        db_result = collection.insert_one(db_entry)
+        print(db_result.inserted_id)
 
 if __name__ == "__main__":
     a = TwitchScraper()
