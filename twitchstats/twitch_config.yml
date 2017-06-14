@@ -1,0 +1,5 @@
+api:
+  version: v5
+db:
+  port: 27017
+  location: localhost
