@@ -3,4 +3,19 @@ api:
   top_games: https://api.twitch.tv/kraken/games/top/?limit=100
 db:
   port: 27017
-  location: localhost
+  host: localhost
+esports_channels:
+  # As I am most interested in the English language audience for league of legends,
+  # all of the dozens of Riot's foreign language channels are not listed.
+  lol:
+    - nalcs1
+    - nalcs2
+    - eulcs1
+    - eulcs2
+    - lpl1
+    - lpl2
+    - lck1
+    - lck2
+    - riotgames
+    - riotgameseu
+    - naclesports
