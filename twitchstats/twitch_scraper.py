@@ -2,7 +2,6 @@ import yaml
 import requests
 import json
 import time
-import urllib
 from pymongo import MongoClient
 
 DEBUG = True
@@ -25,6 +24,7 @@ class TwitchScraper:
             self.client_id = keys['twitchclientid']
             self.secret = keys['twitchsecret']
 
+        # Install twitch authentication
         self.client_header = {'Client-ID': '{}'.format(self.client_id)}
         self.api_version_header = {'Accept': '{}'.format(self.api_version_url)}
 
@@ -39,7 +39,14 @@ class TwitchScraper:
 
         :return:
         """
-        api_result = self.session.get(self.top_games_url)
+        for i in range(3):
+            api_result = self.session.get(self.top_games_url)
+            if api_result.status_code == requests.codes.okay:
+                break
+            if i == 2:
+                # TODO: Implement a more sophisticated failure mechanism
+                print("Failed request.  Exiting.")
+                exit()
 
         db_entry = {'timestamp': int(time.time())}
         games, json_result = {}, json.loads(api_result.text)
@@ -69,7 +76,14 @@ class TwitchScraper:
         """
         with open('twitch_config.yml') as f:
             channel_list = yaml.load(f)['esports_channels'][game]
-        api_result = self.session.get(self.live_streams_url.format(game))
+        for i in range(3):
+            api_result = self.session.get(self.live_streams_url.format(game))
+            if api_result.status_code == requests.codes.okay:
+                break
+            if i == 2:
+                # TODO: Implement a more sophisticated failure mechanism
+                print("Failed request.  Exiting.")
+                exit()
         if DEBUG:
             print(api_result.text)
 
