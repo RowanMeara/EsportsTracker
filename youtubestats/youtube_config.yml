@@ -1,0 +1,4 @@
+api:
+  readonlyscope = https://www.googleapis.com/auth/youtube.readonly
+  apiservicename = youtube
+  api_version = v3
