@@ -1,4 +1,9 @@
 api:
-  readonlyscope = https://www.googleapis.com/auth/youtube.readonly
-  apiservicename = youtube
-  api_version = v3
+  base_url: https://www.googleapis.com/youtube/v3
+  top_3_videos_channel: https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={CHANNEL_ID}&maxResults=10&order=date&type=video&key={YOUR_API_KEY}
+esports_channels:
+  # I am most interested in the English language audience for League of Legends so
+  # all of Riot's foreign language channels are omitted.
+  'League of Legends':
+    - channel_name: LolChampSeries
+      id: UCvqRdlKsE5Q8mf8YXbdIJLw

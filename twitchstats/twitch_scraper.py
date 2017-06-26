@@ -25,12 +25,12 @@ class TwitchScraper:
             self.secret = keys['twitchsecret']
 
         # Install twitch authentication
-        self.client_header = {'Client-ID': '{}'.format(self.client_id)}
-        self.api_version_header = {'Accept': '{}'.format(self.api_version_url)}
+        client_header = {'Client-ID': self.client_id}
+        api_version_header = {'Accept': self.api_version_url}
 
         self.session = requests.Session()
-        self.session.headers.update(self.client_header)
-        self.session.headers.update(self.api_version_header)
+        self.session.headers.update(client_header)
+        self.session.headers.update(api_version_header)
 
     def scrape_top_games(self):
         """
