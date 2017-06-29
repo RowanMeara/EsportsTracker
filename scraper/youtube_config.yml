@@ -7,3 +7,6 @@ esports_channels:
   'League of Legends':
     - channel_name: LolChampSeries
       id: UCvqRdlKsE5Q8mf8YXbdIJLw
+db:
+  port: 27017
+  host: localhost

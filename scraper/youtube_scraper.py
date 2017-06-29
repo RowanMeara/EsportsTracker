@@ -1,21 +1,23 @@
-import time
 import yaml
 import json
-import os
-import sys
-import collections
 import requests
+import time
+from pymongo import MongoClient
 
 DEBUG = True
 
+
 class YoutubeScraper:
-    def __init__(self, config_file_path='youtube_config.yml', key_file_path='../keys.yml'):
+    def __init__(self, config_file_path='youtube_config.yml',
+                 key_file_path='../keys.yml'):
         with open(key_file_path) as f:
             keys = yaml.load(f)
             self.client_id = keys['youtubeclientid']
             self.secret = keys['youtubesecret']
         with open(config_file_path) as f:
             config = yaml.load(f)
+            self.db_port = config['db']['port']
+            self.db_host = config['db']['host']
             self.base_url = config['api']['base_url']
 
         self.base_params = {'Client-ID': self.client_id, 'key': self.secret}
@@ -42,39 +44,48 @@ class YoutubeScraper:
             results[username] = json_result['items'][0]['id']
         return results
 
-    def get_top_livestreams(self, game):
+    def get_top_livestreams(self):
         """
-        Retrieves the top live streams for each game and their view counts.
+        Retrieves the top 50 live streams and their view counts.
 
-        Youtube allows you to search by game and order by view count but retrieving the view
-        :param game: string, Must match a game name in youtube config file.
+        Youtube allows you to search by game and order by view count but
+        retrieving the exact view count requires a separate api call.
+
         :return:
         """
         most_viewed_livestreams_url = self.base_url + '/search'
         params = {
             'part': 'snippet',
-            'maxResults': 5,
+            'maxResults': 50,
             'order': 'viewCount',
             'type': 'video',
-            'eventType': 'live'
+            'eventType': 'live',
+            'regionCode': 'US',
+            'relevantLanguage': 'en'
         }
-        api_result = self.session.get(most_viewed_livestreams_url, params=self._bundle(params))
+        api_result = self.session.get(most_viewed_livestreams_url,
+                                      params=self._bundle(params))
         print(api_result)
-        # print(api_result.text)
         json_result = json.loads(api_result.text)
         broadcasts = {}
         video_ids = [k['id']['videoId'] for k in json_result['items']]
         view_counts = self.get_livestream_view_count(video_ids)
         for broadcast in json_result['items']:
             broadcasts[broadcast['snippet']['channelId']] = {
+                'timestamp': time.time(),
                 'title': broadcast['snippet']['title'],
                 'broadcaster_name': broadcast['snippet']['channelTitle'],
                 'broadcast_id': broadcast['id']['videoId'],
                 'concurrent_viewers': view_counts[broadcast['id']['videoId']]
             }
         return(broadcasts)
-        # Get the view count now that we have retrieved the most viewed things
 
+    def store_top_livestreams(self, top_livestreams):
+        db = MongoClient(self.db_host, self.db_port).esports_stats
+        collection = db.youtube_streams
+        db_result = collection.insert_one(top_livestreams)
+        if DEBUG:
+            print(db_result.inserted_id)
 
     def get_livestream_view_count(self, broadcast_ids):
         """
@@ -91,7 +102,7 @@ class YoutubeScraper:
 
         api_url = self.base_url + '/videos'
         params = {
-            'part': 'liveStreamingDetails',
+            'part': 'liveStreamingDetails,topicDetails,snippet,contentDetails',
             'id': ','.join(broadcast_ids)
         }
         api_result = self.session.get(api_url, params=self._bundle(params))
@@ -106,8 +117,11 @@ class YoutubeScraper:
 
 if __name__ == "__main__":
     a = YoutubeScraper()
-    #a.get_channel_ids(['LoLChampSeries'])
-    #a.get_viewers('UCvqRdlKsE5Q8mf8YXbdIJLw')
-    #a.get_viewers('UC2wKfjlioOCLP4xQMOWNcgg')
-    print(a.get_top_livestreams('hello'))
-    #a.get_livestream_view_count(['wNBhjL6uQXM', 'E2FU-A0bARo'])
+    while True:
+        start_time = time.time()
+        res = a.get_top_livestreams()
+        a.store_top_livestreams(res)
+        if DEBUG:
+            print(res)
+            print("Elapsed time: {:.2f}s".format(time.time() - start_time))
+        time.sleep(300 - (time.time() - start_time))
