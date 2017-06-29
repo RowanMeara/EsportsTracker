@@ -4,7 +4,7 @@ import requests
 import time
 from pymongo import MongoClient
 
-DEBUG = True
+DEBUG = False
 
 
 class YoutubeScraper:
