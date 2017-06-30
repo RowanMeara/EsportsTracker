@@ -134,7 +134,7 @@ class TwitchScraper:
 
 if __name__ == "__main__":
     a = TwitchScraper()
-    logging.basicConfig(filename='twitch.log', level=logging.DEBUG)
+    logging.basicConfig(filename='twitch.log', level=logging.WARNING)
     while True:
         start_time = time.time()
         try:
