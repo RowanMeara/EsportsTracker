@@ -3,6 +3,7 @@ import requests
 import json
 import time
 from pymongo import MongoClient
+import logging
 
 DEBUG = True
 
@@ -50,8 +51,7 @@ class TwitchScraper:
             if api_result.status_code == requests.codes.okay:
                 return api_result
         # TODO: Implement a more sophisticated failure mechanism
-        print("Failed request.  Exiting.")
-        exit()
+
 
     def scrape_top_games(self):
         """
@@ -134,10 +134,14 @@ class TwitchScraper:
 
 if __name__ == "__main__":
     a = TwitchScraper()
+    logging.basicConfig(filename='twitch.log', level=logging.DEBUG)
     while True:
         start_time = time.time()
-        a.scrape_top_games()
-        a.scrape_esports_channels('League of Legends')
-        if DEBUG:
-            print("Elapsed time: {:.2f}s".format(time.time() - start_time))
+        try:
+            a.scrape_top_games()
+            a.scrape_esports_channels('League of Legends')
+            if DEBUG:
+                print("Elapsed time: {:.2f}s".format(time.time() - start_time))
+        except:
+            logging.warning("Twitch API Failed: {}".format(time.time()))
         time.sleep(300 - (time.time() - start_time))
