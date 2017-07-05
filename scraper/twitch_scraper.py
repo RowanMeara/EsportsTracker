@@ -14,9 +14,9 @@ class TwitchScraper:
     MongoDB collection.  Data is stored in a raw form, and more processing is
     needed before using due to the significant amount of information collected.
     """
-    def __init__(self, config_path='twitch_config.yml', key_path='../keys.yml'):
+    def __init__(self, config_path='scraper_config.yml', key_path='../keys.yml'):
         with open(config_path) as f:
-            config = yaml.load(f)
+            config = yaml.load(f)['twitch']
             self.db_name = config['db']['db_name']
             self.db_top_streams = config['db']['top_streams']
             self.db_top_games = config['db']['top_streams']
@@ -59,7 +59,7 @@ class TwitchScraper:
             elif i == 0:
                 logging.WARNING("Twitch API subrequest failed: {}".format(
                     api_result.status_code))
-                raise Exception
+                raise ConnectionError
             time.sleep(10)
         # TODO: Implement a more sophisticated failure mechanism
 
@@ -89,8 +89,8 @@ class TwitchScraper:
         :param game: str: Name of the desired game, must match config file.
         :return:
         """
-        with open('twitch_config.yml') as f:
-            channel_list = yaml.load(f)['esports_channels'][game]
+        with open('scraper_config.yml') as f:
+            channel_list = yaml.load(f)['twitch']['esports_channels'][game]
 
         api_result = self.twitch_api_request(self.live_streams_url.format(game))
         self.store_esports_channels(api_result, game)
@@ -157,7 +157,6 @@ if __name__ == "__main__":
             a.scrape_esports_channels('League of Legends')
             if DEBUG:
                 print("Elapsed time: {:.2f}s".format(time.time() - start_time))
-        except:
-            print("Twitch Failed.")
+        except ConnectionError as e:
             logging.warning("Twitch API Failed: {}".format(time.time()))
         time.sleep(300 - (time.time() - start_time))

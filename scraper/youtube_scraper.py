@@ -2,20 +2,21 @@ import yaml
 import json
 import requests
 import time
+import logging
 from pymongo import MongoClient
 
 DEBUG = True
 
 
 class YoutubeScraper:
-    def __init__(self, config_file_path='youtube_config.yml',
+    def __init__(self, config_path='scraper_config.yml',
                  key_file_path='../keys.yml'):
         with open(key_file_path) as f:
             keys = yaml.load(f)
             self.client_id = keys['youtubeclientid']
             self.secret = keys['youtubesecret']
-        with open(config_file_path) as f:
-            config = yaml.load(f)
+        with open(config_path) as f:
+            config = yaml.load(f)['youtube']
             self.db_port = config['db']['port']
             self.db_host = config['db']['host']
             self.db_name = config['db']['db_name']
@@ -25,8 +26,22 @@ class YoutubeScraper:
         self.base_params = {'Client-ID': self.client_id, 'key': self.secret}
         self.session = requests.session()
 
+    def make_api_request(self, url, params):
+        for i in range(1):
+            api_result = self.session.get(url, params=self._bundle(params))
+            if api_result.status_code == requests.codes.okay:
+                return api_result
+            elif i == 0:
+                logging.WARNING("Youtube API subrequest failed: {}".format(
+                    api_result.status_code))
+                raise ConnectionError
+            time.sleep(10)
+        # TODO: Implement a more sophisticated failure mechanism
+
     def _bundle(self, params):
-        """Combines the parameter dictionary with the key dictionary."""
+        """
+        Combines the params dictionary and the key dictionary.
+        """
         return {**self.base_params, **params}
 
     def get_channel_ids(self, usernames):
@@ -40,7 +55,7 @@ class YoutubeScraper:
         results = {}
         for username in usernames:
             params = {'part': 'id', 'forUsername': username}
-            api_result = self.session.get(url, params=self._bundle(params))
+            api_result = self.make_api_request(url, params=self._bundle(params))
             # TODO: Add error checking
             json_result = json.loads(api_result.text)
             results[username] = json_result['items'][0]['id']
@@ -65,8 +80,7 @@ class YoutubeScraper:
             'regionCode': 'US',
             'relevantLanguage': 'en'
         }
-        api_result = self.session.get(most_viewed_livestreams_url,
-                                      params=self._bundle(params))
+        api_result = self.make_api_request(most_viewed_livestreams_url, params)
         print(api_result)
         json_result = json.loads(api_result.text)
         broadcasts = {}
@@ -107,7 +121,7 @@ class YoutubeScraper:
             'part': 'liveStreamingDetails,topicDetails,snippet,contentDetails',
             'id': ','.join(broadcast_ids)
         }
-        api_result = self.session.get(api_url, params=self._bundle(params))
+        api_result = self.make_api_request(api_url, params)
         json_result = json.loads(api_result.text)
         res = {k:(-1) for k in broadcast_ids}
         for broadcast in json_result['items']:
@@ -118,11 +132,15 @@ class YoutubeScraper:
         return res
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='youtube.log', level=logging.WARNING)
     a = YoutubeScraper()
     while True:
         start_time = time.time()
-        res = a.get_top_livestreams()
-        a.store_top_livestreams(res)
+        try:
+            res = a.get_top_livestreams()
+            a.store_top_livestreams(res)
+        except ConnectionError:
+            logging.warning("Youtube API Failed: {}".format(time.time()))
         if DEBUG:
             print(res)
             print("Elapsed time: {:.2f}s".format(time.time() - start_time))

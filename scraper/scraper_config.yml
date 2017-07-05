@@ -1,0 +1,41 @@
+twitch:
+  api:
+    version: application/vnd.twitchtv.v5+json
+    top_games: https://api.twitch.tv/kraken/games/top/?limit=100
+    live_streams: https://api.twitch.tv/kraken/streams/?language=en&stream_type=live&limit=100&game={}
+  db:
+    port: 27017
+    host: localhost
+    db_name: esports_stats
+    top_games: twitch_top_games
+    top_streams: twitch_streams
+  esports_channels:
+    # I am most interested in the English language audience for League of Legends so
+    # all of Riot's foreign language channels are omitted.
+    'League of Legends':
+      - nalcs1
+      - nalcs2
+      - eulcs1
+      - eulcs2
+      - lpl1
+      - lpl2
+      - lck1
+      - lck2
+      - riotgames
+      - riotgameseu
+      - naclesports
+youtube:
+  api:
+    base_url: https://www.googleapis.com/youtube/v3
+    top_3_videos_channel: https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={CHANNEL_ID}&maxResults=10&order=date&type=video&key={YOUR_API_KEY}
+  esports_channels:
+    # I am most interested in the English language audience for League of Legends so
+    # all of Riot's foreign language channels are omitted.
+    'League of Legends':
+      - channel_name: LolChampSeries
+        id: UCvqRdlKsE5Q8mf8YXbdIJLw
+  db:
+    port: 27017
+    host: localhost
+    db_name: esports_stats
+    top_streams: youtube_streams
