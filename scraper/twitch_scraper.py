@@ -52,11 +52,11 @@ class TwitchScraper:
         :param url: str, Twitch api request
         :return: requests.Response
         """
-        for i in range(1):
+        for i in range(3):
             api_result = self.session.get(url)
             if api_result.status_code == requests.codes.okay:
                 return api_result
-            elif i == 0:
+            elif i == 2:
                 logging.WARNING("Twitch API subrequest failed: {}".format(
                     api_result.status_code))
                 raise ConnectionError

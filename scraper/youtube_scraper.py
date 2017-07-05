@@ -27,11 +27,11 @@ class YoutubeScraper:
         self.session = requests.session()
 
     def make_api_request(self, url, params):
-        for i in range(1):
+        for i in range(3):
             api_result = self.session.get(url, params=self._bundle(params))
             if api_result.status_code == requests.codes.okay:
                 return api_result
-            elif i == 0:
+            elif i == 2:
                 logging.WARNING("Youtube API subrequest failed: {}".format(
                     api_result.status_code))
                 raise ConnectionError
