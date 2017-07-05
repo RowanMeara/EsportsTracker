@@ -3,3 +3,5 @@ keys.yaml
 keys.*
 .idea/
 *.swp
+*.log
+.DS_Store

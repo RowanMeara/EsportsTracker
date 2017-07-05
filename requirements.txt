@@ -1,0 +1,4 @@
+pyyaml
+pymongo
+requests
+pytest
