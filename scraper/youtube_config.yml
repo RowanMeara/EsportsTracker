@@ -10,3 +10,5 @@ esports_channels:
 db:
   port: 27017
   host: localhost
+  db_name: esports_stats
+  top_streams: youtube_streams

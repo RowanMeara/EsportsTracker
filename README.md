@@ -6,8 +6,8 @@ viewership has increased significantly to the point where they are now too
 large too ignore.  EsportsStats was designed to fix that problem aggregating 
 Twitch and Youtube viewership data in one place.  
 
-I started this project because of the frequency of threads discussing LCS 
-viewership without any concrete numbers.  Some insiders have said that 
+I started this project because of the frequency of reddit threads discussing 
+LCS viewership without any concrete numbers.  Some insiders have said that 
 esports as well as LCS viewership has not really risen in the last year yet 
 now major sports teams are spending tens of millions of dollars on 
 franchised spots for the Overwatch and League leagues.

@@ -11,12 +11,15 @@ DEBUG = True
 class TwitchScraper:
     """
     Makes twitch api calls and stores the partially filtered results in a
-    MongoDB collection.  To extrapolate interesting things from the results that
-    can be shown on a website, more processing is needed.
+    MongoDB collection.  Data is stored in a raw form, and more processing is
+    needed before using due to the significant amount of information collected.
     """
     def __init__(self, config_path='twitch_config.yml', key_path='../keys.yml'):
         with open(config_path) as f:
             config = yaml.load(f)
+            self.db_name = config['db']['db_name']
+            self.db_top_streams = config['db']['top_streams']
+            self.db_top_games = config['db']['top_streams']
             self.db_port = config['db']['port']
             self.db_host = config['db']['host']
             self.top_games_url = config['api']['top_games']
@@ -41,17 +44,24 @@ class TwitchScraper:
         Makes a twitch api request.
 
         Makes a twitch api request and logs failed requests so that they can be
-        addressed and performs other error checks.
+        addressed and performs other error checks.  If the request fails,
+        the request is tried twice more with a ten second wait between each
+        request.  The twitch api has been somewhat prone to unreliability in
+        my experience.
 
         :param url: str, Twitch api request
         :return: requests.Response
         """
-        for i in range(3):
+        for i in range(1):
             api_result = self.session.get(url)
             if api_result.status_code == requests.codes.okay:
                 return api_result
+            elif i == 0:
+                logging.WARNING("Twitch API subrequest failed: {}".format(
+                    api_result.status_code))
+                raise Exception
+            time.sleep(10)
         # TODO: Implement a more sophisticated failure mechanism
-
 
     def scrape_top_games(self):
         """
@@ -108,8 +118,8 @@ class TwitchScraper:
                 'broadcaster_id':   stream['channel']['_id']
             }
         db_entry['streams'] = streams
-        db = MongoClient(self.db_host, self.db_port).twitch_stats
-        collection = db.twitch_streams
+        db = MongoClient(self.db_host, self.db_port)[self.db_name]
+        collection = db[self.db_top_streams]
         db_result = collection.insert_one(db_entry)
         if DEBUG:
             print(db_result.inserted_id)
@@ -125,11 +135,16 @@ class TwitchScraper:
             }
         db_entry['games'] = games
 
-        db = MongoClient(self.db_host, self.db_port).twitch_stats
-        collection = db.twitch_top_games
+        db = MongoClient(self.db_host, self.db_port)[self.db_name]
+        collection = db[self.db_top_games]
         db_result = collection.insert_one(db_entry)
         if DEBUG:
             print(db_result.inserted_id)
+
+    def aggregate_top_game_results(self, results):
+        # Aggregates the specified MongoDB results
+
+        return None
 
 
 if __name__ == "__main__":
@@ -143,5 +158,6 @@ if __name__ == "__main__":
             if DEBUG:
                 print("Elapsed time: {:.2f}s".format(time.time() - start_time))
         except:
+            print("Twitch Failed.")
             logging.warning("Twitch API Failed: {}".format(time.time()))
         time.sleep(300 - (time.time() - start_time))

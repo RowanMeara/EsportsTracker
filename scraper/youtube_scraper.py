@@ -4,7 +4,7 @@ import requests
 import time
 from pymongo import MongoClient
 
-DEBUG = False
+DEBUG = True
 
 
 class YoutubeScraper:
@@ -18,6 +18,8 @@ class YoutubeScraper:
             config = yaml.load(f)
             self.db_port = config['db']['port']
             self.db_host = config['db']['host']
+            self.db_name = config['db']['db_name']
+            self.db_streams = config['db']['top_streams']
             self.base_url = config['api']['base_url']
 
         self.base_params = {'Client-ID': self.client_id, 'key': self.secret}
@@ -81,8 +83,8 @@ class YoutubeScraper:
         return(broadcasts)
 
     def store_top_livestreams(self, top_livestreams):
-        db = MongoClient(self.db_host, self.db_port).esports_stats
-        collection = db.youtube_streams
+        db = MongoClient(self.db_host, self.db_port)[self.db_name]
+        collection = db[self.db_streams]
         db_result = collection.insert_one(top_livestreams)
         if DEBUG:
             print(db_result.inserted_id)

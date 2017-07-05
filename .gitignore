@@ -5,3 +5,7 @@ keys.*
 *.swp
 *.log
 .DS_Store
+.cache/
+*.pyc
+*/__pycache__/
+dump/
