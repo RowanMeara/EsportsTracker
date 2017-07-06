@@ -5,7 +5,7 @@ import time
 from pymongo import MongoClient
 import logging
 
-DEBUG = True
+DEBUG = False
 
 
 class TwitchScraper:
@@ -48,6 +48,7 @@ class TwitchScraper:
         config file.  The IDs are then dumped for later use.
         :return:
         """
+        return
 
 
     def twitch_api_request(self, url):
@@ -135,7 +136,8 @@ class TwitchScraper:
                 'broadcaster_id':   stream['channel']['_id']
             }
         db_entry['streams'] = streams
-        print(db_entry)
+        if DEBUG:
+            print(db_entry)
         db = MongoClient(self.db_host, self.db_port)[self.db_name]
         collection = db[self.db_top_streams]
         db_result = collection.insert_one(db_entry)
