@@ -1,20 +1,23 @@
 from ruamel import yaml
 import requests
+import sys
 import json
 import time
-import sys
 from pymongo import MongoClient
 import logging
 
 DEBUG = False
 
+
+# noinspection PyTypeChecker
 class TwitchScraper:
     """
     Makes twitch api calls and stores the partially filtered results in a
     MongoDB collection.  Data is stored in a raw form, and more processing is
     needed before using due to the significant amount of information collected.
     """
-    def __init__(self, config_path='scraper_config.yml', key_path='../keys.yml'):
+    def __init__(self, config_path='scraper_config.yml',
+                 key_path='../keys.yml'):
         self.config_path = config_path
         with open(config_path) as f:
             config = yaml.safe_load(f)['twitch']
@@ -56,6 +59,7 @@ class TwitchScraper:
         :return: Boolean, True if user IDs were retrieved.
         """
         # TODO: Make function clearer
+        new_ids_found = False
         with open(self.config_path) as f:
             data = yaml.safe_load(f)
             esports_channels = data['twitch']['esports_channels']
@@ -80,9 +84,15 @@ class TwitchScraper:
             for broadcaster_org, channels in game.items():
                 for channel in channels:
                     if channel['name'] in ids:
+                        new_ids_found = True
                         channel['id'] = ids[channel['name']]
-        with open(self.config_path, 'w') as f:
-            yaml.safe_dump(data, default_flow_style=False, stream=f)
+
+        if new_ids_found:
+            with open(self.config_path, 'w') as f:
+                yaml.safe_dump(data, default_flow_style=False, stream=f)
+            self.esports_channels = data['twitch']['esports_channels']
+            return True
+        return False
 
     def twitch_api_request(self, url):
         """
@@ -147,12 +157,16 @@ class TwitchScraper:
         """
         db_entry = {'timestamp': int(time.time()), 'game': game}
         streams, json_result = {}, json.loads(api_result.text)
+
+        broadcasters = []
+        for bc_name, bc_channels in self.esports_channels[game].items():
+            for channel in bc_channels:
+                broadcasters.append(channel['id'])
         for stream in json_result['streams']:
-            broadcaster_name = stream['channel']['display_name'].lower()
-            if broadcaster_name not in self.esports_channels[game]:
+            broadcaster_id = str(stream['channel']['_id'])
+            if broadcaster_id not in broadcasters:
                 pass
                 # TODO: Should I only track esports broadcasts or filter them
-                #       out later?
                 # continue
             # TODO: Convert to a pure broadcast_id format.
             streams[str(stream['channel']['_id'])] = {
@@ -196,21 +210,26 @@ class TwitchScraper:
 
 
 if __name__ == "__main__":
-    a = TwitchScraper()
-    """
     logging.basicConfig(filename='twitch.log', level=logging.WARNING)
     while True:
-        start_time = time.time()
         try:
-            a.scrape_top_games()
-            a.scrape_esports_channels('League of Legends')
-            a.scrape_esports_channels('Dota 2')
-            a.scrape_esports_channels('Overwatch')
-            a.scrape_esports_channels('Counter-Strike: Global Offensive')
-            if DEBUG:
-                print("Elapsed time: {:.2f}s".format(time.time() - start_time))
-        except ConnectionError as e:
-            logging.warning("Twitch API Failed: {}".format(time.time()))
-        time.sleep(300 - (time.time() - start_time))
-    """
-    a.check_userids()
+            a = TwitchScraper()
+            a.check_userids()
+
+            while True:
+                start_time = time.time()
+                try:
+                    a.scrape_top_games()
+                    a.scrape_esports_channels('League of Legends')
+                    a.scrape_esports_channels('Dota 2')
+                    a.scrape_esports_channels('Overwatch')
+                    a.scrape_esports_channels('Counter-Strike: Global Offensive')
+                    if DEBUG:
+                        print("Elapsed time: {:.2f}s".format(time.time() - start_time))
+                except ConnectionError as e:
+                    logging.warning("Twitch API Failed: {}".format(time.time()))
+                time.sleep(300 - (time.time() - start_time))
+        except:
+            logging.warning("Unexpected error: {}. Time: {}".format(
+                            sys.exc_info()[0], time.time()))
+
