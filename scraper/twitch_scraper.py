@@ -25,6 +25,7 @@ class TwitchScraper:
             self.top_games_url = config['api']['top_games']
             self.live_streams_url = config['api']['live_streams']
             self.api_version_url = config['api']['version']
+            self.user_id_url = config['api']['user_ids']
             self.esports_channels = config['esports_channels']
         with open(key_path) as f:
             keys = yaml.load(f)
@@ -38,6 +39,16 @@ class TwitchScraper:
         self.session = requests.Session()
         self.session.headers.update(client_header)
         self.session.headers.update(api_version_header)
+
+    def get_userids(self):
+        """
+        Converts the user names specified in the config file into user IDs.
+
+        Gets the userids associated with the channel names specified in the
+        config file.  The IDs are then dumped for later use.
+        :return:
+        """
+
 
     def twitch_api_request(self, url):
         """
@@ -75,6 +86,9 @@ class TwitchScraper:
         api_result = self.twitch_api_request(self.top_games_url)
         self.store_top_games(api_result)
 
+
+
+
     def scrape_esports_channels(self, game):
         """
         Retrieves channel data for one game.
@@ -109,6 +123,9 @@ class TwitchScraper:
             broadcaster_name = stream['channel']['display_name'].lower()
             if broadcaster_name not in self.esports_channels[game]:
                 pass
+                # TODO: Should I only track esports broadcasts or filter them
+                #       out later?
+                # continue
             # TODO: Convert to a pure broadcast_id format.
             streams[str(stream['channel']['_id'])] = {
                 'display_name':     stream['channel']['display_name'],
@@ -118,6 +135,7 @@ class TwitchScraper:
                 'broadcaster_id':   stream['channel']['_id']
             }
         db_entry['streams'] = streams
+        print(db_entry)
         db = MongoClient(self.db_host, self.db_port)[self.db_name]
         collection = db[self.db_top_streams]
         db_result = collection.insert_one(db_entry)
@@ -156,6 +174,8 @@ if __name__ == "__main__":
         try:
             a.scrape_top_games()
             a.scrape_esports_channels('League of Legends')
+            a.scrape_esports_channels('Dota 2')
+            a.scrape_esports_channels('Overwatch')
             a.scrape_esports_channels('Counter-Strike: Global Offensive')
             if DEBUG:
                 print("Elapsed time: {:.2f}s".format(time.time() - start_time))
