@@ -6,7 +6,7 @@ import time
 from pymongo import MongoClient
 import logging
 
-DEBUG = False
+DEBUG = True
 
 
 # noinspection PyTypeChecker
@@ -21,6 +21,7 @@ class TwitchScraper:
         self.config_path = config_path
         with open(config_path) as f:
             config = yaml.safe_load(f)['twitch']
+            self.update_frequency = config['update_frequency']
             self.db_name = config['db']['db_name']
             self.db_top_streams = config['db']['top_streams']
             self.db_top_games = config['db']['top_games']
@@ -31,6 +32,7 @@ class TwitchScraper:
             self.api_version_url = config['api']['version']
             self.user_id_url = config['api']['user_ids']
             self.esports_channels = config['esports_channels']
+            self.games = self.esports_channels.keys()
         with open(key_path) as f:
             keys = yaml.safe_load(f)
             self.client_id = keys['twitchclientid']
@@ -208,27 +210,35 @@ class TwitchScraper:
 
         return
 
+    def scrape(self):
+        """
+        Runs forever scraping and storing Twitch data.
+
+        :return:
+        """
+        logging.basicConfig(filename='twitch.log', level=logging.WARNING)
+        self.check_userids()
+        while True:
+            start_time = time.time()
+            try:
+                a.scrape_top_games()
+                for game in self.games:
+                    a.scrape_esports_channels(game)
+                if DEBUG:
+                    print("Elapsed time: {:.2f}s".format(time.time() - start_time))
+            except ConnectionError as e:
+                logging.warning("Twitch API Failed: {}".format(time.time()))
+            time_to_sleep = self.update_frequency - (time.time() - start_time)
+            if time_to_sleep > 0:
+                time.sleep(time_to_sleep)
+
 
 if __name__ == "__main__":
     logging.basicConfig(filename='twitch.log', level=logging.WARNING)
     while True:
         try:
             a = TwitchScraper()
-            a.check_userids()
-
-            while True:
-                start_time = time.time()
-                try:
-                    a.scrape_top_games()
-                    a.scrape_esports_channels('League of Legends')
-                    a.scrape_esports_channels('Dota 2')
-                    a.scrape_esports_channels('Overwatch')
-                    a.scrape_esports_channels('Counter-Strike: Global Offensive')
-                    if DEBUG:
-                        print("Elapsed time: {:.2f}s".format(time.time() - start_time))
-                except ConnectionError as e:
-                    logging.warning("Twitch API Failed: {}".format(time.time()))
-                time.sleep(300 - (time.time() - start_time))
+            a.scrape()
         except:
             logging.warning("Unexpected error: {}. Time: {}".format(
                             sys.exc_info()[0], time.time()))
