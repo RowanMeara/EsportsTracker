@@ -148,8 +148,6 @@ class TwitchScraper:
         return
 
 
-
-
 if __name__ == "__main__":
     a = TwitchScraper()
     logging.basicConfig(filename='twitch.log', level=logging.WARNING)
@@ -158,6 +156,7 @@ if __name__ == "__main__":
         try:
             a.scrape_top_games()
             a.scrape_esports_channels('League of Legends')
+            a.scrape_esports_channels('Counter-Strike: Global Offensive')
             if DEBUG:
                 print("Elapsed time: {:.2f}s".format(time.time() - start_time))
         except ConnectionError as e:

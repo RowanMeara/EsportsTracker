@@ -24,6 +24,72 @@ twitch:
       - riotgames
       - riotgameseu
       - naclesports
+    'Counter-Strike: Global Offensive':
+    # To determine the channels, I went through hltv and team liquid's wiki
+    # to make sure to include everyone hosting upcoming major events.
+    # ESL
+      - esl_csgo
+      - esl_csgob
+      - proleaguecsgo
+    # ESEA
+      - esea
+      - esea2
+      - esea3
+    # Dreamhack
+      - dreamhackcs
+    # FACEIT
+      - faceittv
+      - faceittv2
+      - faceitproleague
+      - faceitcommunity
+      - gamesacademy
+    # PGL
+      - pgl
+      - pgl_csgo
+    # StarLadder
+      - starladder_cs_en
+      - starladder5
+      - starladder10
+    # Other Channels
+      - nvidiageforcepl
+      - eleaguetv
+    'Dota 2':
+    # StarLadder (Mars Dota League, WESG, etc.)
+      - beyondthesummit
+      - beyondthesummit2
+      - dotastarladder_en
+      - dotastarladder_en2
+      - starladder1
+      - starladder2
+      - starladder3
+      - starladder4
+      - starladder7
+      - starladder8
+    # ESL
+      - esl_dota2
+      - esl_joindotared
+    # The International
+      - dota2ti
+      - dota2ti_2
+      - dota2ti_3
+      - dota2ti_4
+      - dota2ti_newcomer
+      - dota2ti_workshop
+      - dota2ti_crowd
+    # Dreamleague
+      - dreamleague
+    # Dota Major PGL
+      - dotamajor
+    'Overwatch':
+    # OGN
+      - ognglobal
+    # Dreamhack
+      - dreamhackoverwatch
+    # ESL
+      - esl_overwatch
+    # Other Channels
+      - beatesports
+      - blizzard
 youtube:
   api:
     base_url: https://www.googleapis.com/youtube/v3
