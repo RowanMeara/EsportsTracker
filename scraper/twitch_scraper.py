@@ -19,7 +19,7 @@ class TwitchScraper:
             config = yaml.load(f)['twitch']
             self.db_name = config['db']['db_name']
             self.db_top_streams = config['db']['top_streams']
-            self.db_top_games = config['db']['top_streams']
+            self.db_top_games = config['db']['top_games']
             self.db_port = config['db']['port']
             self.db_host = config['db']['host']
             self.top_games_url = config['api']['top_games']
@@ -142,9 +142,12 @@ class TwitchScraper:
             print(db_result.inserted_id)
 
     def aggregate_top_game_results(self, results):
-        # Aggregates the specified MongoDB results
+        # Aggregates the specified MongoDB results and returns a dictionary with
+        # the results
 
-        return None
+        return
+
+
 
 
 if __name__ == "__main__":
