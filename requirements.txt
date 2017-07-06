@@ -2,3 +2,4 @@ pyyaml
 pymongo
 requests
 pytest
+ruamel.yaml

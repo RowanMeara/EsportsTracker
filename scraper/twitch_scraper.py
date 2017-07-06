@@ -1,12 +1,12 @@
-import yaml
+from ruamel import yaml
 import requests
 import json
 import time
+import sys
 from pymongo import MongoClient
 import logging
 
 DEBUG = False
-
 
 class TwitchScraper:
     """
@@ -15,8 +15,9 @@ class TwitchScraper:
     needed before using due to the significant amount of information collected.
     """
     def __init__(self, config_path='scraper_config.yml', key_path='../keys.yml'):
+        self.config_path = config_path
         with open(config_path) as f:
-            config = yaml.load(f)['twitch']
+            config = yaml.safe_load(f)['twitch']
             self.db_name = config['db']['db_name']
             self.db_top_streams = config['db']['top_streams']
             self.db_top_games = config['db']['top_games']
@@ -28,7 +29,7 @@ class TwitchScraper:
             self.user_id_url = config['api']['user_ids']
             self.esports_channels = config['esports_channels']
         with open(key_path) as f:
-            keys = yaml.load(f)
+            keys = yaml.safe_load(f)
             self.client_id = keys['twitchclientid']
             self.secret = keys['twitchsecret']
 
@@ -40,16 +41,48 @@ class TwitchScraper:
         self.session.headers.update(client_header)
         self.session.headers.update(api_version_header)
 
-    def get_userids(self):
+    def check_userids(self):
         """
-        Converts the user names specified in the config file into user IDs.
+        Retrieves user IDs for channels that are only specified by name in
+        the config file.
 
         Gets the userids associated with the channel names specified in the
-        config file.  The IDs are then dumped for later use.
-        :return:
-        """
-        return
+        config file.  The user IDs are then dumped into the config file for
+        later use.  Nothing is written if there are no ids to retrieve.
+        Allows channels to be specified in the config file as:
 
+        - name: channel_display_name
+
+        :return: Boolean, True if user IDs were retrieved.
+        """
+        # TODO: Make function clearer
+        with open(self.config_path) as f:
+            data = yaml.safe_load(f)
+            esports_channels = data['twitch']['esports_channels']
+        for game_name, game in esports_channels.items():
+            display_names = []
+            for broadcaster_org, channels in game.items():
+                for channel in channels:
+                    if 'id' not in channel:
+                        display_names.append(channel['name'])
+            if not display_names:
+                continue
+
+            # Make API request to retrieve user IDs
+            url = self.user_id_url.format(','.join(display_names))
+            resp = self.twitch_api_request(url)
+            api_resp_channels = json.loads(resp.text)['users']
+            ids = {}
+            for channel in api_resp_channels:
+                ids[channel['name']] = channel['_id']
+
+            # Now modify the yaml file that we are going to dump
+            for broadcaster_org, channels in game.items():
+                for channel in channels:
+                    if channel['name'] in ids:
+                        channel['id'] = ids[channel['name']]
+        with open(self.config_path, 'w') as f:
+            yaml.safe_dump(data, default_flow_style=False, stream=f)
 
     def twitch_api_request(self, url):
         """
@@ -87,9 +120,6 @@ class TwitchScraper:
         api_result = self.twitch_api_request(self.top_games_url)
         self.store_top_games(api_result)
 
-
-
-
     def scrape_esports_channels(self, game):
         """
         Retrieves channel data for one game.
@@ -104,9 +134,6 @@ class TwitchScraper:
         :param game: str: Name of the desired game, must match config file.
         :return:
         """
-        with open('scraper_config.yml') as f:
-            channel_list = yaml.load(f)['twitch']['esports_channels'][game]
-
         api_result = self.twitch_api_request(self.live_streams_url.format(game))
         self.store_esports_channels(api_result, game)
 
@@ -170,6 +197,7 @@ class TwitchScraper:
 
 if __name__ == "__main__":
     a = TwitchScraper()
+    """
     logging.basicConfig(filename='twitch.log', level=logging.WARNING)
     while True:
         start_time = time.time()
@@ -184,3 +212,5 @@ if __name__ == "__main__":
         except ConnectionError as e:
             logging.warning("Twitch API Failed: {}".format(time.time()))
         time.sleep(300 - (time.time() - start_time))
+    """
+    a.check_userids()

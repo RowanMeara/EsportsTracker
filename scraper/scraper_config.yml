@@ -1,108 +1,160 @@
 twitch:
   api:
-    version: application/vnd.twitchtv.v5+json
-    top_games: https://api.twitch.tv/kraken/games/top/?limit=100
     live_streams: https://api.twitch.tv/kraken/streams/?language=en&stream_type=live&limit=100&game={}
+    top_games: https://api.twitch.tv/kraken/games/top/?limit=100
     user_ids: https://api.twitch.tv/kraken/users?login={}
+    version: application/vnd.twitchtv.v5+json
   db:
-    port: 27017
-    host: localhost
     db_name: esports_stats
+    host: localhost
+    port: 27017
     top_games: twitch_top_games
     top_streams: twitch_streams
   esports_channels:
-    # I am most interested in the English language audience for League of Legends so
-    # all of Riot's foreign language channels are omitted.
-    'League of Legends':
-      - nalcs1
-      - nalcs2
-      - eulcs1
-      - eulcs2
-      - lpl1
-      - lpl2
-      - lck1
-      - lck2
-      - riotgames
-      - riotgameseu
-      - naclesports
     'Counter-Strike: Global Offensive':
-    # To determine the channels, I went through hltv and team liquid's wiki
-    # to make sure to include everyone hosting upcoming major events.
-    # ESL
-      - esl_csgo
-      - esl_csgob
-      - proleaguecsgo
-    # ESEA
-      - esea
-      - esea2
-      - esea3
-    # Dreamhack
-      - dreamhackcs
-    # FACEIT
-      - faceittv
-      - faceittv2
-      - faceitproleague
-      - faceitcommunity
-      - gamesacademy
-    # PGL
-      - pgl
-      - pgl_csgo
-    # StarLadder
-      - starladder_cs_en
-      - starladder5
-      - starladder10
-    # Other Channels
-      - nvidiageforcepl
-      - eleaguetv
-    'Dota 2':
-    # StarLadder (Mars Dota League, WESG, etc.)
-      - beyondthesummit
-      - beyondthesummit2
-      - dotastarladder_en
-      - dotastarladder_en2
-      - starladder1
-      - starladder2
-      - starladder3
-      - starladder4
-      - starladder7
-      - starladder8
-    # ESL
-      - esl_dota2
-      - esl_joindotared
-    # The International
-      - dota2ti
-      - dota2ti_2
-      - dota2ti_3
-      - dota2ti_4
-      - dota2ti_newcomer
-      - dota2ti_workshop
-      - dota2ti_crowd
-    # Dreamleague
-      - dreamleague
-    # Dota Major PGL
-      - dotamajor
-    'Overwatch':
-    # OGN
-      - ognglobal
-    # Dreamhack
-      - dreamhackoverwatch
-    # ESL
-      - esl_overwatch
-    # Other Channels
-      - beatesports
-      - blizzard
+      Dreamhack:
+      - id: '22859264'
+        name: dreamhackcs
+      ESEA:
+      - id: '8911047'
+        name: esea
+      - id: '28206345'
+        name: esea2
+      - id: '28547446'
+        name: esea3
+      ESL:
+      - id: '31239503'
+        name: esl_csgo
+      - id: '35936871'
+        name: esl_csgob
+      - id: '132561587'
+        name: proleaguecsgo
+      FACEIT:
+      - id: '27942990'
+        name: faceittv
+      - id: '55512799'
+        name: faceittv2
+      - id: '99132812'
+        name: faceitproleague
+      - id: '55675686'
+        name: faceitcommunity
+      - id: '59448778'
+        name: gamesacademy
+      Other:
+      - id: '93141680'
+        name: nvidiageforcepl
+      - id: '109724636'
+        name: eleaguetv
+      PGL:
+      - id: '21681549'
+        name: pgl
+      - id: '107953058'
+        name: pgl_csgo
+      StarLadder:
+      - id: '85875535'
+        name: starladder_cs_en
+      - id: '28633374'
+        name: starladder5
+      - id: '28633636'
+        name: starladder10
+    Dota 2:
+      DreamLeague:
+      - id: '50160915'
+        name: dreamleague
+      ESL:
+      - id: '36481935'
+        name: esl_dota2
+      - id: '82312665'
+        name: esl_joindotared
+      PGL:
+      - id: '106460795'
+        name: dotamajor
+      StarLadder:
+      - id: '29578325'
+        name: beyondthesummit
+      - id: '29769280'
+        name: beyondthesummit2
+      - id: '54933969'
+        name: dotastarladder_en
+      - id: '54934114'
+        name: dotastarladder_en2
+      - id: '28633177'
+        name: starladder1
+      - id: '28633201'
+        name: starladder2
+      - id: '28633266'
+        name: starladder3
+      - id: '28633298'
+        name: starladder4
+      - id: '28633500'
+        name: starladder7
+      - id: '28633563'
+        name: starladder8
+      The International:
+      - id: '35630634'
+        name: dota2ti
+      - id: '65503456'
+        name: dota2ti_2
+      - id: '65503845'
+        name: dota2ti_3
+      - id: '65503889'
+        name: dota2ti_4
+      - id: '96399910'
+        name: dota2ti_newcomer
+      - id: '96408506'
+        name: dota2ti_workshop
+      - id: '96400126'
+        name: dota2ti_crowd
+    League of Legends:
+      Riot:
+      - id: '124420521'
+        name: nalcs1
+      - id: '124421740'
+        name: nalcs2
+      - id: '124422593'
+        name: eulcs1
+      - id: '124424929'
+        name: eulcs2
+      - id: '124425627'
+        name: lpl1
+      - id: '124427423'
+        name: lpl2
+      - id: '124425501'
+        name: lck1
+      - id: '124425092'
+        name: lck2
+      - id: '36029255'
+        name: riotgames
+      - id: '45982670'
+        name: riotgameseu
+      - id: '49649564'
+        name: naclesports
+    Overwatch:
+      Blizzard:
+      - id: '8822'
+        name: blizzard
+      Dreamhack:
+      - id: '134543960'
+        name: dreamhackoverwatch
+      ESL:
+      - id: '23660075'
+        name: esl_overwatch
+      OGN:
+      - id: '32179353'
+        name: ognglobal
+      Other:
+      - id: '44079069'
+        name: beatesports
 youtube:
   api:
     base_url: https://www.googleapis.com/youtube/v3
     top_3_videos_channel: https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={CHANNEL_ID}&maxResults=10&order=date&type=video&key={YOUR_API_KEY}
-  esports_channels:
-    # I am most interested in the English language audience for League of Legends so
-    # all of Riot's foreign language channels are omitted.
-    'League of Legends':
-      - channel_name: LolChampSeries
-        id: UCvqRdlKsE5Q8mf8YXbdIJLw
   db:
-    port: 27017
-    host: localhost
     db_name: esports_stats
+    host: localhost
+    port: 27017
     top_streams: youtube_streams
+  esports_channels:
+    League of Legends:
+    - channel_name: LolChampSeries
+      id: UCvqRdlKsE5Q8mf8YXbdIJLw
