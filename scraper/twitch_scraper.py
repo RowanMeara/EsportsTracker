@@ -170,7 +170,6 @@ class TwitchScraper:
                 pass
                 # TODO: Should I only track esports broadcasts or filter them
                 # continue
-            # TODO: Convert to a pure broadcast_id format.
             streams[str(stream['channel']['_id'])] = {
                 'display_name':     stream['channel']['display_name'],
                 'viewers':          stream['viewers'],

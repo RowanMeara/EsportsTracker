@@ -3,10 +3,10 @@ import json
 import requests
 import time
 import logging
+import sys
 from pymongo import MongoClient
 
 DEBUG = True
-
 
 class YoutubeScraper:
     def __init__(self, config_path='scraper_config.yml',
@@ -131,17 +131,25 @@ class YoutubeScraper:
                 res[broadcast['id']] = 0
         return res
 
+    def scrape(self):
+        while True:
+            start_time = time.time()
+            try:
+                res = a.get_top_livestreams()
+                a.store_top_livestreams(res)
+            except ConnectionError:
+                logging.warning("Youtube API Failed: {}".format(time.time()))
+            if DEBUG:
+                print(res)
+                print("Elapsed time: {:.2f}s".format(time.time() - start_time))
+            time.sleep(300 - (time.time() - start_time))
+
 if __name__ == "__main__":
     logging.basicConfig(filename='youtube.log', level=logging.WARNING)
     a = YoutubeScraper()
     while True:
-        start_time = time.time()
         try:
-            res = a.get_top_livestreams()
-            a.store_top_livestreams(res)
-        except ConnectionError:
-            logging.warning("Youtube API Failed: {}".format(time.time()))
-        if DEBUG:
-            print(res)
-            print("Elapsed time: {:.2f}s".format(time.time() - start_time))
-        time.sleep(300 - (time.time() - start_time))
+            a.scrape()
+        except:
+            logging.warning("Unexpected error: {}. Time: {}".format(
+                sys.exc_info()[0], time.time()))

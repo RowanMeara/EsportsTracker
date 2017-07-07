@@ -1,7 +1,8 @@
 twitch:
   update_frequency: 300
   api:
-    live_streams: https://api.twitch.tv/kraken/streams/?language=en&stream_type=live&limit=5&game={}
+    live_streams: https://api.twitch
+    .tv/kraken/streams/?language=en&stream_type=live&limit=100&game={}
     top_games: https://api.twitch.tv/kraken/games/top/?limit=100
     user_ids: https://api.twitch.tv/kraken/users?login={}
     version: application/vnd.twitchtv.v5+json
@@ -143,9 +144,29 @@ twitch:
       OGN:
       - id: '32179353'
         name: ognglobal
+      TakeTV:
+      - name: taketv_overwatch
       Other:
       - id: '44079069'
         name: beatesports
+    Hearthstone:
+      Dreamhack:
+      - name: dreamhackhs
+      Blizzard:
+      - name: playhearthstone
+      TakeTV:
+      - name: taketv_hs
+    StarCraft II:
+      Dreamhack:
+      - name: dreamhacksc2
+      TakeTV:
+      - name: taketv
+      ESL:
+      - name: esl_sc2
+      GSL:
+      - name: gsl
+      Blizzard:
+      - name: starcraft
 youtube:
   api:
     base_url: https://www.googleapis.com/youtube/v3
