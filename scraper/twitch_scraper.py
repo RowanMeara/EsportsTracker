@@ -163,7 +163,9 @@ class TwitchScraper:
         broadcasters = []
         for bc_name, bc_channels in self.esports_channels[game].items():
             for channel in bc_channels:
-                broadcasters.append(channel['id'])
+                if 'id' in channel:
+                    broadcasters.append(channel['id'])
+        # TODO: investigate the issue surrounding wrong channels.
         for stream in json_result['streams']:
             broadcaster_id = str(stream['channel']['_id'])
             if broadcaster_id not in broadcasters:
@@ -242,3 +244,5 @@ if __name__ == "__main__":
             logging.warning("Unexpected error: {}. Time: {}".format(
                             sys.exc_info()[0], time.time()))
 
+    #a = TwitchScraper()
+    #a.scrape()
