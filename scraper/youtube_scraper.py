@@ -8,6 +8,7 @@ from pymongo import MongoClient
 
 DEBUG = True
 
+
 class YoutubeScraper:
     def __init__(self, config_path='scraper_config.yml',
                  key_file_path='../keys.yml'):
@@ -17,6 +18,7 @@ class YoutubeScraper:
             self.secret = keys['youtubesecret']
         with open(config_path) as f:
             config = yaml.load(f)['youtube']
+            self.update_interval = config['update_interval']
             self.db_port = config['db']['port']
             self.db_host = config['db']['host']
             self.db_name = config['db']['db_name']
@@ -142,7 +144,9 @@ class YoutubeScraper:
             if DEBUG:
                 print(res)
                 print("Elapsed time: {:.2f}s".format(time.time() - start_time))
-            time.sleep(300 - (time.time() - start_time))
+            time_to_sleep = self.update_interval - (time.time() - start_time)
+            if time_to_sleep > 0:
+                time.sleep(time_to_sleep)
 
 if __name__ == "__main__":
     logging.basicConfig(filename='youtube.log', level=logging.WARNING)

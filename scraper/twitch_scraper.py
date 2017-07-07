@@ -18,10 +18,18 @@ class TwitchScraper:
     """
     def __init__(self, config_path='scraper_config.yml',
                  key_path='../keys.yml'):
+        """
+        Constructor for TwitchScraper.
+
+        :param config_path: Path to the config file.  See repository for
+            examples.
+        :param key_path: Path to a yaml file which contains a 'twitchclientid'
+            field and a 'twitchclientsecret' field.
+        """
         self.config_path = config_path
         with open(config_path) as f:
             config = yaml.safe_load(f)['twitch']
-            self.update_frequency = config['update_frequency']
+            self.update_interval = config['update_interval']
             self.db_name = config['db']['db_name']
             self.db_top_streams = config['db']['top_streams']
             self.db_top_games = config['db']['top_games']
@@ -217,7 +225,6 @@ class TwitchScraper:
 
         :return:
         """
-        logging.basicConfig(filename='twitch.log', level=logging.WARNING)
         self.check_userids()
         while True:
             start_time = time.time()
@@ -229,7 +236,7 @@ class TwitchScraper:
                     print("Elapsed time: {:.2f}s".format(time.time() - start_time))
             except ConnectionError as e:
                 logging.warning("Twitch API Failed: {}".format(time.time()))
-            time_to_sleep = self.update_frequency - (time.time() - start_time)
+            time_to_sleep = self.update_interval - (time.time() - start_time)
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
 
