@@ -115,6 +115,14 @@ twitch:
       TakeTV:
       - id: '52288508'
         name: taketv_hs
+    Heroes of the Storm:
+      Blizzard:
+      - id: '48937001'
+        name: blizzheroes
+      - id: '125149756'
+        name: cn_goldseries
+      - id: '139607661'
+        name: gcwc
     League of Legends:
       Riot:
       - id: '124420521'
@@ -151,15 +159,31 @@ twitch:
       ESL:
       - id: '23660075'
         name: esl_overwatch
-      OGN:
-      - id: '32179353'
-        name: ognglobal
       FaceIt:
       - id: '44079069'
         name: beatesports
+      OGN:
+      - id: '32179353'
+        name: ognglobal
       TakeTV:
       - id: '107551531'
         name: taketv_overwatch
+    Rocket League:
+      Dreamhack:
+      - id: '157859480'
+        name: dreamhackrocketleague
+      FaceIt:
+      - id: '447814'
+        name: xgames
+      Gfinity:
+      - id: '92094149'
+        name: rocketleaguecentral
+      Psyonix:
+      - id: '57781936'
+        name: rocketleague
+      Throwdown:
+      - id: '118999468'
+        name: throwdowntv
     StarCraft II:
       Blizzard:
       - id: '42508152'
@@ -196,7 +220,8 @@ twitch:
         name: capcomfighters
     Super Smash Bros. Melee:
       2GGaming:
-      - name: 2GGaming
+      - id: '10384419'
+        name: 2ggaming
       Dreamhack:
       - id: '101390582'
         name: dreamhacksmash
