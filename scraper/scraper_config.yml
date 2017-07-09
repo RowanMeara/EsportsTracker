@@ -1,5 +1,4 @@
 twitch:
-  update_interval: 300
   api:
     live_streams: https://api.twitch.tv/kraken/streams/?language=en&stream_type=live&limit=100&game={}
     top_games: https://api.twitch.tv/kraken/games/top/?limit=100
@@ -136,6 +135,8 @@ twitch:
         name: lck2
       - id: '36029255'
         name: riotgames
+      - id: '36794584'
+        name: riotgames2
       - id: '45982670'
         name: riotgameseu
       - id: '49649564'
@@ -153,7 +154,7 @@ twitch:
       OGN:
       - id: '32179353'
         name: ognglobal
-      Other:
+      FaceIt:
       - id: '44079069'
         name: beatesports
       TakeTV:
@@ -210,8 +211,8 @@ twitch:
         name: srkevo4
       - id: '36616300'
         name: capcomfighters
-youtube:
   update_interval: 300
+youtube:
   api:
     base_url: https://www.googleapis.com/youtube/v3
     top_3_videos_channel: https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={CHANNEL_ID}&maxResults=10&order=date&type=video&key={YOUR_API_KEY}
@@ -224,3 +225,4 @@ youtube:
     League of Legends:
     - channel_name: LolChampSeries
       id: UCvqRdlKsE5Q8mf8YXbdIJLw
+  update_interval: 300
