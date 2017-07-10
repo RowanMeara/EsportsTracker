@@ -246,6 +246,7 @@ twitch:
   update_interval: 300
 youtube:
   api:
+    num_results_per_request: 50
     base_url: https://www.googleapis.com/youtube/v3
     top_3_videos_channel: https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={CHANNEL_ID}&maxResults=10&order=date&type=video&key={YOUR_API_KEY}
   db:

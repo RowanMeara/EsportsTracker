@@ -4,6 +4,7 @@ import requests
 import time
 import logging
 import sys
+import math
 from pymongo import MongoClient
 
 DEBUG = True
@@ -24,6 +25,9 @@ class YoutubeScraper:
             self.db_name = config['db']['db_name']
             self.db_streams = config['db']['top_streams']
             self.base_url = config['api']['base_url']
+            # Max number is 50
+            self.res_per_request = config['api']['num_results_per_request']
+            self.gaming_category_id = 20
 
         self.base_params = {'Client-ID': self.client_id, 'key': self.secret}
         self.session = requests.session()
@@ -42,7 +46,7 @@ class YoutubeScraper:
 
     def _bundle(self, params):
         """
-        Combines the params dictionary and the key dictionary.
+        Combines the params dictionary and the YoutubeScraper's key dictionary.
         """
         return {**self.base_params, **params}
 
@@ -63,34 +67,53 @@ class YoutubeScraper:
             results[username] = json_result['items'][0]['id']
         return results
 
-    def get_top_livestreams(self):
+    def get_top_livestreams(self, num_pages=1):
         """
-        Retrieves the top 50 live streams and their view counts.
+        Retrieves top gaming live streams and their view counts.
 
+        Currently youtube restricts the maximum number of results to 100 even
+        with pagination.  This may be because the API is potentially pulling
+        from an internal playlist rather than doing a search even though the
+        search api call is used. Youtube's live playlists only contain 100
+        channels.
         Youtube allows you to search by game and order by view count but
         retrieving the exact view count requires a separate api call.
 
-        :return:
+        :param num_pages: int, The total number of results returned will be
+            the number of pages multiplied by the results per request. Must
+            be at least 1.
+        :return: dict
         """
         most_viewed_livestreams_url = self.base_url + '/search'
         params = {
             'part': 'snippet',
-            'maxResults': 50,
+            'maxResults': self.res_per_request,
             'order': 'viewCount',
             'type': 'video',
+            'videoCategoryId': self.gaming_category_id,
             'eventType': 'live',
             'regionCode': 'US',
             'relevantLanguage': 'en',
             'safeSearch': 'none'
         }
-        api_result = self.make_api_request(most_viewed_livestreams_url, params)
+        raw_broadcasts = []
+        for i in range(num_pages):
+            api_result = self.make_api_request(most_viewed_livestreams_url, params)
+            json_result = json.loads(api_result.text)
+            params['pageToken'] = json_result['nextPageToken']
+            raw_broadcasts += json_result['items']
+            # The Youtube API seems to limit results to 100 while still
+            # providing the pageToken.  Check if the result is empty to avoid
+            # unnecessary api calls.
+            if len(json_result['items']) < self.res_per_request:
+                break
         if DEBUG:
             print("API result: {}".format(api_result))
-        json_result = json.loads(api_result.text)
+
         broadcasts = {}
-        video_ids = [k['id']['videoId'] for k in json_result['items']]
+        video_ids = [k['id']['videoId'] for k in raw_broadcasts]
         view_counts = self.get_livestream_view_count(video_ids)
-        for broadcast in json_result['items']:
+        for broadcast in raw_broadcasts:
             broadcasts[broadcast['snippet']['channelId']] = {
                 'timestamp': time.time(),
                 'title': broadcast['snippet']['title'],
@@ -98,7 +121,7 @@ class YoutubeScraper:
                 'broadcast_id': broadcast['id']['videoId'],
                 'concurrent_viewers': view_counts[broadcast['id']['videoId']]
             }
-        return(broadcasts)
+        return broadcasts
 
     def store_top_livestreams(self, top_livestreams):
         db = MongoClient(self.db_host, self.db_port)[self.db_name]
@@ -122,25 +145,37 @@ class YoutubeScraper:
         """
 
         api_url = self.base_url + '/videos'
-        params = {
-            'part': 'liveStreamingDetails,topicDetails,snippet,contentDetails',
-            'id': ','.join(broadcast_ids)
-        }
-        api_result = self.make_api_request(api_url, params)
-        json_result = json.loads(api_result.text)
-        res = {k:(-1) for k in broadcast_ids}
-        for broadcast in json_result['items']:
+        params = []
+        for i in range(math.ceil(len(broadcast_ids)/self.res_per_request)):
+            start = i*self.res_per_request
+            end = min((i+1)*self.res_per_request, len(broadcast_ids))
+            request_ids = broadcast_ids[start:end]
+            request_params = {
+                'part': 'liveStreamingDetails,topicDetails,snippet,contentDetails',
+                'id': ','.join(request_ids)
+            }
+            params.append(request_params)
+
+        broadcasts = []
+        for req_params in params:
+            api_result = self.make_api_request(api_url, req_params)
+            json_result = json.loads(api_result.text)
+            broadcasts += json_result['items']
+
+        view_counts = {bc_id: -1 for bc_id in broadcast_ids}
+        for broadcast in broadcasts:
             if 'concurrentViewers' in broadcast['liveStreamingDetails']:
-                res[broadcast['id']] = broadcast['liveStreamingDetails']['concurrentViewers']
+                viewers = broadcast['liveStreamingDetails']['concurrentViewers']
+                view_counts[broadcast['id']] = viewers
             else:
-                res[broadcast['id']] = 0
-        return res
+                view_counts[broadcast['id']] = 0
+        return view_counts
 
     def scrape(self):
         while True:
             start_time = time.time()
             try:
-                res = a.get_top_livestreams()
+                res = a.get_top_livestreams(5)
                 a.store_top_livestreams(res)
             except ConnectionError:
                 logging.warning("Youtube API Failed: {}".format(time.time()))
@@ -156,6 +191,6 @@ if __name__ == "__main__":
     while True:
         try:
             a.scrape()
-        except:
+        except ConnectionError:
             logging.warning("Unexpected error: {}. Time: {}".format(
                 sys.exc_info()[0], time.time()))
