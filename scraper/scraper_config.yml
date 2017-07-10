@@ -1,3 +1,4 @@
+aggregator: null
 twitch:
   api:
     live_streams: https://api.twitch.tv/kraken/streams/?language=en&stream_type=live&limit=100&game={}
@@ -11,6 +12,12 @@ twitch:
     top_games: twitch_top_games
     top_streams: twitch_streams
   esports_channels:
+    'Call of Duty: Infinite Warfare':
+      MLG:
+      - id: '22212874'
+        name: mlg
+      - id: '48866350'
+        name: mlgbravo
     'Counter-Strike: Global Offensive':
       Dreamhack:
       - id: '22859264'
@@ -248,6 +255,6 @@ youtube:
     top_streams: youtube_streams
   esports_channels:
     League of Legends:
-    - channel_name: LolChampSeries
+    - name: LolChampSeries
       id: UCvqRdlKsE5Q8mf8YXbdIJLw
   update_interval: 300

@@ -80,10 +80,12 @@ class YoutubeScraper:
             'type': 'video',
             'eventType': 'live',
             'regionCode': 'US',
-            'relevantLanguage': 'en'
+            'relevantLanguage': 'en',
+            'safeSearch': 'none'
         }
         api_result = self.make_api_request(most_viewed_livestreams_url, params)
-        print(api_result)
+        if DEBUG:
+            print("API result: {}".format(api_result))
         json_result = json.loads(api_result.text)
         broadcasts = {}
         video_ids = [k['id']['videoId'] for k in json_result['items']]
@@ -104,6 +106,7 @@ class YoutubeScraper:
         db_result = collection.insert_one(top_livestreams)
         if DEBUG:
             print(db_result.inserted_id)
+            print("Inserted: ", top_livestreams)
 
     def get_livestream_view_count(self, broadcast_ids):
         """
@@ -142,7 +145,6 @@ class YoutubeScraper:
             except ConnectionError:
                 logging.warning("Youtube API Failed: {}".format(time.time()))
             if DEBUG:
-                print(res)
                 print("Elapsed time: {:.2f}s".format(time.time() - start_time))
             time_to_sleep = self.update_interval - (time.time() - start_time)
             if time_to_sleep > 0:
