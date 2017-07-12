@@ -15,5 +15,6 @@ franchised spots for the Overwatch and League leagues.
 ### Requirements
 * MongoDB
 * Python3
-* PyYAML, Requests, PyMongo, pytest
+* requirements.txt
+
 
