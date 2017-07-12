@@ -191,6 +191,6 @@ if __name__ == "__main__":
     while True:
         try:
             a.scrape()
-        except:
+        except ConnectionError:
             logging.warning("Unexpected error: {}. Time: {}".format(
                 sys.exc_info()[0], time.time()))
