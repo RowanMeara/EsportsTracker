@@ -191,6 +191,12 @@ twitch:
       Throwdown:
       - id: '118999468'
         name: throwdowntv
+    Smite:
+      Hi-Rez Studios:
+      - id: '31542318'
+        name: smitegame
+      - id: '31500812'
+        name: hireztv
     StarCraft II:
       Blizzard:
       - id: '42508152'
@@ -246,8 +252,8 @@ twitch:
   update_interval: 300
 youtube:
   api:
-    num_results_per_request: 50
     base_url: https://www.googleapis.com/youtube/v3
+    num_results_per_request: 50
     top_3_videos_channel: https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={CHANNEL_ID}&maxResults=10&order=date&type=video&key={YOUR_API_KEY}
   db:
     db_name: esports_stats
@@ -256,6 +262,6 @@ youtube:
     top_streams: youtube_streams
   esports_channels:
     League of Legends:
-    - name: LolChampSeries
-      id: UCvqRdlKsE5Q8mf8YXbdIJLw
+    - id: UCvqRdlKsE5Q8mf8YXbdIJLw
+      name: LolChampSeries
   update_interval: 300

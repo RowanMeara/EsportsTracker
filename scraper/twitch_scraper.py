@@ -90,7 +90,7 @@ class TwitchScraper:
             for channel in api_resp_channels:
                 ids[channel['name']] = channel['_id']
 
-            # Now modify the yaml file that we are going to dump
+            # Modify the config that is going to be dumped
             for broadcaster_org, channels in game.items():
                 for channel in channels:
                     if channel['name'] in ids:
