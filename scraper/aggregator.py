@@ -111,10 +111,13 @@ class Aggregator:
         client = MongoClient(self.twitch_db['host'], self.twitch_db['port'])
         db = client[self.twitch_db['db_name']]
         topgames = db[self.twitch_db['top_games']]
-        cursor = topgames.find(
+        cursor = topgames.find_one(
             {"timestamp": {"$gt": start}}
         ).sort("timestamp", pymongo.ASCENDING)
-        return int(cursor[0]['timestamp'])
+        if cursor:
+            return int(cursor['timestamp'])
+        else:
+            return int(1 << 30)
 
     def mongo_top_games(self, start, end):
         """
@@ -152,18 +155,18 @@ class Aggregator:
         # Add up the total number of viewer seconds.
         for entry in entries:
             cur_timestamp = entry['timestamp']
-            for id, game in entry['games'].items():
-                if id not in games:
-                    games[id] = {'v': 0, 'name': game['name']}
-                games[id]['v'] += game['viewers']*(cur_timestamp-last_timestamp)
+            for gid, game in entry['games'].items():
+                if gid not in games:
+                    games[gid] = {'v': 0, 'name': game['name']}
+                games[gid]['v'] += game['viewers']*(cur_timestamp-last_timestamp)
             last_timestamp = cur_timestamp
         # Add time from last entry
-        for id, game in entry['games'].items():
-            games[id]['v'] += game['viewers']*(end-last_timestamp)
+        for gid, game in entry['games'].items():
+            games[gid]['v'] += game['viewers']*(end-last_timestamp)
         # Convert viewerseconds into the average number of viewers
-        for id in games:
-            games[id]['v'] //= (end-start)
-        return games\
+        for gid in games:
+            games[gid]['v'] //= (end-start)
+        return games
 
     def store_top_games(self, games, timestamp, conn):
         """
@@ -181,7 +184,7 @@ class Aggregator:
         for id, game in games.items():
             values.append("({}, {}, '{}')".format(id, timestamp, game['v']))
         query = sql.format(','.join(values))
-        sql.execute(query)
+        cursor.execute(query)
         logging.debug("Top games stored from: {}".format(timestamp))
 
     def store_game_ids(self, games, conn):
@@ -203,37 +206,36 @@ class Aggregator:
         query = sql.format(','.join(values))
         curs.execute(query)
 
-    def agg_top_games(self, cursor):
+    def agg_top_games(self):
         """
 
-
-        :param cursor: MongoClient Cursor, Result of a find() query.
         :return:
         """
         # start is the first second of the next hour that we need to aggregate
         # end is the last second of the most recent full hour
-        sechr = 3600
-        start = self.latest_top_games_update() + sechr
-        end = self.epoch_to_hour(time.time())
-
-        earliest_entry = self.first_entry_after(start)
-        curhrstart = earliest_entry//sechr*sechr
-        curhrend = curhrstart + sechr - 1
         conn = psycopg2.connect(host=self.postgres['host'],
                                 port=self.postgres['port'],
                                 user=self.postgres['user'],
                                 password=self.postgres['passwd'],
                                 dbname=self.postgres['db_name'])
+        sechr = 3600
+        start = self.latest_top_games_update(conn) + sechr
+        end = self.epoch_to_hour(time.time())
+        earliest_entry = self.first_entry_after(start)
+        curhrstart = earliest_entry//sechr*sechr
+        curhrend = curhrstart + sechr - 1
+
         while curhrend < end:
             entries = self.mongo_top_games(curhrstart, curhrend)
             games = self.agg_top_games_period(entries, curhrstart, curhrend)
-            self.store_game_ids(games, entries, conn)
+            self.store_game_ids(games, conn)
             conn.commit()
             self.store_top_games(games, curhrstart)
             conn.commit()
             curhrstart += sechr
             curhrend += sechr
-            
+        conn.close()
+
     @staticmethod
     def epoch_to_hour(epoch):
         """
@@ -255,5 +257,5 @@ if __name__ == '__main__':
                         filename='aggregator.log')
     a = Aggregator()
     a.initdb()
-    a.aggregatetopgames()
+    a.agg_top_games()
     #a.twitchtopgames(0.0, time.time())
