@@ -16,3 +16,14 @@ def test_agg_top_games_period():
     assert games['game1'] == 400
     assert games['game2'] == 1
 
+    entry3 = {'timestamp': 2000}
+    entry3['games'] = {'game3': {'viewers': 200}}
+    entries.append(entry3)
+    games = Aggregator.agg_top_games_period(entries, 1500, 2000)
+    assert games['game1'] == 320
+    assert games['game2'] == 0
+    assert games['game3'] == 40
+    games = Aggregator.agg_top_games_period(entries, 1800, 2200)
+    assert games['game1'] == 100
+    assert games['game2'] == 0
+    assert games['game3'] == 150
