@@ -144,7 +144,8 @@ class Aggregator:
         :param entries: cursor,
         :param start: int 
         :param end: int
-        :return: dict: keys are game_ids and values are viewercounts
+        :return: dict: keys are game_ids and values are dictionaries where
+            'v' is the viewercount and 'name' is the game's name.
         """
         last_timestamp = start
         games = {}
@@ -153,16 +154,52 @@ class Aggregator:
             cur_timestamp = entry['timestamp']
             for id, game in entry['games'].items():
                 if id not in games:
-                    games[id] = 0
-                games[id] += game['viewers']*(cur_timestamp-last_timestamp)
+                    games[id] = {'v': 0, 'name': game['name']}
+                games[id]['v'] += game['viewers']*(cur_timestamp-last_timestamp)
             last_timestamp = cur_timestamp
         # Add time from last entry
         for id, game in entry['games'].items():
-            games[id] += game['viewers']*(end-last_timestamp)
+            games[id]['v'] += game['viewers']*(end-last_timestamp)
         # Convert viewerseconds into the average number of viewers
         for id in games:
-            games[id] //= (end-start)
-        return games
+            games[id]['v'] //= (end-start)
+        return games\
+
+    def store_top_games(self, games, timestamp, conn):
+        """
+        Stores top game entries using conn.
+
+        There is no error checking in this function so the games id field
+        must already exist in the games table.  Call store_game_ids on the
+        list of game entries first to make sure this function does not crash.
+        """
+        logging.debug("Storing top games at: {}".format(timestamp))
+        cursor = conn.cursor()
+        # TODO: handle missing game_ids
+        sql = ('INSERT INTO twitch_top_games'
+               '')
+        for id, viewers in games.items():
+            pass
+        logging.debug("Top games stored at: {}".format(timestamp))
+
+    def store_game_ids(self, games, conn):
+        """
+        Stores the game ids specified in games or does nothing if they
+        already are stored.  Does not commit.
+
+        :param games: dict, Output from agg_top_games_period
+        :param conn: psycog2.Connection, database connection
+        :return:
+        """
+        sql = ('INSERT INTO games (giantbomb_id, name)'
+               'VALUES {}'
+               'ON CONFLICT DO NOTHING')
+        curs = conn.cursor()
+        values = []
+        for id, game in games.items():
+            values.append("({id}, '{name}')".format(id=id, name=game['name']))
+        query = sql.format(','.join(values))
+        curs.execute(query)
 
     def agg_top_games(self, cursor):
         """
@@ -180,15 +217,20 @@ class Aggregator:
         earliest_entry = self.first_entry_after(start)
         curhrstart = earliest_entry//sechr*sechr
         curhrend = curhrstart + sechr - 1
+        conn = psycopg2.connect(host=self.postgres['host'],
+                                port=self.postgres['port'],
+                                user=self.postgres['user'],
+                                password=self.postgres['passwd'],
+                                dbname=self.postgres['db_name'])
         while curhrend < end:
             entries = self.mongo_top_games(curhrstart, curhrend)
-
-
-        # Group entries by hour (One hour at a time).
-        # Addup time for each hour.
-        # Store each hour
-        # Advance to next hour
-
+            games = self.agg_top_games_period(entries, curhrstart, curhrend)
+            self.store_game_ids(games, entries, conn)
+            conn.commit()
+            self.store_top_games(games, curhrstart)
+            conn.commit()
+            curhrstart += sechr
+            curhrend += sechr
 
     @staticmethod
     def epoch_to_hour(epoch):
@@ -204,20 +246,6 @@ class Aggregator:
         seconds_in_hour = 3600
         return int(epoch) // seconds_in_hour * seconds_in_hour - 1
 
-    def aggregate_time(self, timestamps):
-        """
-        Returns the combined viewer hours.
-
-        Adds the timestamps together accounting for the irregular intervals
-        between them.  Timestamps that are further apart than fifteen minutes
-        will result in inaccurate data as only the 15 minutes after the
-        timestamp will be counted.
-
-        :param timestamps: list, List of tuples where the first entry is the
-            unix timestamp and the second entry is the viewer count.
-        :return:
-        """
-        pass
 
 if __name__ == '__main__':
     logformat = '%(asctime)s %(levelname)s:%(message)s'
