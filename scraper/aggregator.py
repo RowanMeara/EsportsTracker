@@ -175,12 +175,14 @@ class Aggregator:
         """
         logging.debug("Storing top games at: {}".format(timestamp))
         cursor = conn.cursor()
-        # TODO: handle missing game_ids
         sql = ('INSERT INTO twitch_top_games'
-               '')
-        for id, viewers in games.items():
-            pass
-        logging.debug("Top games stored at: {}".format(timestamp))
+               'VALUES {}')
+        values = []
+        for id, game in games.items():
+            values.append("({}, {}, '{}')".format(id, timestamp, game['v']))
+        query = sql.format(','.join(values))
+        sql.execute(query)
+        logging.debug("Top games stored from: {}".format(timestamp))
 
     def store_game_ids(self, games, conn):
         """
@@ -231,7 +233,7 @@ class Aggregator:
             conn.commit()
             curhrstart += sechr
             curhrend += sechr
-
+            
     @staticmethod
     def epoch_to_hour(epoch):
         """
