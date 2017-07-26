@@ -1,0 +1,6 @@
+pyyaml
+pymongo
+requests
+pytest
+ruamel.yaml
+psycopg2
