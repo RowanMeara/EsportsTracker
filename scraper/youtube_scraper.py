@@ -186,7 +186,9 @@ class YoutubeScraper:
                 time.sleep(time_to_sleep)
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='youtube.log', level=logging.WARNING)
+    fmt = '%(asctime)s %(levelname)s:%(message)s'
+    logging.basicConfig(format=fmt, filename='youtube.log',
+                        level=logging.DEBUG)
     a = YoutubeScraper()
     while True:
         try:

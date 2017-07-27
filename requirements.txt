@@ -4,3 +4,4 @@ requests
 pytest
 ruamel.yaml
 psycopg2
+pytz

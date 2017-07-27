@@ -256,3 +256,4 @@ if __name__ == "__main__":
 
     #a = TwitchScraper()
     #a.scrape()
+    # TODO: Handle mongo dying. pymongo.errors.ServerSelectionTimeoutError

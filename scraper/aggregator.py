@@ -4,7 +4,9 @@ import logging
 from ruamel import yaml
 import pymongo
 from pymongo import MongoClient
-
+from datetime import datetime
+import pytz
+import sys
 
 class Aggregator:
     def __init__(self, configpath='scraper_config.yml', keypath='../keys.yml'):
@@ -19,6 +21,7 @@ class Aggregator:
         self.postgres = config['postgres']
         self.postgres['user'] = keys['postgres']['user']
         self.postgres['passwd'] = keys['postgres']['passwd']
+        self.client = None
 
     @staticmethod
     def db_initialized(conn):
@@ -95,29 +98,30 @@ class Aggregator:
 
         :return:
         """
-        sql = ('SELECT COALESCE(MIN(epoch), 0) '
+        sql = ('SELECT COALESCE(MAX(epoch), 0) '
                'FROM twitch_top_games ')
         cursor = conn.cursor()
         cursor.execute(sql)
-        return cursor.fetchone()
+        return cursor.fetchone()[0]
 
     def first_entry_after(self, start):
         """
         Returns the entry with a timestamp after start.
 
+        The client class variable must be initialized to a MongoClient.
+
         :param start:
         :return: int
         """
-        client = MongoClient(self.twitch_db['host'], self.twitch_db['port'])
-        db = client[self.twitch_db['db_name']]
+        db = self.client[self.twitch_db['db_name']]
         topgames = db[self.twitch_db['top_games']]
-        cursor = topgames.find_one(
+        cursor = topgames.find(
             {"timestamp": {"$gt": start}}
         ).sort("timestamp", pymongo.ASCENDING)
-        if cursor:
-            return int(cursor['timestamp'])
+        if cursor.count() > 0:
+            return int(cursor[0]['timestamp'])
         else:
-            return int(1 << 30)
+            return 1 << 31
 
     def mongo_top_games(self, start, end):
         """
@@ -130,8 +134,7 @@ class Aggregator:
         :param end: int, Timestamp of the last entry
         :return: pymongo.cursor.Cursor
         """
-        client = MongoClient(self.twitch_db['host'], self.twitch_db['port'])
-        db = client[self.twitch_db['db_name']]
+        db = self.client[self.twitch_db['db_name']]
         topgames = db[self.twitch_db['top_games']]
         cursor = topgames.find(
             {"timestamp": {"$gt": start, "$lt": end}}
@@ -153,6 +156,7 @@ class Aggregator:
         last_timestamp = start
         games = {}
         # Add up the total number of viewer seconds.
+        entry = None
         for entry in entries:
             cur_timestamp = entry['timestamp']
             for gid, game in entry['games'].items():
@@ -160,6 +164,9 @@ class Aggregator:
                     games[gid] = {'v': 0, 'name': game['name']}
                 games[gid]['v'] += game['viewers']*(cur_timestamp-last_timestamp)
             last_timestamp = cur_timestamp
+        # Return if there were no entries
+        if not entry:
+            return games
         # Add time from last entry
         for gid, game in entry['games'].items():
             games[gid]['v'] += game['viewers']*(end-last_timestamp)
@@ -176,16 +183,25 @@ class Aggregator:
         must already exist in the games table.  Call store_game_ids on the
         list of game entries first to make sure this function does not crash.
         """
-        logging.debug("Storing top games at: {}".format(timestamp))
+        if not games:
+            return
         cursor = conn.cursor()
-        sql = ('INSERT INTO twitch_top_games'
-               'VALUES {}')
+        sql = ('INSERT INTO twitch_top_games '
+               'VALUES {} '
+               'ON CONFLICT DO NOTHING ')
         values = []
         for id, game in games.items():
-            values.append("({}, {}, '{}')".format(id, timestamp, game['v']))
+            tup = (int(id), timestamp, game['v'])
+            values.append(cursor.mogrify("(%s,%s,%s)", tup).decode())
         query = sql.format(','.join(values))
         cursor.execute(query)
-        logging.debug("Top games stored from: {}".format(timestamp))
+        logging.debug("Top games stored from: " + self.strtime(timestamp))
+
+    @staticmethod
+    def strtime(timestamp):
+        tz = pytz.timezone('US/Pacific')
+        dt = datetime.fromtimestamp(timestamp, tz)
+        return dt.strftime("%Z - %Y/%m/%d, %H:%M:%S")
 
     def store_game_ids(self, games, conn):
         """
@@ -196,13 +212,16 @@ class Aggregator:
         :param conn: psycog2.Connection, database connection
         :return:
         """
+        if not games:
+            return
         sql = ('INSERT INTO games (giantbomb_id, name)'
-               'VALUES {}'
+               'VALUES {} '
                'ON CONFLICT DO NOTHING')
         curs = conn.cursor()
         values = []
         for id, game in games.items():
-            values.append("({id}, '{name}')".format(id=id, name=game['name']))
+            tup = (id, game['name'])
+            values.append(curs.mogrify("(%s, %s)", tup).decode())
         query = sql.format(','.join(values))
         curs.execute(query)
 
@@ -218,23 +237,24 @@ class Aggregator:
                                 user=self.postgres['user'],
                                 password=self.postgres['passwd'],
                                 dbname=self.postgres['db_name'])
+        self.client = MongoClient(self.twitch_db['host'], self.twitch_db['port'])
         sechr = 3600
         start = self.latest_top_games_update(conn) + sechr
         end = self.epoch_to_hour(time.time())
         earliest_entry = self.first_entry_after(start)
         curhrstart = earliest_entry//sechr*sechr
         curhrend = curhrstart + sechr - 1
-
         while curhrend < end:
             entries = self.mongo_top_games(curhrstart, curhrend)
             games = self.agg_top_games_period(entries, curhrstart, curhrend)
             self.store_game_ids(games, conn)
             conn.commit()
-            self.store_top_games(games, curhrstart)
+            self.store_top_games(games, curhrstart, conn)
             conn.commit()
             curhrstart += sechr
             curhrend += sechr
         conn.close()
+        self.client.close()
 
     @staticmethod
     def epoch_to_hour(epoch):
@@ -255,7 +275,10 @@ if __name__ == '__main__':
     logformat = '%(asctime)s %(levelname)s:%(message)s'
     logging.basicConfig(format=logformat, level=logging.DEBUG,
                         filename='aggregator.log')
+    logging.debug("Aggregator Starting.")
     a = Aggregator()
     a.initdb()
+    start = time.time()
     a.agg_top_games()
-    #a.twitchtopgames(0.0, time.time())
+    end = time.time()
+    print("Total Time: {}".format(int(end-start)))
