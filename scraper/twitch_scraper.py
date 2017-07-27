@@ -203,7 +203,8 @@ class TwitchScraper:
             games[str(game['game']['giantbomb_id'])] = {
                 'name':     game['game']['name'],
                 'viewers':  game['viewers'],
-                'channels': game['channels']
+                'channels': game['channels'],
+                'id':       game['_id']
             }
         db_entry['games'] = games
 
