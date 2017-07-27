@@ -40,31 +40,63 @@ class Aggregator:
             return False
 
     @staticmethod
-    def init_db_tables(conn):
+    def create_tables(conn):
         """
-        Initializes the games and twitch_top_games tables.
+        Creates Postgres tables.
 
 
         :param conn: psycopg2 connection
         :return:
         """
-        initgames = (
+        games = (
             'CREATE TABLE games( '
             '    giantbomb_id integer PRIMARY KEY, '
-            '    name text NOT NULL'
-            '); '
+            '    name text NOT NULL '
+            ');'
         )
-        inittopgames = (
+        twitch_top_games = (
             'CREATE TABLE twitch_top_games( '
             '    giantbomb_id integer REFERENCES games(giantbomb_id), '
             '    epoch integer NOT NULL, '
             '    viewers integer NOT NULL, '
-            '    PRIMARY KEY (giantbomb_id, epoch)'
-            '); '
+            '    PRIMARY KEY (giantbomb_id, epoch) '
+            ');'
+        )
+        twitch_channels = (
+            'CREATE TABLE twitch_channels( '
+            '    channel_id integer PRIMARY KEY, '
+            '    name text NOT NULL ' 
+            ');'
+        )
+        twitch_broadcasts = (
+            'CREATE TABLE twitch_broadcasts( ' 
+            '    epoch integer NOT NULL, '
+            '    giantbomb_id integer REFERENCES games(giantbomb_id), '
+            '    viewers integer NOT NULL, '
+            '    channel_id integer REFERENCES twitch_channels(channel_id), '
+            '    PRIMARY KEY (channel_id, epoch)'
+            ');'
+        )
+        orgs = (
+            'CREATE TABLE orgs( '
+            '    org_id integer PRIMARY KEY, '
+            '    name text NOT NULL '
+            ');'
+        )
+        channel_affiliations = (
+            'CREATE TABLE channel_affiliations( '
+            '    org_id REFERENCES orgs(org_id), '
+            '    channel_id REFERENCES twitch_channels(channel_id), '
+            '    PRIMARY KEY (org_id, channel_id) '
+            ');'
         )
         curs = conn.cursor()
-        curs.execute(initgames)
-        curs.execute(inittopgames)
+        curs.execute(games)
+        curs.execute(twitch_top_games)
+        curs.execute(twitch_channels)
+        curs.execute(twitch_broadcasts)
+        curs.execute(orgs)
+        curs.execute(channel_affiliations)
 
     def initdb(self):
         """
@@ -82,7 +114,7 @@ class Aggregator:
             if not self.db_initialized(conn):
                 conn.commit()
                 logging.info("Postgres Twitch schema not initialized.")
-                self.init_db_tables(conn)
+                self.create_tables(conn)
                 conn.commit()
                 logging.info("Twitch Schema Initialized.")
             conn.close()
@@ -271,6 +303,8 @@ class Aggregator:
         seconds_in_hour = 3600
         return int(epoch) // seconds_in_hour * seconds_in_hour - 1
 
+    def agg_broadcasts(self):
+        pass
 
 if __name__ == '__main__':
     logformat = '%(asctime)s %(levelname)s:%(message)s'
