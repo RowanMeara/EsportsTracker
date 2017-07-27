@@ -2,6 +2,7 @@ import pytest
 import os
 from scraper.aggregator import Aggregator
 
+
 config_path = 'tests/res/test_scraper_config.yml'
 key_path = 'tests/res/test_keys.yml'
 

@@ -6,7 +6,7 @@ import pymongo
 from pymongo import MongoClient
 from datetime import datetime
 import pytz
-import sys
+
 
 class Aggregator:
     def __init__(self, configpath='scraper_config.yml', keypath='../keys.yml'):
@@ -247,12 +247,13 @@ class Aggregator:
         while curhrend < end:
             entries = self.mongo_top_games(curhrstart, curhrend)
             games = self.agg_top_games_period(entries, curhrstart, curhrend)
-            self.store_game_ids(games, conn)
-            conn.commit()
-            self.store_top_games(games, curhrstart, conn)
-            conn.commit()
+            # Some hours empty due to server failure
+            if games:
+                self.store_game_ids(games, conn)
+                self.store_top_games(games, curhrstart, conn)
             curhrstart += sechr
             curhrend += sechr
+        conn.commit()
         conn.close()
         self.client.close()
 
@@ -261,7 +262,7 @@ class Aggregator:
         """
         Returns the last second in the most recent hour.
 
-        Example. If the epoch corresponds to 2:16:37, then the epoch
+        Example. If the epoch corresponds to 2:16:37, then the integer
         corresponding to 1:59:59 will be returned.
 
         :param epoch: int or float, Unix Epoch
