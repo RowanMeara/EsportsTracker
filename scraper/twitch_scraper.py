@@ -3,6 +3,7 @@ import requests
 import sys
 import json
 import time
+import pymongo
 from pymongo import MongoClient
 import logging
 
@@ -39,6 +40,7 @@ class TwitchScraper:
             self.live_streams_url = config['api']['live_streams']
             self.api_version_url = config['api']['version']
             self.user_id_url = config['api']['user_ids']
+            self.game_ids_url =config['api']['game_ids']
             self.esports_channels = config['esports_channels']
             self.games = self.esports_channels.keys()
         with open(key_path) as f:
@@ -104,7 +106,7 @@ class TwitchScraper:
             return True
         return False
 
-    def twitch_api_request(self, url):
+    def twitch_api_request(self, url, params=None):
         """
         Makes a twitch api request.
 
@@ -115,10 +117,15 @@ class TwitchScraper:
         my experience.
 
         :param url: str, Twitch api request
+        :param params: dict, params to pass to requests.get
         :return: requests.Response
         """
         for i in range(3):
-            api_result = self.session.get(url)
+            if params:
+                api_result = self.session.get(url, params=params)
+            else:
+                api_result = self.session.get(url)
+            api_result.encoding = 'utf8'
             if api_result.status_code == requests.codes.okay:
                 return api_result
             elif i == 2:
@@ -127,6 +134,26 @@ class TwitchScraper:
                 raise ConnectionError
             time.sleep(10)
         # TODO: Implement a more sophisticated failure mechanism
+
+    def gamename_to_id(self, gamename):
+        """
+        Returns the Twitch id corresponding to a game.
+
+        Uses the Twitch API to return the game id for the game with the given
+        name.
+
+        :param name: str, The name of the game
+        :return:
+        """
+        p = {'query': gamename }
+        res = self.twitch_api_request(self.game_ids_url, params=p)
+        games = json.loads(res.text)['games']
+        for game in games:
+            if game['name'] == gamename:
+                return int(game['_id'])
+
+        raise Exception
+
 
     def scrape_top_games(self):
         """
@@ -216,12 +243,6 @@ class TwitchScraper:
             print(db_entry)
             print(db_result.inserted_id)
 
-    def aggregate_top_game_results(self, results):
-        # Aggregates the specified MongoDB results and returns a dictionary with
-        # the results
-
-        return
-
     def scrape(self):
         """
         Runs forever scraping and storing Twitch data.
@@ -252,7 +273,7 @@ if __name__ == "__main__":
         try:
             a = TwitchScraper()
             a.scrape()
-        except:
+        except (ConnectionError, pymongo.errors.ServerSelectionTimeoutError):
             logging.warning("Unexpected error: {}. Time: {}".format(
                             sys.exc_info()[0], time.time()))
 

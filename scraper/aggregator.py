@@ -141,9 +141,9 @@ class Aggregator:
 
     def first_entry_after(self, start):
         """
-        Returns the entry with a timestamp after start.
+        Returns the timestamp of the first entry after start.
 
-        The client class variable must be initialized to a MongoClient.
+        The instance variable client must be initialized to a MongoClient.
 
         :param start:
         :return: int

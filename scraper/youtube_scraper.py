@@ -6,6 +6,7 @@ import logging
 import sys
 import math
 from pymongo import MongoClient
+import pymongo
 
 DEBUG = True
 
@@ -35,6 +36,7 @@ class YoutubeScraper:
     def make_api_request(self, url, params):
         for i in range(3):
             api_result = self.session.get(url, params=self._bundle(params))
+            api_result.encoding = 'utf8'
             if api_result.status_code == requests.codes.okay:
                 return api_result
             elif i == 2:
@@ -193,6 +195,6 @@ if __name__ == "__main__":
     while True:
         try:
             a.scrape()
-        except:
+        except (ConnectionError, pymongo.errors.ServerSelectionTimeoutError):
             logging.warning("Unexpected error: {}. Time: {}".format(
                 sys.exc_info()[0], time.time()))
