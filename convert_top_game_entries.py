@@ -84,7 +84,6 @@ def v1tov2(entry):
 
 def update_all():
     global retrieved_ids
-    os.chdir('..')
     os.chdir('scraper')
     print("Starting...")
     if os.path.isfile(fn):
