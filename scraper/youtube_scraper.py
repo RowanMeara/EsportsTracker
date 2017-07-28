@@ -117,13 +117,12 @@ class YoutubeScraper:
         view_counts = self.get_livestream_view_count(video_ids)
         for broadcast in raw_broadcasts:
             broadcasts[broadcast['snippet']['channelId']] = {
-                'timestamp': time.time(),
                 'title': broadcast['snippet']['title'],
                 'broadcaster_name': broadcast['snippet']['channelTitle'],
                 'broadcast_id': broadcast['id']['videoId'],
                 'concurrent_viewers': view_counts[broadcast['id']['videoId']]
             }
-        return broadcasts
+        return {'timestamp': int(time.time()), 'broadcasts': broadcasts}
 
     def store_top_livestreams(self, top_livestreams):
         db = MongoClient(self.db_host, self.db_port)[self.db_name]
@@ -179,7 +178,7 @@ class YoutubeScraper:
             try:
                 res = a.get_top_livestreams(5)
                 a.store_top_livestreams(res)
-            except ConnectionError:
+            except requests.exceptions.ConnectionError:
                 logging.warning("Youtube API Failed: {}".format(time.time()))
             except pymongo.errors.ServerSelectionTimeoutError:
                 logging.warning("Database Error: {}. Time: {}".format(

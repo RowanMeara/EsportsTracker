@@ -3,6 +3,7 @@ twitch:
   api:
     live_streams: http://retrievelivestreams.test/?game={}
     top_games: http://retrievetopgames.test
+    game_ids: https://api.twitch.tv/kraken/search/games
     user_ids: http://retrieveuserids.test/?login={}
     version: application/vnd.twitchtv.v5+json
   db:

@@ -145,7 +145,7 @@ class TwitchScraper:
         :param name: str, The name of the game
         :return:
         """
-        p = {'query': gamename }
+        p = {'query': gamename}
         res = self.twitch_api_request(self.game_ids_url, params=p)
         games = json.loads(res.text)['games']
         for game in games:
@@ -258,7 +258,7 @@ class TwitchScraper:
                     a.scrape_esports_channels(game)
                 if DEBUG:
                     print("Elapsed time: {:.2f}s".format(time.time() - start_time))
-            except ConnectionError:
+            except requests.exceptions.ConnectionError:
                 logging.warning("Twitch API Failed: {}".format(time.time()))
             except pymongo.errors.ServerSelectionTimeoutError:
                 logging.warning("Database Error: {}. Time: {}".format(
