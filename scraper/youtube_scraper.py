@@ -181,6 +181,9 @@ class YoutubeScraper:
                 a.store_top_livestreams(res)
             except ConnectionError:
                 logging.warning("Youtube API Failed: {}".format(time.time()))
+            except pymongo.errors.ServerSelectionTimeoutError:
+                logging.warning("Database Error: {}. Time: {}".format(
+                    sys.exc_info()[0], time.time()))
             if DEBUG:
                 print("Elapsed time: {:.2f}s".format(time.time() - start_time))
             time_to_sleep = self.update_interval - (time.time() - start_time)
@@ -195,6 +198,6 @@ if __name__ == "__main__":
     while True:
         try:
             a.scrape()
-        except (ConnectionError, pymongo.errors.ServerSelectionTimeoutError):
+        except:
             logging.warning("Unexpected error: {}. Time: {}".format(
                 sys.exc_info()[0], time.time()))

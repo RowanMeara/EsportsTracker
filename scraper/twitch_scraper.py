@@ -258,8 +258,11 @@ class TwitchScraper:
                     a.scrape_esports_channels(game)
                 if DEBUG:
                     print("Elapsed time: {:.2f}s".format(time.time() - start_time))
-            except ConnectionError as e:
+            except ConnectionError:
                 logging.warning("Twitch API Failed: {}".format(time.time()))
+            except pymongo.errors.ServerSelectionTimeoutError:
+                logging.warning("Database Error: {}. Time: {}".format(
+                    sys.exc_info()[0], time.time()))
             time_to_sleep = self.update_interval - (time.time() - start_time)
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
@@ -273,7 +276,7 @@ if __name__ == "__main__":
         try:
             a = TwitchScraper()
             a.scrape()
-        except (ConnectionError, pymongo.errors.ServerSelectionTimeoutError):
+        except:
             logging.warning("Unexpected error: {}. Time: {}".format(
                             sys.exc_info()[0], time.time()))
 
