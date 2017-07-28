@@ -200,11 +200,12 @@ class TwitchScraper:
         db_entry = {'timestamp': int(time.time())}
         games, json_result = {}, json.loads(api_result.text)
         for game in json_result['top']:
-            games[str(game['game']['giantbomb_id'])] = {
-                'name':     game['game']['name'],
-                'viewers':  game['viewers'],
-                'channels': game['channels'],
-                'id':       game['_id']
+            games[str(game['game']['_id'])] = {
+                'name':         game['game']['name'],
+                'viewers':      game['viewers'],
+                'channels':     game['channels'],
+                'id':           game['game']['_id'],
+                'giantbomb_id': game['game']['giantbomb_id']
             }
         db_entry['games'] = games
 

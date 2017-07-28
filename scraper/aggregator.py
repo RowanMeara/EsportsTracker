@@ -50,28 +50,30 @@ class Aggregator:
         """
         games = (
             'CREATE TABLE games( '
-            '    giantbomb_id integer PRIMARY KEY, '
-            '    name text NOT NULL '
+            '    game_id integer PRIMARY KEY, '
+            '    name text NOT NULL UNIQUE, '
+            '    giantbomb_id integer '
             ');'
         )
+        games_index = 'CREATE INDEX game_name_idx ON games USING HASH (names);'
         twitch_top_games = (
             'CREATE TABLE twitch_top_games( '
-            '    giantbomb_id integer REFERENCES games(giantbomb_id), '
+            '    game_id integer REFERENCES games(game_id), '
             '    epoch integer NOT NULL, '
             '    viewers integer NOT NULL, '
-            '    PRIMARY KEY (giantbomb_id, epoch) '
+            '    PRIMARY KEY (game_id, epoch) '
             ');'
         )
         twitch_channels = (
             'CREATE TABLE twitch_channels( '
             '    channel_id integer PRIMARY KEY, '
-            '    name text NOT NULL ' 
+            '    channel_name text NOT NULL ' 
             ');'
         )
         twitch_broadcasts = (
             'CREATE TABLE twitch_broadcasts( ' 
             '    epoch integer NOT NULL, '
-            '    giantbomb_id integer REFERENCES games(giantbomb_id), '
+            '    game_id integer REFERENCES games(game_id), '
             '    viewers integer NOT NULL, '
             '    channel_id integer REFERENCES twitch_channels(channel_id), '
             '    PRIMARY KEY (channel_id, epoch)'
@@ -92,11 +94,12 @@ class Aggregator:
         )
         curs = conn.cursor()
         curs.execute(games)
+        curs.execute(games_index)
         curs.execute(twitch_top_games)
-        curs.execute(twitch_channels)
-        curs.execute(twitch_broadcasts)
-        curs.execute(orgs)
-        curs.execute(channel_affiliations)
+        #curs.execute(twitch_channels)
+        #curs.execute(twitch_broadcasts)
+        #curs.execute(orgs)
+        #curs.execute(channel_affiliations)
 
     def initdb(self):
         """
@@ -246,12 +249,13 @@ class Aggregator:
         """
         if not games:
             return
-        sql = ('INSERT INTO games (giantbomb_id, name)'
+        sql = ('INSERT INTO games (game_id, name, giantbomb_id)'
                'VALUES {} '
                'ON CONFLICT DO NOTHING')
         curs = conn.cursor()
         values = []
         for id, game in games.items():
+            giantbomb_id = games
             tup = (id, game['name'])
             values.append(curs.mogrify("(%s, %s)", tup).decode())
         query = sql.format(','.join(values))
