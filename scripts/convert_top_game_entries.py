@@ -26,6 +26,7 @@
 # Run from scripts folder
 
 import pymongo
+from bson.objectid import ObjectId
 import os
 from scraper.twitch_scraper import TwitchScraper
 import pickle
@@ -33,7 +34,7 @@ import time
 import sys
 
 retrieved_ids = {}
-fn = 'gameiddict.pickle'
+fn = '../scripts/res/gameiddict.pickle'
 corrected_names = {'PokĂŠmon Sun/Moon': 'Pokémon Sun/Moon'}
 banned_games = {'House Party', 'Minecraft: Story Mode - Season 2', 'V'}
 
@@ -68,7 +69,7 @@ def isv1(entry):
     """Returns True if the entry is V1."""
     games = entry['games']
     game = games[list(games)[0]]
-    return id not in games
+    return 'id' not in game
 
 def v1tov2(entry):
     """ Assume entry in V1 format. """
@@ -98,15 +99,23 @@ def update_all():
 
     oldest = retrieve_oldest_mongo_doc(coll, 50000)
     count = 0
+    countv1 = 0
+    countv2 = 0
     for v1entry in oldest:
         count += 1
         if count % 100 == 0:
-            print("Count: ", count)
+            print("Progress: ", count)
         if isv1(v1entry):
-            oldestv2 = v1tov2(v1entry)
-            # Now need to delete entry and
+            countv1 += 1
+            v2entry = v1tov2(v1entry)
+            filter = {'_id': ObjectId(v1entry['_id'])}
+            res = coll.replace_one(filter, v2entry)
+        else:
+            countv2 += 1
     end = time.time()
     print("Total Time: ", end-start)
+    print("Total V1 entries updated: ", count)
+    print("V2 Entries already existing: ", countv2)
 
 def test_retrieval(gamename):
     os.chdir('..')
