@@ -55,7 +55,7 @@ class Aggregator:
             '    giantbomb_id integer '
             ');'
         )
-        games_index = 'CREATE INDEX game_name_idx ON games USING HASH (names);'
+        games_index = 'CREATE INDEX game_name_idx ON games USING HASH (name);'
         twitch_top_games = (
             'CREATE TABLE twitch_top_games( '
             '    game_id integer REFERENCES games(game_id), '
@@ -163,7 +163,7 @@ class Aggregator:
         Returns top games entries.
 
         Returns entries in the twitch_top_games collections from Mongo that
-        are timestamped between start and end.
+        are timestamped greater than start but less than end.
 
         :param start: int, Timestamp of the earliest entry
         :param end: int, Timestamp of the last entry
@@ -172,7 +172,7 @@ class Aggregator:
         db = self.client[self.twitch_db['db_name']]
         topgames = db[self.twitch_db['top_games']]
         cursor = topgames.find(
-            {"timestamp": {"$gt": start, "$lt": end}}
+            {"timestamp": {"$gte": start, "$lt": end}}
         ).sort("timestamp", pymongo.ASCENDING)
         return cursor
 
@@ -194,20 +194,25 @@ class Aggregator:
         entry = None
         for entry in entries:
             cur_timestamp = entry['timestamp']
-            for gid, game in entry['games'].items():
-                if gid not in games:
-                    games[gid] = {'v': 0, 'name': game['name']}
-                games[gid]['v'] += game['viewers']*(cur_timestamp-last_timestamp)
+            for gameid, game in entry['games'].items():
+                if gameid not in games:
+                    games[gameid] = {
+                        'v': 0,
+                        'name': game['name'],
+                        'giantbomb_id': game['giantbomb_id']
+                    }
+                viewersecs = game['viewers']*(cur_timestamp-last_timestamp)
+                games[gameid]['v'] += viewersecs
             last_timestamp = cur_timestamp
         # Return if there were no entries
         if not entry:
             return games
         # Add time from last entry
-        for gid, game in entry['games'].items():
-            games[gid]['v'] += game['viewers']*(end-last_timestamp)
+        for gameid, game in entry['games'].items():
+            games[gameid]['v'] += game['viewers']*(end-last_timestamp)
         # Convert viewerseconds into the average number of viewers
-        for gid in games:
-            games[gid]['v'] //= (end-start)
+        for gameid in games:
+            games[gameid]['v'] //= (end-start)
         return games
 
     def store_top_games(self, games, timestamp, conn):
@@ -255,9 +260,8 @@ class Aggregator:
         curs = conn.cursor()
         values = []
         for id, game in games.items():
-            giantbomb_id = games
-            tup = (id, game['name'])
-            values.append(curs.mogrify("(%s, %s)", tup).decode())
+            tup = (id, game['name'], game['giantbomb_id'])
+            values.append(curs.mogrify("(%s, %s, %s)", tup).decode())
         query = sql.format(','.join(values))
         curs.execute(query)
 
@@ -279,7 +283,7 @@ class Aggregator:
         end = self.epoch_to_hour(time.time())
         earliest_entry = self.first_entry_after(start)
         curhrstart = earliest_entry//sechr*sechr
-        curhrend = curhrstart + sechr - 1
+        curhrend = curhrstart + sechr
         while curhrend < end:
             entries = self.mongo_top_games(curhrstart, curhrend)
             games = self.agg_top_games_period(entries, curhrstart, curhrend)
@@ -299,13 +303,13 @@ class Aggregator:
         Returns the last second in the most recent hour.
 
         Example. If the epoch corresponds to 2:16:37, then the integer
-        corresponding to 1:59:59 will be returned.
+        corresponding to 2:00:00 will be returned.
 
         :param epoch: int or float, Unix Epoch
         :return: int
         """
         seconds_in_hour = 3600
-        return int(epoch) // seconds_in_hour * seconds_in_hour - 1
+        return int(epoch) // seconds_in_hour * seconds_in_hour
 
     def agg_broadcasts(self):
         pass
