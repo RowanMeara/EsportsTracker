@@ -64,7 +64,6 @@ class YoutubeScraper:
         for username in usernames:
             params = {'part': 'id', 'forUsername': username}
             api_result = self.make_api_request(url, params=self._bundle(params))
-            # TODO: Add error checking
             json_result = json.loads(api_result.text)
             results[username] = json_result['items'][0]['id']
         return results
@@ -114,13 +113,16 @@ class YoutubeScraper:
 
         broadcasts = {}
         video_ids = [k['id']['videoId'] for k in raw_broadcasts]
-        view_counts = self.get_livestream_view_count(video_ids)
+        dets = self.get_livestream_details(video_ids)
         for broadcast in raw_broadcasts:
+            det = dets[broadcast['id']['videoId']]
             broadcasts[broadcast['snippet']['channelId']] = {
                 'title': broadcast['snippet']['title'],
                 'broadcaster_name': broadcast['snippet']['channelTitle'],
                 'broadcast_id': broadcast['id']['videoId'],
-                'concurrent_viewers': view_counts[broadcast['id']['videoId']]
+                'concurrent_viewers': det['viewers'],
+                'language': det['language'],
+                'tags': det['tags']
             }
         return {'timestamp': int(time.time()), 'broadcasts': broadcasts}
 
@@ -132,17 +134,18 @@ class YoutubeScraper:
             print(db_result.inserted_id)
             print("Inserted: ", top_livestreams)
 
-    def get_livestream_view_count(self, broadcast_ids):
+    def get_livestream_details(self, broadcast_ids):
         """
-        Gets the number of current viewers of the specified broadcasts.
+        Gets the viewers, language, and tags of the specified broadcasts.
 
         If one or more of the broadcast_id's are invalid, the returned
-        dictionary will have a value of -1 for those ids.  If it is a valid
-        broadcast but it is over the value will be 0 instead.
+        dictionary will have default values except for the -1 viewcount.  If it
+        is a valid broadcast but it is over the viewercount will be 0 instead.
 
         :param broadcast_ids: list, A list of up to 50 youtube video_id's
             corresponding to current live broadcasts.
-        :return: dict, Video_id's are keys and values are the viewer count.
+        :return: dict, Video_id's are keys and values are the viewer count,
+        defaultAudioLanguage, and tags.
         """
 
         api_url = self.base_url + '/videos'
@@ -163,14 +166,20 @@ class YoutubeScraper:
             json_result = json.loads(api_result.text)
             broadcasts += json_result['items']
 
-        view_counts = {bc_id: -1 for bc_id in broadcast_ids}
+        default = {'viewers': -1, 'language': 'unknown', 'tags': []}
+        details = {bc_id: default for bc_id in broadcast_ids}
         for broadcast in broadcasts:
-            if 'concurrentViewers' in broadcast['liveStreamingDetails']:
-                viewers = broadcast['liveStreamingDetails']['concurrentViewers']
-                view_counts[broadcast['id']] = viewers
-            else:
-                view_counts[broadcast['id']] = 0
-        return view_counts
+            snip = broadcast['snippet']
+            ld = broadcast['liveStreamingDetails']
+            viewers = ld.get('concurrentViewers', 0)
+            lang = snip.get('defaultAudioLanguage', 'unknown')
+            tags = snip.get('tags', [])
+            details[broadcast['id']] = {
+                'viewers':  viewers,
+                'language': lang,
+                'tags':     tags
+            }
+        return details
 
     def scrape(self):
         while True:
