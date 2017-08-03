@@ -1,9 +1,9 @@
 import pytest
 import os
-from scraper import twitch_scraper
+from src import twitch_scraper
 
-config_path = 'tests/res/test_scraper_config.yml'
-key_path = 'tests/res/test_keys.yml'
+config_path = 'scraper/tests/res/test_scraper_config.yml'
+key_path = 'scraper/tests/res/test_keys.yml'
 
 
 def test_init():
