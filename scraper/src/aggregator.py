@@ -9,7 +9,8 @@ import pytz
 
 
 class Aggregator:
-    def __init__(self, configpath='scraper_config.yml', keypath='../keys.yml'):
+    def __init__(self, configpath='src/scraper_config.yml',
+                 keypath='keys.yml'):
         self.aggregation_interval = 3600
         self.config_path = configpath
         with open(configpath) as f:

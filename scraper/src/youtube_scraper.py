@@ -12,8 +12,8 @@ DEBUG = True
 
 
 class YoutubeScraper:
-    def __init__(self, config_path='scraper_config.yml',
-                 key_file_path='../keys.yml'):
+    def __init__(self, config_path='src/scraper_config.yml',
+                 key_file_path='keys.yml'):
         with open(key_file_path) as f:
             keys = yaml.load(f)
             self.client_id = keys['youtubeclientid']
@@ -188,7 +188,7 @@ class YoutubeScraper:
                 res = a.get_top_livestreams(5)
                 a.store_top_livestreams(res)
             except requests.exceptions.ConnectionError:
-                logging.warning("Youtube API Failed: {}".format(time.time()))
+                logging.warning("Youtube API Failed")
             except pymongo.errors.ServerSelectionTimeoutError:
                 logging.warning("Database Error: {}. Time: {}".format(
                     sys.exc_info()[0], time.time()))

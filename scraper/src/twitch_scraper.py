@@ -17,8 +17,8 @@ class TwitchScraper:
     MongoDB collection.  Data is stored in a raw form, and more processing is
     needed before using due to the significant amount of information collected.
     """
-    def __init__(self, config_path='scraper_config.yml',
-                 key_path='../keys.yml'):
+    def __init__(self, config_path='src/scraper_config.yml',
+                 key_path='keys.yml'):
         """
         Constructor for TwitchScraper.
 
@@ -259,17 +259,18 @@ class TwitchScraper:
                 if DEBUG:
                     print("Elapsed time: {:.2f}s".format(time.time() - start_time))
             except requests.exceptions.ConnectionError:
-                logging.warning("Twitch API Failed: {}".format(time.time()))
+                logging.warning("Twitch API Failed")
             except pymongo.errors.ServerSelectionTimeoutError:
-                logging.warning("Database Error: {}. Time: {}".format(
-                    sys.exc_info()[0], time.time()))
+                logging.warning("Database Error: {}".format(sys.exc_info()[0]))
             time_to_sleep = self.update_interval - (time.time() - start_time)
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='twitch.log', level=logging.WARNING)
+    fmt = '%(asctime)s %(levelname)s:%(message)s'
+    logging.basicConfig(format=fmt, filename='twitch.log',
+                        level=logging.WARNING)
     logging.getLogger('requests').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     while True:
@@ -282,4 +283,3 @@ if __name__ == "__main__":
 
     #a = TwitchScraper()
     #a.scrape()
-    # TODO: Handle mongo dying. pymongo.errors.ServerSelectionTimeoutError
