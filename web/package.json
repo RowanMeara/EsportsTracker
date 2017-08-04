@@ -1,0 +1,23 @@
+{
+  "name": "web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "body-parser": "~1.17.1",
+    "cookie-parser": "^1.4.3",
+    "debug": "^2.6.8",
+    "express": "~4.15.2",
+    "morgan": "~1.8.1",
+    "node-sass-middleware": "^0.9.8",
+    "pg-promise": "^6.3.6",
+    "pug": "^2.0.0-rc.3",
+    "serve-favicon": "^2.4.3"
+  },
+  "devDependencies": {
+    "standard": "^10.0.2"
+  }
+}
