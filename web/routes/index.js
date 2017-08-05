@@ -4,9 +4,7 @@ const router = express.Router()
 
 /* GET home page. */
 router.get('/', async function (req, res) {
-  let q = 'Failure'
-  console.log(JSON.stringify(q))
-  res.render('index', { title: 'Esports Market', query: q })
+  res.render('index', { title: 'Esports Market'})
 })
 
 module.exports = router
