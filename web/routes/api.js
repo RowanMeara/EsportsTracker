@@ -2,20 +2,18 @@ const express = require('express')
 const queries = require('../server/queries')
 const router = express.Router()
 
-router.get('/test1', function (req, res) {
-  // TODO: remove
-  res.send('TESTING ME')
-})
-
-router.get('/', async function (req, res) {
-  let q = 'Failure'
+router.get('/twitchtopgames', async function (req, res) {
   try {
-    q = await queries.getTwitchGamesTotalViewerHours(0, 1501822962, 20)
+    let start = 0
+    let epoch = Math.floor(new Date() / 1000)
+    if (req.query.time === 'last30days') {
+      start = epoch - 2592000
+    }
+    let q = await queries.getTwitchGamesTotalViewerHours(start, epoch, 10)
     let l = []
     q.forEach((entry) => {
       l.push([entry['name'], parseInt(entry['viewers'])])
     })
-    console.log(l)
     res.status(200).json(l)
   } catch (e) {
     console.log(e.message)
