@@ -1,28 +1,19 @@
 doctype html
-html(lange="en")
+html(class="mdc-typography")
   head
     title= title
-    meta(name="viewport" content="width=device-width, shrink-to-fit=no, initial-scale=1")
-    link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
-    link(rel='stylesheet', href='/stylesheets/style.css')
-  body
-    div(id="wrapper")
-      block sidebar
-        div(id="sidebar-wrapper")
-          ul(class="sidebar-nav nav")
-            li(class="sidebar-brand")
-              a(href="#") Esports Market
-            li
-              a(href="#") Twitch vs. Youtube
-      div(id="page-content-wrapper")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    link(rel='stylesheet' href="/stylesheets/material-components-web.css")
+    link(rel='stylesheet' href="/stylesheets/style.css")
+  body.mdc-typography.site-body
+    .site-content.mdc-toolbar-fixed-adjust
+      include toolbar.pug
+      include sidenav.pug
+      main
         block content
-    script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js")
+    script(src="/javascripts/material-components-web.js")
+    script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js")
     script(src="https://www.gstatic.com/charts/loader.js")
     script(src="/javascripts/loadcharts.js")
-    script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js")
     script
-      | $("#menu-toggle").click(function(e) {
-      |     e.preventDefault();
-      |     $("#wrapper").toggleClass("toggled");
-      | });
-
+      | mdc.autoInit()

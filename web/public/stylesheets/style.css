@@ -1,8 +1,15 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif; }
+.site-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  min-height: 100%; }
 
-a {
-  color: #00B7FF; }
+.site-content {
+  display: flex;
+  flex: 1 1 auto;
+  height: 100%;
+  box-sizing: border-box; }
 
 /*# sourceMappingURL=style.css.map */

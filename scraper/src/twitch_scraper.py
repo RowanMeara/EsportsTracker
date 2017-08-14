@@ -1,6 +1,7 @@
 from ruamel import yaml
 import requests
 import sys
+import os
 import json
 import time
 import pymongo
@@ -142,7 +143,7 @@ class TwitchScraper:
         Uses the Twitch API to return the game id for the game with the given
         name.
 
-        :param name: str, The name of the game
+        :param gamename: str, The name of the game
         :return:
         """
         p = {'query': gamename}
@@ -278,8 +279,12 @@ if __name__ == "__main__":
             a = TwitchScraper()
             a.scrape()
         except:
-            logging.warning("Unexpected error: {}. Time: {}".format(
-                            sys.exc_info()[0], time.time()))
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            err = "{}. File: {}, line {}"
+            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno))
+            # TODO: Remove magic number
+            time.sleep(60)
 
     #a = TwitchScraper()
     #a.scrape()

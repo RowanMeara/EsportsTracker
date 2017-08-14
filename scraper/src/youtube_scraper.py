@@ -4,6 +4,7 @@ import requests
 import time
 import logging
 import sys
+import os
 import math
 from pymongo import MongoClient
 import pymongo
@@ -207,5 +208,9 @@ if __name__ == "__main__":
         try:
             a.scrape()
         except:
-            logging.warning("Unexpected error: {}. Time: {}".format(
-                sys.exc_info()[0], time.time()))
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            err = "{}. File: {}, line {}"
+            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno))
+            # TODO: Make more informative than line 209
+            time.sleep(60)

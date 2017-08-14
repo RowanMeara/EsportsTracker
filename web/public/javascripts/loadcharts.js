@@ -9,7 +9,6 @@ function drawChart () {
     dataType: 'json',
     async: false,
     success: function (msg) {
-      console.info(msg)
       numbers = msg
     }
   }).responseText

@@ -3,7 +3,8 @@ const queries = require('../server/queries')
 const router = express.Router()
 
 router.get('/test1', function (req, res) {
-  res.send("TESTING ME")
+  // TODO: remove
+  res.send('TESTING ME')
 })
 
 router.get('/', async function (req, res) {
@@ -19,8 +20,6 @@ router.get('/', async function (req, res) {
   } catch (e) {
     console.log(e.message)
   }
-
-
 })
 
 module.exports = router

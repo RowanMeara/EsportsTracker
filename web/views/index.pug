@@ -1,9 +1,6 @@
 extends layout
 
 block content
-  div(class="container-fluid")
-    div(class="row")
-      div(class="col-log-12")
-        h1= title
-        p Welcome to #{title}
-        div(id="chart_div")
+  h1.mdc-typography--display1= title
+  //p Welcome to #{title}
+  #chart_div
