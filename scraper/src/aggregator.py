@@ -21,8 +21,10 @@ class Aggregator:
         self.twitch_db = config['twitch']['db']
         self.youtube_db = config['youtube']['db']
         self.postgres = config['postgres']
+        self.esports_games = set(config['twitch']['esports_channels'].keys())
         self.postgres['user'] = keys['postgres']['user']
         self.postgres['passwd'] = keys['postgres']['passwd']
+
         self.client = None
 
     @staticmethod
@@ -165,17 +167,18 @@ class Aggregator:
         cursor.execute(query)
         return cursor.fetchone()[0]
 
-    def first_entry_after(self, start):
+    def first_entry_after(self, start, collname):
         """
         Returns the timestamp of the first entry after start.
 
         The instance variable client must be initialized to a MongoClient.
 
-        :param start:
+        :param start: int
+        :param collname: str
         :return: int
         """
         db = self.client[self.twitch_db['db_name']]
-        topgames = db[self.twitch_db['top_games']]
+        topgames = db[collname]
         cursor = topgames.find(
             {'timestamp': {'$gt': start}}
         ).sort('timestamp', pymongo.ASCENDING)
@@ -352,7 +355,7 @@ class Aggregator:
         curs = conn.cursor()
         values = []
         for chid, stream in streams.items():
-            tup = (chid, stream['ch_name'])
+            tup = (chid, stream['name'])
             values.append(curs.mogrify("(%s, %s)", tup).decode())
         query = query.format(','.join(values))
         curs.execute(query)
@@ -390,6 +393,12 @@ class Aggregator:
         logging.debug("Broadcasts stored from: " + self.strtime(timestamp))
 
     def game_name_to_id(self, conn, name):
+        # TODO: Figure out source of inconsistent naming data
+        if name not in self.esports_games:
+            for game in self.esports_games:
+                if name.lower() == game.lower():
+                    name = game
+                    break
         query = ('SELECT game_id '
                  'FROM games '
                  'WHERE name = %s')
@@ -412,7 +421,9 @@ class Aggregator:
         conn = self.postgresconn()
         self.client = MongoClient(self.twitch_db['host'],
                                   self.twitch_db['port'])
-        curhrstart, curhrend, last = self._agg_ts(conn, self.twitch_db['top_games'])
+        curhrstart, curhrend, last = self._agg_ts(conn,
+                                                  'twitch_top_games',
+                                                  self.twitch_db['top_games'])
         while curhrend < last:
             entries = self.docsbetween(curhrstart, curhrend,
                                        self.twitch_db['top_games'])
@@ -440,7 +451,9 @@ class Aggregator:
         conn = self.postgresconn()
         self.client = MongoClient(self.twitch_db['host'],
                                   self.twitch_db['port'])
-        hrstart, hrend, last = self._agg_ts(conn, self.twitch_db['top_streams'])
+        hrstart, hrend, last = self._agg_ts(conn,
+                                            'twitch_broadcasts',
+                                            self.twitch_db['top_streams'])
         while hrend < last:
             entries = self.docsbetween(hrstart, hrend,
                                        self.twitch_db['top_streams'])
@@ -474,7 +487,7 @@ class Aggregator:
             docs.append(doc)
 
         # Calculate viewership
-        avgviewers = Aggregator.average_viewers(docs, start, end, 'games',
+        avgviewers = Aggregator.average_viewers(docs, start, end, 'streams',
                                                 'viewers')
         # Format Results
         for id, viewers in avgviewers.items():
@@ -483,12 +496,12 @@ class Aggregator:
             for channelid, stream in doc['streams'].items():
                 chnl = avgviewers[channelid]
                 chnl['channel_id'] = stream['broadcaster_id']
-                chnl['channel_name'] = stream['display_name']
+                chnl['name'] = stream['display_name']
                 chnl['stream_title'] = stream['status']
                 chnl['game_name'] = stream['game']
         return avgviewers
 
-    def _agg_ts(self, conn, collname):
+    def _agg_ts(self, conn, table_name, collname):
         """
         Helper function for aggregation timestamps.
 
@@ -497,14 +510,15 @@ class Aggregator:
         curhrstart), and last (the first second in the current hour).
 
         :param conn: psycopg2.connection
+        :param table_name: str, Name of Postgres table
         :param collname: str, Name of Mongo collection
         :return: tuple, (curhrstart, curhrend, last)
         """
         # TODO: Rename function
         sechr = 3600
-        start = self.last_postgres_update(conn, collname) + sechr
+        start = self.last_postgres_update(conn, table_name) + sechr
         last = self.epoch_to_hour(time.time())
-        earliest_entry = self.first_entry_after(start)
+        earliest_entry = self.first_entry_after(start, collname)
         curhrstart = earliest_entry // sechr*sechr
         curhrend = curhrstart + sechr
         return curhrstart, curhrend, last
@@ -544,6 +558,7 @@ if __name__ == '__main__':
     a = Aggregator()
     a.initdb()
     start = time.time()
-    a.agg_top_games()
+    #a.agg_top_games()
+    a.agg_twitch_broadcasts()
     end = time.time()
     print("Total Time: {:.2f}".format(end-start))
