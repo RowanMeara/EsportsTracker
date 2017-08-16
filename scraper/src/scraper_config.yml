@@ -1,9 +1,13 @@
 aggregator: null
+postgres:
+  db_name: esports_stats
+  host: localhost
+  port: 5432
 twitch:
   api:
+    game_ids: https://api.twitch.tv/kraken/search/games
     live_streams: https://api.twitch.tv/kraken/streams/?language=en&stream_type=live&limit=100&game={}
     top_games: https://api.twitch.tv/kraken/games/top/?limit=100
-    game_ids: https://api.twitch.tv/kraken/search/games
     user_ids: https://api.twitch.tv/kraken/users?login={}
     version: application/vnd.twitchtv.v5+json
   db:
@@ -176,6 +180,10 @@ twitch:
       TakeTV:
       - id: '107551531'
         name: taketv_overwatch
+    PLAYERUNKNOWN'S BATTLEGROUNDS:
+      Bluehole:
+      - id: '127506955'
+        name: playbattlegrounds
     Rocket League:
       Dreamhack:
       - id: '157859480'
@@ -266,7 +274,3 @@ youtube:
     - id: UCvqRdlKsE5Q8mf8YXbdIJLw
       name: LolChampSeries
   update_interval: 300
-postgres:
-  db_name: esports_stats
-  host: localhost
-  port: 5432

@@ -26,20 +26,23 @@ class Aggregator:
         self.client = None
 
     @staticmethod
-    def db_initialized(conn):
+    def table_exists(conn, tablename):
         """
         Returns True if the 'games' table exists.
 
         :param conn:
         :return: bool
         """
-        gamesexists = 'SELECT 1 FROM games'
-        try:
-            cursor = conn.cursor()
-            cursor.execute(gamesexists)
-            return True
-        except psycopg2.DatabaseError:
+        tables = ['games', 'twitch_top_games', 'twitch_broadcasts',
+                  'twitch_channels', 'channel_affiliations', 'orgs']
+        if tablename not in tables:
             return False
+        exists = ('SELECT count(*) '
+                  '    FROM information_schema.tables'
+                  '    WHERE table_name = \'{}\'')
+        cursor = conn.cursor()
+        cursor.execute(exists.format(tablename))
+        return cursor.fetchone()[0] > 0
 
     @staticmethod
     def create_tables(conn):
@@ -69,15 +72,16 @@ class Aggregator:
         twitch_channels = (
             'CREATE TABLE twitch_channels( '
             '    channel_id integer PRIMARY KEY, '
-            '    channel_name text NOT NULL ' 
+            '    name text NOT NULL ' 
             ');'
         )
         twitch_broadcasts = (
             'CREATE TABLE twitch_broadcasts( ' 
+            '    channel_id integer REFERENCES twitch_channels(channel_id), '
             '    epoch integer NOT NULL, '
             '    game_id integer REFERENCES games(game_id), '
             '    viewers integer NOT NULL, '
-            '    channel_id integer REFERENCES twitch_channels(channel_id), '
+            '    stream_title text, '
             '    PRIMARY KEY (channel_id, epoch)'
             ');'
         )
@@ -89,19 +93,31 @@ class Aggregator:
         )
         channel_affiliations = (
             'CREATE TABLE channel_affiliations( '
-            '    org_id REFERENCES orgs(org_id), '
-            '    channel_id REFERENCES twitch_channels(channel_id), '
-            '    PRIMARY KEY (org_id, channel_id) '
+            '    org_id integer REFERENCES orgs(org_id), '
+            '    channel_id integer REFERENCES twitch_channels(channel_id), '
+            '    PRIMARY KEY (channel_id) '
             ');'
         )
         curs = conn.cursor()
-        curs.execute(games)
-        curs.execute(games_index)
-        curs.execute(twitch_top_games)
-        #curs.execute(twitch_channels)
-        #curs.execute(twitch_broadcasts)
-        #curs.execute(orgs)
-        #curs.execute(channel_affiliations)
+        if not Aggregator.table_exists(conn, 'games'):
+            curs.execute(games)
+            curs.execute(games_index)
+            logging.info('Created Table: games')
+        if not Aggregator.table_exists(conn, 'twitch_top_games'):
+            curs.execute(twitch_top_games)
+            logging.info('Created Table: twitch_top_games')
+        if not Aggregator.table_exists(conn, 'twitch_channels'):
+            curs.execute(twitch_channels)
+            logging.info('Created Table: twitch_channels')
+        if not Aggregator.table_exists(conn, 'twitch_broadcasts'):
+            curs.execute(twitch_broadcasts)
+            logging.info('Created Table: twitch_broadcasts')
+        if not Aggregator.table_exists(conn, 'orgs'):
+            curs.execute(orgs)
+            logging.info('Created Table: orgs')
+        if not Aggregator.table_exists(conn, 'channel_affiliations'):
+            curs.execute(channel_affiliations)
+            logging.info('Created Table: channel_affiliations')
 
     def initdb(self):
         """
@@ -116,16 +132,18 @@ class Aggregator:
                                      user=self.postgres['user'],
                                      password=self.postgres['passwd'],
                                      dbname=self.postgres['db_name'])
-            if not self.db_initialized(conn):
+            tables = ['games', 'twitch_top_games', 'twitch_broadcasts',
+                      'twitch_channels', 'channel_affiliations', 'orgs']
+            if not all(self.table_exists(conn, t) for t in tables):
                 conn.commit()
-                logging.info("Postgres Twitch schema not initialized.")
+                logging.info('Initializing missing tables.')
                 self.create_tables(conn)
                 conn.commit()
-                logging.info("Twitch Schema Initialized.")
+                logging.info('Twitch Schema Initialized.')
             conn.close()
-            logging.debug("Postgres database ready.")
+            logging.debug('Postgres database ready.')
         except psycopg2.DatabaseError as e:
-            logging.warning("Failed to connect to database: {}".format(e))
+            logging.warning('Failed to initialize database: {}'.format(e))
             raise psycopg2.DatabaseError
 
     @staticmethod
@@ -159,8 +177,8 @@ class Aggregator:
         db = self.client[self.twitch_db['db_name']]
         topgames = db[self.twitch_db['top_games']]
         cursor = topgames.find(
-            {"timestamp": {"$gt": start}}
-        ).sort("timestamp", pymongo.ASCENDING)
+            {'timestamp': {'$gt': start}}
+        ).sort('timestamp', pymongo.ASCENDING)
         if cursor.count() > 0:
             return int(cursor[0]['timestamp'])
         else:
@@ -181,8 +199,8 @@ class Aggregator:
         db = self.client[self.twitch_db['db_name']]
         coll = db[collname]
         cursor = coll.find(
-            {"timestamp": {"$gte": start, "$lt": end}}
-        ).sort("timestamp", pymongo.ASCENDING)
+            {'timestamp': {'$gte': start, '$lt': end}}
+        ).sort('timestamp', pymongo.ASCENDING)
         return cursor
 
     @staticmethod
@@ -210,7 +228,6 @@ class Aggregator:
             avgviewers[id] = {'v': viewers}
         for doc in docs:
             for gameid, game in doc['games'].items():
-                print(game)
                 avgviewers[gameid]['name'] = game['name']
                 avgviewers[gameid]['giantbomb_id'] = game['giantbomb_id']
         return avgviewers
@@ -235,6 +252,7 @@ class Aggregator:
         :param viewers: str, Name of the viewers key in entries.
         :return: dict, {id: average_viewers}, Average viewer of each item.
         """
+        # TODO: Check that broadcasts are in ascending order
         last_timestamp = start
         res = {}
         # Add up the total number of viewer seconds.
@@ -260,7 +278,6 @@ class Aggregator:
             res[gameid] //= (end-start)
         return res
 
-
     def store_top_games(self, games, timestamp, conn):
         """
         Stores top game entries using conn.
@@ -278,8 +295,8 @@ class Aggregator:
 
         # Sanitize values
         values = []
-        for id, game in games.items():
-            tup = (int(id), timestamp, game['v'])
+        for gid, game in games.items():
+            tup = (int(gid), timestamp, game['v'])
             values.append(cursor.mogrify("(%s,%s,%s)", tup).decode())
         query = query.format(','.join(values))
         cursor.execute(query)
@@ -291,7 +308,8 @@ class Aggregator:
         dt = datetime.fromtimestamp(timestamp, tz)
         return dt.strftime("%Z - %Y/%m/%d, %H:%M:%S")
 
-    def store_game_ids(self, games, conn):
+    @staticmethod
+    def store_game_ids(games, conn):
         """
         Stores the game ids specified in games or does nothing if they
         already are stored.  Does not commit.
@@ -302,16 +320,82 @@ class Aggregator:
         """
         if not games:
             return
-        query = ('INSERT INTO games (game_id, name, giantbomb_id)'
+        query = ('INSERT INTO games (game_id, name, giantbomb_id) '
                  'VALUES {} '
                  'ON CONFLICT DO NOTHING')
         curs = conn.cursor()
         values = []
-        for id, game in games.items():
-            tup = (id, game['name'], game['giantbomb_id'])
+        for gid, game in games.items():
+            tup = (gid, game['name'], game['giantbomb_id'])
             values.append(curs.mogrify("(%s, %s, %s)", tup).decode())
         query = query.format(','.join(values))
         curs.execute(query)
+
+    @staticmethod
+    def store_twitch_channels(streams, conn):
+        """
+        Adds new channels to db.
+
+        Stores the game ids specified in streams or does nothing if they
+        already are stored.  Does not commit.
+
+        :param streams: dict,
+        :param conn: psycog2.Connection, Postgres connection.
+        :return:
+        """
+        if not streams:
+            return
+        # TODO: Handle name change updates
+        query = ('INSERT INTO twitch_channels (channel_id, name) '
+                 'VALUES {} '
+                 'ON CONFLICT DO NOTHING')
+        curs = conn.cursor()
+        values = []
+        for chid, stream in streams.items():
+            tup = (chid, stream['ch_name'])
+            values.append(curs.mogrify("(%s, %s)", tup).decode())
+        query = query.format(','.join(values))
+        curs.execute(query)
+
+    def store_broadcasts(self, streams, timestamp, conn):
+        """
+        Stores top game entries using conn.
+
+        There is no error checking in this function so the games id field
+        must already exist in the games table.  Call store_game_ids on the
+        list of game entries first to make sure this function does not crash.
+        """
+        if not streams:
+            return
+        cursor = conn.cursor()
+        query = ('INSERT INTO twitch_broadcasts '
+                 'VALUES {} '
+                 'ON CONFLICT DO NOTHING ')
+
+        # Sanitize values
+        values = []
+        game_ids = {}
+        for channel_id, stream in streams.items():
+            gn = stream['game_name']
+            if gn not in game_ids:
+                game_ids[gn] = self.game_name_to_id(conn, gn)
+            tup = (int(channel_id),
+                   timestamp,
+                   game_ids[gn],
+                   stream['viewers'],
+                   stream['stream_title'])
+            values.append(cursor.mogrify("(%s,%s,%s,%s,%s)", tup).decode())
+        query = query.format(','.join(values))
+        cursor.execute(query)
+        logging.debug("Broadcasts stored from: " + self.strtime(timestamp))
+
+    def game_name_to_id(self, conn, name):
+        query = ('SELECT game_id '
+                 'FROM games '
+                 'WHERE name = %s')
+        cursor = conn.cursor()
+        cursor.execute(query, (name,))
+        return cursor.fetchone()[0]
 
     def agg_top_games(self):
         """
@@ -343,6 +427,67 @@ class Aggregator:
         conn.close()
         self.client.close()
 
+    def agg_twitch_broadcasts(self):
+        """
+        Retrieves, aggregates, and stores twitch broadcasts.
+
+        Checks the MongoDB specified in the config file for new twitch
+        broadcasts, aggregates them, and stores them in Postgres.  initdb must
+        be called before calling this function.
+
+        :return:
+        """
+        conn = self.postgresconn()
+        self.client = MongoClient(self.twitch_db['host'],
+                                  self.twitch_db['port'])
+        hrstart, hrend, last = self._agg_ts(conn, self.twitch_db['top_streams'])
+        while hrend < last:
+            entries = self.docsbetween(hrstart, hrend,
+                                       self.twitch_db['top_streams'])
+            streams = self.agg_twitch_broadcasts_period(entries, hrstart, hrend)
+            # Some hours empty due to server failure
+            if streams:
+                self.store_twitch_channels(streams, conn)
+                self.store_broadcasts(streams, hrstart, conn)
+            hrstart += 3600
+            hrend += 3600
+        conn.commit()
+        conn.close()
+        self.client.close()
+
+    @staticmethod
+    def agg_twitch_broadcasts_period(entries, start, end):
+        """
+        Determines the average number of viewers of each broadcast over the
+        specified period.  Entries must be in ascending order based on
+        timestamp.
+
+        :param entries: cursor or list,
+        :param start: int
+        :param end: int
+        :return: dict, keys are game_ids and values are dictionaries where
+            'v' is the viewercount and 'name' is the game's name.
+        """
+        # Get documents from cursor
+        docs = []
+        for doc in entries:
+            docs.append(doc)
+
+        # Calculate viewership
+        avgviewers = Aggregator.average_viewers(docs, start, end, 'games',
+                                                'viewers')
+        # Format Results
+        for id, viewers in avgviewers.items():
+            avgviewers[id] = {'viewers': viewers}
+        for doc in docs:
+            for channelid, stream in doc['streams'].items():
+                chnl = avgviewers[channelid]
+                chnl['channel_id'] = stream['broadcaster_id']
+                chnl['channel_name'] = stream['display_name']
+                chnl['stream_title'] = stream['status']
+                chnl['game_name'] = stream['game']
+        return avgviewers
+
     def _agg_ts(self, conn, collname):
         """
         Helper function for aggregation timestamps.
@@ -360,9 +505,9 @@ class Aggregator:
         start = self.last_postgres_update(conn, collname) + sechr
         last = self.epoch_to_hour(time.time())
         earliest_entry = self.first_entry_after(start)
-        curhrstart = earliest_entry//sechr*sechr
+        curhrstart = earliest_entry // sechr*sechr
         curhrend = curhrstart + sechr
-        return (curhrstart, curhrend, last)
+        return curhrstart, curhrend, last
 
     @staticmethod
     def epoch_to_hour(epoch):
@@ -377,31 +522,6 @@ class Aggregator:
         """
         seconds_in_hour = 3600
         return int(epoch) // seconds_in_hour * seconds_in_hour
-
-    def agg_twitch_broadcasts(self):
-        """
-        Retrieves, aggregates, and stores broadcasts.
-
-
-        :return:
-        """
-        conn = self.postgresconn()
-        self.client = MongoClient(self.twitch_db['host'],
-                                  self.twitch_db['port'])
-        curhrstart, curhrend, last = self._agg_ts(conn, self.twitch_db['top_streams'])
-        while curhrend < end:
-            entries = self.docsbetween(curhrstart, curhrend,
-                                       self.twitch_db['top_streams'])
-            games = self.agg_top_games_period(entries, curhrstart, curhrend)
-            # Some hours may be empty due to scraper downtime/api failure.
-            if games:
-                self.store_game_ids(games, conn)
-                self.store_top_games(games, curhrstart, conn)
-            curhrstart += 3600
-            curhrend += 3600
-        conn.commit()
-        conn.close()
-        self.client.close()
 
     def postgresconn(self):
         """
@@ -426,4 +546,4 @@ if __name__ == '__main__':
     start = time.time()
     a.agg_top_games()
     end = time.time()
-    print("Total Time: {}".format(int(end-start)))
+    print("Total Time: {:.2f}".format(end-start))

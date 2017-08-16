@@ -78,6 +78,8 @@ class TwitchScraper:
             esports_channels = data['twitch']['esports_channels']
         for game_name, game in esports_channels.items():
             display_names = []
+            if not game:
+                continue
             for broadcaster_org, channels in game.items():
                 for channel in channels:
                     if 'id' not in channel:
