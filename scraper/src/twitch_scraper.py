@@ -41,7 +41,7 @@ class TwitchScraper:
             self.live_streams_url = config['api']['live_streams']
             self.api_version_url = config['api']['version']
             self.user_id_url = config['api']['user_ids']
-            self.game_ids_url =config['api']['game_ids']
+            self.game_ids_url = config['api']['game_ids']
             self.esports_channels = config['esports_channels']
             self.games = self.esports_channels.keys()
         with open(key_path) as f:
@@ -132,6 +132,7 @@ class TwitchScraper:
             elif i == 2:
                 logging.WARNING("Twitch API subrequest failed: {}".format(
                     api_result.status_code))
+                # TODO: Raise more appropriate error
                 raise ConnectionError
             time.sleep(10)
         # TODO: Implement a more sophisticated failure mechanism

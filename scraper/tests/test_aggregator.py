@@ -22,7 +22,18 @@ def test_agg_top_games_period():
         }
     }
     entry2 = {'timestamp': 1900}
-    entry2['games'] = {'game1': {'viewers': 400}, 'game2': {'viewers': 1}}
+    entry2['games'] = {
+        'game1': {
+            'viewers': 400,
+            'name': 'onetorulethemall',
+            'giantbomb_id': 0
+        },
+        'game2': {
+            'viewers': 1,
+            'name': 'twotorulethemall',
+            'giantbomb_id': 1
+        }
+    }
     entries = [entry1, entry2]
     games = Aggregator.agg_top_games_period(entries, 0, 2000)
     assert games['game1']['v'] == 400

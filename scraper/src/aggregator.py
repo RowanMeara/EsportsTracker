@@ -5,6 +5,7 @@ from ruamel import yaml
 import pymongo
 from pymongo import MongoClient
 from datetime import datetime
+from psycopg2 import sql
 import pytz
 
 
@@ -128,16 +129,22 @@ class Aggregator:
             raise psycopg2.DatabaseError
 
     @staticmethod
-    def latest_top_games_update(conn):
+    def last_postgres_update(conn, table):
         """
-        Returns unix timestamp of the last aggregation update.
+        Returns the largest entry in the epoch column.
 
-        :return:
+        The specified table must contain a column named epoch and 0 is returned
+        if the column is empty.
+
+        :param conn: psycopg2.connection, Database to connect to.
+        :param table: str, Name of table.
+        :return: int, Epoch corresponding to last update.
         """
-        sql = ('SELECT COALESCE(MAX(epoch), 0) '
-               'FROM twitch_top_games ')
+        query = ('SELECT COALESCE(MAX(epoch), 0) '
+                 'FROM {}')
+        query = sql.SQL(query).format(sql.Identifier(table))
         cursor = conn.cursor()
-        cursor.execute(sql)
+        cursor.execute(query)
         return cursor.fetchone()[0]
 
     def first_entry_after(self, start):
@@ -159,20 +166,21 @@ class Aggregator:
         else:
             return 1 << 31
 
-    def mongo_top_games(self, start, end):
+    def docsbetween(self, start, end, collname):
         """
-        Returns top games entries.
+        Returns entries with timestamps between start and end.
 
-        Returns entries in the twitch_top_games collections from Mongo that
-        are timestamped greater than start but less than end.
+        Returns a cursor to documents in the specified Mongo collection that
+        have a field 'timestamp' with values greater than or equal to start
+        and less than end.
 
         :param start: int, Timestamp of the earliest entry
         :param end: int, Timestamp of the last entry
         :return: pymongo.cursor.Cursor
         """
         db = self.client[self.twitch_db['db_name']]
-        topgames = db[self.twitch_db['top_games']]
-        cursor = topgames.find(
+        coll = db[collname]
+        cursor = coll.find(
             {"timestamp": {"$gte": start, "$lt": end}}
         ).sort("timestamp", pymongo.ASCENDING)
         return cursor
@@ -183,38 +191,75 @@ class Aggregator:
         Determines the average viewercount of each game over the specified 
         period.  Entries must be in ascending order based on timestamp.
         
-        :param entries: cursor,
+        :param entries: cursor or list,
         :param start: int 
         :param end: int
-        :return: dict: keys are game_ids and values are dictionaries where
+        :return: dict, keys are game_ids and values are dictionaries where
             'v' is the viewercount and 'name' is the game's name.
         """
+        # Get documents from cursor
+        docs = []
+        for doc in entries:
+            docs.append(doc)
+
+        # Calculate viewership
+        avgviewers = Aggregator.average_viewers(docs, start, end, 'games',
+                                                'viewers')
+        # Format Results
+        for id, viewers in avgviewers.items():
+            avgviewers[id] = {'v': viewers}
+        for doc in docs:
+            for gameid, game in doc['games'].items():
+                print(game)
+                avgviewers[gameid]['name'] = game['name']
+                avgviewers[gameid]['giantbomb_id'] = game['giantbomb_id']
+        return avgviewers
+
+    @staticmethod
+    def average_viewers(entries, start, end, aggkey, viewers):
+        """
+        Returns the average viewercount over the specified period.
+
+        Entries must be in ascending order based on timestamp.
+        Each dict in the entries parameter must be in the format:
+            { aggkey: {
+                        id: {viewers: int}
+                      }
+              'timestamp': int, Epoch
+            }
+
+        :param entries: list[dict], Entries to be aggregated
+        :param start: int, Start of aggregation period
+        :param end: int, End of aggregation period
+        :param aggkey: str, Name of the id key in entries.
+        :param viewers: str, Name of the viewers key in entries.
+        :return: dict, {id: average_viewers}, Average viewer of each item.
+        """
         last_timestamp = start
-        games = {}
+        res = {}
         # Add up the total number of viewer seconds.
-        entry = None
-        for entry in entries:
-            cur_timestamp = entry['timestamp']
-            for gameid, game in entry['games'].items():
-                if gameid not in games:
-                    games[gameid] = {
-                        'v': 0,
-                        'name': game['name'],
-                        'giantbomb_id': game['giantbomb_id']
-                    }
-                viewersecs = game['viewers']*(cur_timestamp-last_timestamp)
-                games[gameid]['v'] += viewersecs
+        doc = None
+        for doc in entries:
+            cur_timestamp = doc['timestamp']
+            for gameid, game in doc[aggkey].items():
+                if gameid not in res:
+                    res[gameid] = 0
+                viewersecs = game[viewers] * (cur_timestamp - last_timestamp)
+                res[gameid] += viewersecs
             last_timestamp = cur_timestamp
+
         # Return if there were no entries
-        if not entry:
-            return games
-        # Add time from last entry
-        for gameid, game in entry['games'].items():
-            games[gameid]['v'] += game['viewers']*(end-last_timestamp)
+        if not doc:
+            return res
+
+        # Add viewers from the last entry to the end of the period
+        for gameid, game in doc[aggkey].items():
+            res[gameid] += game['viewers']*(end-last_timestamp)
         # Convert viewerseconds into the average number of viewers
-        for gameid in games:
-            games[gameid]['v'] //= (end-start)
-        return games
+        for gameid in res:
+            res[gameid] //= (end-start)
+        return res
+
 
     def store_top_games(self, games, timestamp, conn):
         """
@@ -227,14 +272,16 @@ class Aggregator:
         if not games:
             return
         cursor = conn.cursor()
-        sql = ('INSERT INTO twitch_top_games '
-               'VALUES {} '
-               'ON CONFLICT DO NOTHING ')
+        query = ('INSERT INTO twitch_top_games '
+                 'VALUES {} '
+                 'ON CONFLICT DO NOTHING ')
+
+        # Sanitize values
         values = []
         for id, game in games.items():
             tup = (int(id), timestamp, game['v'])
             values.append(cursor.mogrify("(%s,%s,%s)", tup).decode())
-        query = sql.format(','.join(values))
+        query = query.format(','.join(values))
         cursor.execute(query)
         logging.debug("Top games stored from: " + self.strtime(timestamp))
 
@@ -255,48 +302,67 @@ class Aggregator:
         """
         if not games:
             return
-        sql = ('INSERT INTO games (game_id, name, giantbomb_id)'
-               'VALUES {} '
-               'ON CONFLICT DO NOTHING')
+        query = ('INSERT INTO games (game_id, name, giantbomb_id)'
+                 'VALUES {} '
+                 'ON CONFLICT DO NOTHING')
         curs = conn.cursor()
         values = []
         for id, game in games.items():
             tup = (id, game['name'], game['giantbomb_id'])
             values.append(curs.mogrify("(%s, %s, %s)", tup).decode())
-        query = sql.format(','.join(values))
+        query = query.format(','.join(values))
         curs.execute(query)
 
     def agg_top_games(self):
         """
+        Aggregates and stores twitch game info.
 
-        :return:
+        Checks the MongoDB specified in the config file for new top games
+        entries, aggregates them, and stores them in Postgres.  initdb Must
+        be called before calling this function.
+
+        :return: None
         """
         # start is the first second of the next hour that we need to aggregate
         # end is the last second of the most recent full hour
-        conn = psycopg2.connect(host=self.postgres['host'],
-                                port=self.postgres['port'],
-                                user=self.postgres['user'],
-                                password=self.postgres['passwd'],
-                                dbname=self.postgres['db_name'])
-        self.client = MongoClient(self.twitch_db['host'], self.twitch_db['port'])
-        sechr = 3600
-        start = self.latest_top_games_update(conn) + sechr
-        end = self.epoch_to_hour(time.time())
-        earliest_entry = self.first_entry_after(start)
-        curhrstart = earliest_entry//sechr*sechr
-        curhrend = curhrstart + sechr
-        while curhrend < end:
-            entries = self.mongo_top_games(curhrstart, curhrend)
+        conn = self.postgresconn()
+        self.client = MongoClient(self.twitch_db['host'],
+                                  self.twitch_db['port'])
+        curhrstart, curhrend, last = self._agg_ts(conn, self.twitch_db['top_games'])
+        while curhrend < last:
+            entries = self.docsbetween(curhrstart, curhrend,
+                                       self.twitch_db['top_games'])
             games = self.agg_top_games_period(entries, curhrstart, curhrend)
             # Some hours empty due to server failure
             if games:
                 self.store_game_ids(games, conn)
                 self.store_top_games(games, curhrstart, conn)
-            curhrstart += sechr
-            curhrend += sechr
+            curhrstart += 3600
+            curhrend += 3600
         conn.commit()
         conn.close()
         self.client.close()
+
+    def _agg_ts(self, conn, collname):
+        """
+        Helper function for aggregation timestamps.
+
+        Calculates the timestamps for curhrstart (the first second of the first
+        hour that should aggregated), curhrend (one hour later than
+        curhrstart), and last (the first second in the current hour).
+
+        :param conn: psycopg2.connection
+        :param collname: str, Name of Mongo collection
+        :return: tuple, (curhrstart, curhrend, last)
+        """
+        # TODO: Rename function
+        sechr = 3600
+        start = self.last_postgres_update(conn, collname) + sechr
+        last = self.epoch_to_hour(time.time())
+        earliest_entry = self.first_entry_after(start)
+        curhrstart = earliest_entry//sechr*sechr
+        curhrend = curhrstart + sechr
+        return (curhrstart, curhrend, last)
 
     @staticmethod
     def epoch_to_hour(epoch):
@@ -312,8 +378,43 @@ class Aggregator:
         seconds_in_hour = 3600
         return int(epoch) // seconds_in_hour * seconds_in_hour
 
-    def agg_broadcasts(self):
-        pass
+    def agg_twitch_broadcasts(self):
+        """
+        Retrieves, aggregates, and stores broadcasts.
+
+
+        :return:
+        """
+        conn = self.postgresconn()
+        self.client = MongoClient(self.twitch_db['host'],
+                                  self.twitch_db['port'])
+        curhrstart, curhrend, last = self._agg_ts(conn, self.twitch_db['top_streams'])
+        while curhrend < end:
+            entries = self.docsbetween(curhrstart, curhrend,
+                                       self.twitch_db['top_streams'])
+            games = self.agg_top_games_period(entries, curhrstart, curhrend)
+            # Some hours may be empty due to scraper downtime/api failure.
+            if games:
+                self.store_game_ids(games, conn)
+                self.store_top_games(games, curhrstart, conn)
+            curhrstart += 3600
+            curhrend += 3600
+        conn.commit()
+        conn.close()
+        self.client.close()
+
+    def postgresconn(self):
+        """
+        psycopg2.connect wrapper.
+
+        :return: psycopg2.connection
+        """
+        conn = psycopg2.connect(host=self.postgres['host'],
+                                port=self.postgres['port'],
+                                user=self.postgres['user'],
+                                password=self.postgres['passwd'],
+                                dbname=self.postgres['db_name'])
+        return conn
 
 if __name__ == '__main__':
     logformat = '%(asctime)s %(levelname)s:%(message)s'
