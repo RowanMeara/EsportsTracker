@@ -2,6 +2,7 @@ keys.*
 .idea/
 *.swp
 *.log
+*.cprof
 .DS_Store
 .cache/
 *.pyc
