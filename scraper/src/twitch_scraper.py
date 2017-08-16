@@ -247,6 +247,21 @@ class TwitchScraper:
             print(db_entry)
             print(db_result.inserted_id)
 
+    def check_indexes(self):
+        """
+        Checks if the twitch collections have indexes on timestamp.
+
+        :return:
+        """
+        db = MongoClient(self.db_host, self.db_port)[self.db_name]
+        for collname in [self.db_top_games, self.db_top_streams]:
+            coll = db[collname]
+            indexes = coll.index_information()
+            if 'timestamp_1' not in indexes:
+                logging.info('Index not found for collection: ' + collname)
+                logging.info('Creating index on collection' + collname)
+                coll.create_index('timestamp')
+
     def scrape(self):
         """
         Runs forever scraping and storing Twitch data.
@@ -254,6 +269,7 @@ class TwitchScraper:
         :return:
         """
         self.check_userids()
+        self.check_indexes()
         while True:
             start_time = time.time()
             try:
