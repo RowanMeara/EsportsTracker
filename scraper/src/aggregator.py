@@ -1,13 +1,12 @@
 import time
-import psycopg2
 import logging
 from ruamel import yaml
 import pymongo
 from pymongo import MongoClient
 from datetime import datetime
-from psycopg2 import sql
-from .models import *
 import pytz
+from .models import *
+from .dbinterface import PostgresManager
 
 
 class Aggregator:
@@ -24,28 +23,9 @@ class Aggregator:
         self.postgres = config['postgres']
         self.esports_games = set(config['twitch']['esports_channels'].keys())
         self.postgres['user'] = keys['postgres']['user']
-        self.postgres['passwd'] = keys['postgres']['passwd']
+        self.postgres['password'] = keys['postgres']['passwd']
 
         self.client = None
-
-    @staticmethod
-    def last_postgres_update(conn, table):
-        """
-        Returns the largest entry in the epoch column.
-
-        The specified table must contain a column named epoch and 0 is returned
-        if the column is empty.
-
-        :param conn: psycopg2.connection, Database to connect to.
-        :param table: str, Name of table.
-        :return: int, Epoch corresponding to last update.
-        """
-        query = ('SELECT COALESCE(MAX(epoch), 0) '
-                 'FROM {}')
-        query = sql.SQL(query).format(sql.Identifier(table))
-        cursor = conn.cursor()
-        cursor.execute(query)
-        return cursor.fetchone()[0]
 
     def first_entry_after(self, start, collname):
         """

@@ -1,6 +1,7 @@
 from .models import *
 import psycopg2
 import logging
+from psycopg2 import sql
 
 
 class PostgresManager:
@@ -18,6 +19,11 @@ class PostgresManager:
                         'twitch_stream', 'twitch_channel',
                         'channel_affiliation', 'org']
         self.initdb()
+
+    @staticmethod
+    def from_config(dbconfig):
+        return PostgresManager(dbconfig['host'], dbconfig['port'], dbconfig[
+            'user'], dbconfig['password'], dbconfig['db_name'])
 
     def commit(self):
         self.conn.commit()
@@ -134,6 +140,24 @@ class PostgresManager:
         cursor.execute(exists.format(table))
         return cursor.fetchone()[0] > 0
 
+    def last_postgres_update(self, table):
+        """
+        Returns the largest entry in the epoch column.
+
+        The specified table must contain a column named epoch and 0 is returned
+        if the column is empty.
+
+        :param conn: psycopg2.connection, Database to connect to.
+        :param table: str, Name of table.
+        :return: int, Epoch corresponding to last update.
+        """
+        query = ('SELECT COALESCE(MAX(epoch), 0) '
+                 'FROM {}')
+        query = sql.SQL(query).format(sql.Identifier(table))
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        return cursor.fetchone()[0]
+
     def store_twitch_game_viewer_count(self, rows, commit=False):
         """
         Stores top game entries using conn.
@@ -174,3 +198,6 @@ class PostgresManager:
         if commit:
             self.conn.commit()
 
+class MongoManager:
+    def __init__(self):
+        pass
