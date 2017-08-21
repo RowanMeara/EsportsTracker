@@ -25,19 +25,19 @@ class TwitchGamesAPIResponse(Aggregatable):
     """
     Model representing Twitch top games API response.
     """
-    __slots__ = ['timestamp', 'games']
+    __slots__ = ['ts', 'games']
 
     def __init__(self, mongodoc):
-        self.timestamp = mongodoc['timestamp']
+        self.ts = mongodoc['timestamp']
         self.games = {}
-        for game in mongodoc['games']:
-            self.games[game['id']]
+        for gid, game in mongodoc['games'].items():
+            self.games[gid] = TwitchGameSnapshot(game)
 
     def viewercounts(self):
-        return {game.id: game.viewers for game in self.games}
+        return {game.id: game.viewers for k, game in self.games.items()}
 
     def timestamp(self):
-        return self.timestamp
+        return self.ts
 
 
 class TwitchGameSnapshot:
@@ -77,7 +77,7 @@ class Game:
         """
         games = {}
         for resp in resps:
-            for snp in resp:
+            for snp in resp.games.values():
                 if snp.id not in games:
                     games[snp.id] = Game(snp.id, snp.name, snp.giantbomb_id)
         return games
@@ -98,6 +98,13 @@ class TwitchGameViewerCount:
         self.game_id = game_id
         self.epoch = epoch
         self.viewers = viewers
+
+    @staticmethod
+    def from_vcs(vcs, timestamp):
+        vs = []
+        for gid, viewers in vcs.items():
+            vs.append(TwitchGameViewerCount(gid, timestamp, viewers))
+        return vs
 
     def to_row(self):
         return self.game_id, self.epoch, self.viewers

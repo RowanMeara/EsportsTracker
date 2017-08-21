@@ -1,7 +1,8 @@
-from .models import *
+from models import *
 import psycopg2
 import logging
 from psycopg2 import sql
+from psycopg2 import extras
 
 
 class PostgresManager:
@@ -56,16 +57,16 @@ class PostgresManager:
         :return:
         """
         game = (
-            'CREATE TABLE games( '
+            'CREATE TABLE game( '
             '    game_id integer PRIMARY KEY, '
             '    name text NOT NULL UNIQUE, '
             '    giantbomb_id integer '
             ');'
         )
-        games_index = 'CREATE INDEX game_name_idx ON games USING HASH (name);'
+        game_index = 'CREATE INDEX game_name_idx ON game USING HASH (name);'
         twitch_game_viewer_count = (
             'CREATE TABLE twitch_game_viewer_count( '
-            '    game_id integer REFERENCES games(game_id), '
+            '    game_id integer REFERENCES game(game_id), '
             '    epoch integer NOT NULL, '
             '    viewers integer NOT NULL, '
             '    PRIMARY KEY (game_id, epoch) '
@@ -81,7 +82,7 @@ class PostgresManager:
             'CREATE TABLE twitch_stream( ' 
             '    channel_id integer REFERENCES twitch_channel(channel_id), '
             '    epoch integer NOT NULL, '
-            '    game_id integer REFERENCES games(game_id), '
+            '    game_id integer REFERENCES game(game_id), '
             '    viewers integer NOT NULL, '
             '    stream_title text, '
             '    PRIMARY KEY (channel_id, epoch)'
@@ -95,7 +96,7 @@ class PostgresManager:
         )
         channel_affiliation = (
             'CREATE TABLE channel_affiliation( '
-            '    org_id integer REFERENCES org(org_id), '
+            '    org_id integer REFERENCES esports_org(org_id), '
             '    channel_id integer REFERENCES twitch_channel(channel_id), '
             '    PRIMARY KEY (channel_id) '
             ');'
@@ -103,7 +104,7 @@ class PostgresManager:
         curs = self.conn.cursor()
         if not self.table_exists('game'):
             curs.execute(game)
-            curs.execute(games_index)
+            curs.execute(game_index)
             logging.info('Created Table: game')
         if not self.table_exists('twitch_game_viewer_count'):
             curs.execute(twitch_game_viewer_count)
@@ -129,7 +130,7 @@ class PostgresManager:
             table names.
         :return: bool
         """
-        tables = ['games', 'twitch_game_viewer_count', 'twitch_stream',
+        tables = ['game', 'twitch_game_viewer_count', 'twitch_stream',
                   'twitch_channel', 'channel_affiliation', 'esports_org']
         if table not in tables:
             return False
@@ -164,7 +165,7 @@ class PostgresManager:
 
         There is no error checking in this function so the game_id field of
         each row must already exist in the game table.
-        :param rows: list[TwitchGameViewerCount]
+        :param rows: list[TwitchGameViewerCount],
         """
         if not rows:
             return
@@ -172,9 +173,9 @@ class PostgresManager:
         query = ('INSERT INTO twitch_game_viewer_count '
                  'VALUES %s '
                  'ON CONFLICT DO NOTHING ')
-        curs = self.conn.cursor()
         rows = [x.to_row() for x in rows]
-        psycopg2.extras.execute_values(curs, query, rows, '(%s, %s, %s)', 1000)
+        curs = self.conn.cursor()
+        extras.execute_values(curs, query, rows, '(%s, %s, %s)', 1000)
         if commit:
             self.conn.commit()
 
@@ -182,19 +183,22 @@ class PostgresManager:
         """
         Stores game entries if they do not already exist.
 
-        :param games: list[Game], the list of rows to store.
+        :param games: list[Game] or list[TwitchAPIResponse], the list of rows to
+        store.
         :param commit: bool, whether to commit after storing rows.
         :return:
         """
         if not games:
             return
+        if type(games[0]) == TwitchGamesAPIResponse:
+            games = list(Game.api_responses_to_games(games).values())
 
-        query = ('INSERT INTO games (game_id, name, giantbomb_id) '
+        query = ('INSERT INTO game (game_id, name, giantbomb_id) '
                  'VALUES %s '
                  'ON CONFLICT DO NOTHING')
         rows = [g.to_row() for g in games]
         curs = self.conn.cursor()
-        psycopg2.extras.execute_values(curs, query, rows, '(%s, %s, %s)', 1000)
+        extras.execute_values(curs, query, rows, '(%s, %s, %s)', 1000)
         if commit:
             self.conn.commit()
 

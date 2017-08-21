@@ -5,8 +5,8 @@ import pymongo
 from pymongo import MongoClient
 from datetime import datetime
 import pytz
-from .models import *
-from .dbinterface import PostgresManager
+from models import *
+from dbinterface import PostgresManager
 
 
 class Aggregator:
@@ -188,10 +188,10 @@ class Aggregator:
         """
         # start is the first second of the next hour that we need to aggregate
         # end is the last second of the most recent full hour
-        conn = self.postgresconn()
+        man = PostgresManager.from_config(self.postgres)
         self.client = MongoClient(self.twitch_db['host'],
                                   self.twitch_db['port'])
-        curhrstart, curhrend, last = self._agg_ts(conn,
+        curhrstart, curhrend, last = self._agg_ts(man,
                                                   'twitch_game_viewer_count',
                                                   self.twitch_db['top_games'])
         while curhrend < last:
@@ -199,15 +199,14 @@ class Aggregator:
                                        self.twitch_db['top_games'])
             games = [TwitchGamesAPIResponse(doc) for doc in docs]
             vcs = self.average_viewers(games, curhrstart, curhrend)
-
+            vcs = TwitchGameViewerCount.from_vcs(vcs, curhrstart)
             # Some hours empty due to server failure
             if games:
-                self.store_games(games, conn)
-                self.store_top_games(vcs, curhrstart, conn)
+                man.store_games(games)
+                man.store_twitch_game_viewer_count(vcs)
             curhrstart += 3600
             curhrend += 3600
-        conn.commit()
-        conn.close()
+        man.commit()
         self.client.close()
 
     def agg_twitch_broadcasts(self):
@@ -273,7 +272,7 @@ class Aggregator:
                 chnl['game_name'] = stream['game']
         return avgviewers
 
-    def _agg_ts(self, conn, table_name, collname):
+    def _agg_ts(self, man, table_name, collname):
         """
         Helper function for aggregation timestamps.
 
@@ -281,14 +280,14 @@ class Aggregator:
         hour that should aggregated), curhrend (one hour later than
         curhrstart), and last (the first second in the current hour).
 
-        :param conn: psycopg2.connection
+        :param man: PostgresManager
         :param table_name: str, Name of Postgres table
         :param collname: str, Name of Mongo collection
         :return: tuple, (curhrstart, curhrend, last)
         """
         # TODO: Rename function
         sechr = 3600
-        start = self.last_postgres_update(conn, table_name) + sechr
+        start = man.last_postgres_update(table_name) + sechr
         last = self.epoch_to_hour(time.time())
         earliest_entry = self.first_entry_after(start, collname)
         curhrstart = earliest_entry // sechr*sechr
@@ -315,9 +314,8 @@ if __name__ == '__main__':
                         filename='aggregator.log')
     logging.debug("Aggregator Starting.")
     a = Aggregator()
-    a.initdb()
     start = time.time()
-    #a.agg_top_games()
-    a.agg_twitch_broadcasts()
+    a.agg_top_games()
+    #a.agg_twitch_broadcasts()
     end = time.time()
     print("Total Time: {:.2f}".format(end-start))
