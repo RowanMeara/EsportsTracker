@@ -29,6 +29,9 @@ class Aggregator:
         """
         Returns the average viewer count over the specified period.
 
+        If one Aggregatabale, is missing from an entry that appeared in an
+        earlier entry, its viewcount is treated as zero for that entry.
+
         :param entries: list[Aggregatable], Entries to be aggregated
         :param start: int, Start of aggregation period
         :param end: int, End of aggregation period
