@@ -131,39 +131,6 @@ class Aggregator:
         man.commit()
         mongo.client.close()
 
-    @staticmethod
-    def agg_twitch_broadcasts_period(entries, start, end):
-        """
-        Determines the average number of viewers of each broadcast over the
-        specified period.  Entries must be in ascending order based on
-        timestamp.
-
-        :param entries: cursor or list,
-        :param start: int
-        :param end: int
-        :return: dict, keys are game_ids and values are dictionaries where
-            'v' is the viewercount and 'name' is the game's name.
-        """
-        # Get documents from cursor
-        docs = []
-        for doc in entries:
-            docs.append(doc)
-
-        # Calculate viewership
-        avgviewers = Aggregator.average_viewers(docs, start, end, 'streams',
-                                                'viewers')
-        # Format Results
-        for id, viewers in avgviewers.items():
-            avgviewers[id] = {'viewers': viewers}
-        for doc in docs:
-            for channelid, stream in doc['streams'].items():
-                chnl = avgviewers[channelid]
-                chnl['channel_id'] = stream['broadcaster_id']
-                chnl['name'] = stream['display_name']
-                chnl['stream_title'] = stream['status']
-                chnl['game_name'] = stream['game']
-        return avgviewers
-
     def _agg_ts(self, man, mongo, table_name, collname):
         """
         Helper function for aggregation timestamps.
