@@ -8,7 +8,7 @@ from pymongo import MongoClient
 
 
 class PostgresManager:
-    def __init__(self, host, port, user, password, dbname):
+    def __init__(self, host, port, user, password, dbname, esports_games):
         """
         Class for interacting with the Postgres instance.
 
@@ -21,12 +21,14 @@ class PostgresManager:
         self.tablenames = {'game', 'twitch_game_vc', 'twitch_stream',
                            'twitch_channel', 'channel_affiliation',
                            'esports_org'}
+        self.esports_games = esports_games.copy()
+        self.gamename_cache = {}
         self.initdb()
 
     @staticmethod
-    def from_config(dbconfig):
+    def from_config(dbconfig, esports_games):
         return PostgresManager(dbconfig['host'], dbconfig['port'], dbconfig[
-            'user'], dbconfig['password'], dbconfig['db_name'])
+            'user'], dbconfig['password'], dbconfig['db_name'], esports_games)
 
     def commit(self):
         self.conn.commit()
@@ -183,23 +185,36 @@ class PostgresManager:
         return True
 
     # Stream Functions
-    def game_name_to_id(self, conn, name):
-        # TODO: Figure out source of inconsistent naming data
+    def game_name_to_id(self, name):
+        """
+        Retrieves the id number of the game with the given name.
+
+        Caches responses from previous invocations.
+
+        :param name:
+        :return:
+        """
+        # The Twitch API appears to give inconsistent casing for the names
+        # which we must fix.
         if name not in self.esports_games:
             for game in self.esports_games:
                 if name.lower() == game.lower():
                     name = game
                     break
+        if name in self.gamename_cache:
+            return self.gamename_cache[name]
         query = ('SELECT game_id '
-                 'FROM games '
+                 'FROM game '
                  'WHERE name = %s')
-        cursor = conn.cursor()
+        cursor = self.conn.cursor()
         cursor.execute(query, (name,))
-        return cursor.fetchone()[0]
+        self.gamename_cache[name] = cursor.fetchone()[0]
+        return self.gamename_cache[name]
 
 
 class MongoManager:
-    def __init__(self, host, port, db_name, user=None, password=None):
+    def __init__(self, host, port, db_name, user=None,
+                 password=None):
         self.host = host
         self.port = port
         self.db_name = db_name

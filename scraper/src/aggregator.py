@@ -74,10 +74,10 @@ class Aggregator:
         """
         # start is the first second of the next hour that we need to aggregate
         # end is the last second of the most recent full hour
-        man = PostgresManager.from_config(self.postgres)
+        man = PostgresManager.from_config(self.postgres, self.esports_games)
         mongo = MongoManager(self.twitch_db['host'],
-                                   self.twitch_db['port'],
-                                   self.twitch_db['db_name'])
+                             self.twitch_db['port'],
+                             self.twitch_db['db_name'])
         curhrstart, curhrend, last = self._agg_ts(man, mongo,
                                                   'twitch_game_vc',
                                                   self.twitch_db['top_games'])
@@ -86,7 +86,7 @@ class Aggregator:
                                        self.twitch_db['top_games'])
             apiresp = [TwitchGamesAPIResponse(doc) for doc in docs]
             vcs = self.average_viewers(apiresp, curhrstart, curhrend)
-            vcs = TwitchGameViewerCount.from_vcs(vcs, curhrstart)
+            vcs = TwitchGameVC.from_vcs(vcs, curhrstart)
             # Some hours empty due to server failure
             if apiresp:
                 games = Game.api_responses_to_games(apiresp).values()
@@ -107,19 +107,24 @@ class Aggregator:
 
         :return:
         """
-        man = PostgresManager.from_config(self.postgres)
+        man = PostgresManager.from_config(self.postgres, self.esports_games)
         mongo = MongoManager(self.twitch_db['host'],
-                                  self.twitch_db['port'])
+                             self.twitch_db['port'],
+                             self.twitch_db['db_name'])
         hrstart, hrend, last = self._agg_ts(man, mongo,
                                             'twitch_stream',
                                             self.twitch_db['top_streams'])
         while hrend < last:
-            entries = self.docsbetween(hrstart, hrend,
-                                       self.twitch_db['top_streams'])
-            streams = self.agg_twitch_broadcasts_period(entries, hrstart, hrend)
+            docs = mongo.docsbetween(hrstart, hrend,
+                                     self.twitch_db['top_streams'])
+            apiresp = [TwitchStreamsAPIResponse(doc) for doc in docs]
+
             # Some hours empty due to server failure
-            if streams:
-                man.store_rows(streams, 'twitch_channel')
+            if apiresp:
+                vcs = self.average_viewers(apiresp, hrstart, hrend)
+                channels = TwitchChannel.from_api_resp(apiresp).values()
+                man.store_rows(channels, 'twitch_channel')
+                streams = TwitchStream.from_vcs(apiresp, vcs, hrstart, man)
                 man.store_rows(streams, 'twitch_stream')
             hrstart += 3600
             hrend += 3600
@@ -203,7 +208,7 @@ if __name__ == '__main__':
     logging.debug("Aggregator Starting.")
     a = Aggregator()
     start = time.time()
-    a.agg_twitch_games()
-    #a.agg_twitch_broadcasts()
+    #a.agg_twitch_games()
+    a.agg_twitch_broadcasts()
     end = time.time()
     print("Total Time: {:.2f}".format(end-start))

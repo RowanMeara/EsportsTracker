@@ -54,6 +54,39 @@ class TwitchGameSnapshot:
         self.giantbomb_id = game['giantbomb_id']
 
 
+class TwitchStreamsAPIResponse(Aggregatable):
+    """
+    Model representing Twitch streams API response.
+    """
+    __slots__ = ['ts', 'streams']
+
+    def __init__(self, mongodoc):
+        self.ts = mongodoc['timestamp']
+        self.streams = {}
+        for gid, stream in mongodoc['streams'].items():
+            self.streams[gid] = TwitchStreamSnapshot(stream)
+
+    def viewercounts(self):
+        return {s.broadcaster_id: s.viewers for s in self.streams.values()}
+
+    def timestamp(self):
+        return self.ts
+
+
+class TwitchStreamSnapshot:
+    """
+    One game from a TwitchGamesAPIResponse
+    """
+    __slots__ = ['name', 'viewers', 'game', 'stream_title', 'broadcaster_id']
+
+    def __init__(self, stream):
+        self.name = stream['display_name']
+        self.viewers = stream['viewers']
+        self.game = stream['game']
+        self.stream_title = stream['status']
+        self.broadcaster_id = stream['broadcaster_id']
+
+
 class Game:
     """
     A row in the game table.
@@ -86,7 +119,7 @@ class Game:
         return self.game_id, self.name, self.giantbomb_id
 
 
-class TwitchGameViewerCount:
+class TwitchGameVC:
     """
     A row in the twitch_top_game table.
 
@@ -103,7 +136,7 @@ class TwitchGameViewerCount:
     def from_vcs(vcs, timestamp):
         vs = []
         for gid, viewers in vcs.items():
-            vs.append(TwitchGameViewerCount(gid, timestamp, viewers))
+            vs.append(TwitchGameVC(gid, timestamp, viewers))
         return vs
 
     def to_row(self):
@@ -117,8 +150,63 @@ class TwitchChannel:
     __slots__ = ['channel_id', 'name']
 
     def __init__(self, channel_id, name):
-        self.channel_id = id
+        self.channel_id = channel_id
         self.name = name
+
+    @staticmethod
+    def from_api_resp(resps):
+        """
+        Creates TwitchChannel objects for each unique game.
+
+        :param resps: list[TwitchStreamsAPIResponse],
+        :return: list[Game]
+        """
+        streams = {}
+        for resp in resps:
+            for snp in resp.streams.values():
+                if snp.broadcaster_id not in streams:
+                    channel = TwitchChannel(snp.broadcaster_id, snp.name)
+                    streams[snp.broadcaster_id] = channel
+        return streams
 
     def to_row(self):
         return self.channel_id, self.name
+
+
+class TwitchStream:
+    """
+    A row in the twitch_stream table.
+
+    The title and number of viewers of a stream for a given hour.
+    """
+    __slots__ = ['channel_id', 'epoch', 'game_id', 'viewers', 'stream_title']
+
+    def __init__(self, channel_id, epoch, game_id, viewers, stream_title):
+        self.channel_id = channel_id
+        self.epoch = epoch
+        self.game_id = game_id
+        self.viewers = viewers
+        self.stream_title = stream_title
+
+    @staticmethod
+    def from_vcs(api_resp, vcs, timestamp, man):
+        # Combine api_resp so that we can look across all api responses
+        comb = {}
+        for resp in api_resp:
+            for snp in resp.streams.values():
+                if snp.broadcaster_id not in comb:
+                    comb[snp.broadcaster_id] = snp
+
+        ts = []
+        for sid, viewers in vcs.items():
+            chid = sid
+            ep = timestamp
+            gid = man.game_name_to_id(comb[sid].game)
+            vc = viewers
+            tit = comb[sid].stream_title
+            ts.append(TwitchStream(chid, ep, gid, vc, tit))
+        return ts
+
+    def to_row(self):
+        return (self.channel_id, self.epoch, self.game_id, self.viewers,
+                self.stream_title)
