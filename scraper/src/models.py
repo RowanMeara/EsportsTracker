@@ -63,9 +63,9 @@ class Game:
     __slots__ = ['game_id', 'name', 'giantbomb_id']
 
     def __init__(self, game_id, name, giantbomb_id):
-        self.game_id = game_id
+        self.game_id = int(game_id)
         self.name = name
-        self.giantbomb_id = giantbomb_id
+        self.giantbomb_id = int(giantbomb_id)
 
     @staticmethod
     def api_responses_to_games(resps):
@@ -108,3 +108,17 @@ class TwitchGameViewerCount:
 
     def to_row(self):
         return self.game_id, self.epoch, self.viewers
+
+
+class TwitchChannel:
+    """
+    A mapping between a Twitch channel name and its id.
+    """
+    __slots__ = ['channel_id', 'name']
+
+    def __init__(self, channel_id, name):
+        self.channel_id = id
+        self.name = name
+
+    def to_row(self):
+        return self.channel_id, self.name

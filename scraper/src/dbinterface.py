@@ -16,9 +16,9 @@ class PostgresManager:
 
         self.conn = psycopg2.connect(host=host, port=port, user=user,
                                      password=password, dbname=dbname)
-        self. tables = ['games', 'twitch_game_viewer_count',
-                        'twitch_stream', 'twitch_channel',
-                        'channel_affiliation', 'org']
+        self.tablenames = {'game', 'twitch_game_vc', 'twitch_stream',
+                           'twitch_channel', 'channel_affiliation',
+                           'esports_org'}
         self.initdb()
 
     @staticmethod
@@ -38,7 +38,7 @@ class PostgresManager:
         """
         try:
 
-            if not all(self.table_exists(t) for t in self.tables):
+            if not all(self.table_exists(t) for t in self.tablenames):
                 logging.info('Initializing missing tables.')
                 self.create_tables()
                 self.conn.commit()
@@ -64,8 +64,8 @@ class PostgresManager:
             ');'
         )
         game_index = 'CREATE INDEX game_name_idx ON game USING HASH (name);'
-        twitch_game_viewer_count = (
-            'CREATE TABLE twitch_game_viewer_count( '
+        twitch_game_vc = (
+            'CREATE TABLE twitch_game_vc( '
             '    game_id integer REFERENCES game(game_id), '
             '    epoch integer NOT NULL, '
             '    viewers integer NOT NULL, '
@@ -74,7 +74,7 @@ class PostgresManager:
         )
         twitch_channel = (
             'CREATE TABLE twitch_channel( '
-            '    channel_id integer PRIMARY KEY, '
+            '    channel_id integer PRIMARY KEY, ' 
             '    name text NOT NULL ' 
             ');'
         )
@@ -106,9 +106,9 @@ class PostgresManager:
             curs.execute(game)
             curs.execute(game_index)
             logging.info('Created Table: game')
-        if not self.table_exists('twitch_game_viewer_count'):
-            curs.execute(twitch_game_viewer_count)
-            logging.info('Created Table: twitch_game_viewer_count')
+        if not self.table_exists('twitch_game_vc'):
+            curs.execute(twitch_game_vc)
+            logging.info('Created Table: twitch_game_vc')
         if not self.table_exists('twitch_channel'):
             curs.execute(twitch_channel)
             logging.info('Created Table: twitch_channel')
@@ -130,9 +130,7 @@ class PostgresManager:
             table names.
         :return: bool
         """
-        tables = ['game', 'twitch_game_viewer_count', 'twitch_stream',
-                  'twitch_channel', 'channel_affiliation', 'esports_org']
-        if table not in tables:
+        if table not in self.tablenames:
             return False
         exists = ('SELECT count(*) '
                   '    FROM information_schema.tables'
@@ -159,48 +157,44 @@ class PostgresManager:
         cursor.execute(query)
         return cursor.fetchone()[0]
 
-    def store_twitch_game_viewer_count(self, rows, commit=False):
+    def store_rows(self, rows, tablename, commit=False):
         """
-        Stores top game entries using conn.
+        Stores the rows in the specified table.
 
-        There is no error checking in this function so the game_id field of
-        each row must already exist in the game table.
-        :param rows: list[TwitchGameViewerCount],
+        Conflicting rows are ignored
+
+        :param rows: list[Object], Objects must have a to_row method.
+        :param tablename: str, name of the table to insert into.
+        :return: bool
         """
-        if not rows:
-            return
-
-        query = ('INSERT INTO twitch_game_viewer_count '
+        if not rows or tablename not in self.tablenames:
+            return False
+        query = (f'INSERT INTO {tablename} '
                  'VALUES %s '
                  'ON CONFLICT DO NOTHING ')
         rows = [x.to_row() for x in rows]
+        template = '({})'.format(','.join(['%s' for _ in range(len(rows[0]))]))
         curs = self.conn.cursor()
-        extras.execute_values(curs, query, rows, '(%s, %s, %s)', 1000)
+        extras.execute_values(curs, query, rows, template, 1000)
         if commit:
             self.conn.commit()
+        return True
 
-    def store_games(self, games, commit=False):
-        """
-        Stores game entries if they do not already exist.
+    # Stream Functions
+    def game_name_to_id(self, conn, name):
+        # TODO: Figure out source of inconsistent naming data
+        if name not in self.esports_games:
+            for game in self.esports_games:
+                if name.lower() == game.lower():
+                    name = game
+                    break
+        query = ('SELECT game_id '
+                 'FROM games '
+                 'WHERE name = %s')
+        cursor = conn.cursor()
+        cursor.execute(query, (name,))
+        return cursor.fetchone()[0]
 
-        :param games: list[Game] or list[TwitchAPIResponse], the list of rows to
-        store.
-        :param commit: bool, whether to commit after storing rows.
-        :return:
-        """
-        if not games:
-            return
-        if type(games[0]) == TwitchGamesAPIResponse:
-            games = list(Game.api_responses_to_games(games).values())
-
-        query = ('INSERT INTO game (game_id, name, giantbomb_id) '
-                 'VALUES %s '
-                 'ON CONFLICT DO NOTHING')
-        rows = [g.to_row() for g in games]
-        curs = self.conn.cursor()
-        extras.execute_values(curs, query, rows, '(%s, %s, %s)', 1000)
-        if commit:
-            self.conn.commit()
 
 class MongoManager:
     def __init__(self):

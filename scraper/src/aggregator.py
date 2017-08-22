@@ -104,78 +104,6 @@ class Aggregator:
         dt = datetime.fromtimestamp(timestamp, tz)
         return dt.strftime("%Z - %Y/%m/%d, %H:%M:%S")
 
-    @staticmethod
-    def store_twitch_channel(streams, conn):
-        """
-        Adds new channels to db.
-
-        Stores the game ids specified in streams or does nothing if they
-        already are stored.  Does not commit.
-
-        :param streams: dict,
-        :param conn: psycog2.Connection, Postgres connection.
-        :return:
-        """
-        if not streams:
-            return
-        # TODO: Handle name change updates
-        query = ('INSERT INTO twitch_channel (channel_id, name) '
-                 'VALUES {} '
-                 'ON CONFLICT DO NOTHING')
-        curs = conn.cursor()
-        values = []
-        for chid, stream in streams.items():
-            tup = (chid, stream['name'])
-            values.append(curs.mogrify("(%s, %s)", tup).decode())
-        query = query.format(','.join(values))
-        curs.execute(query)
-
-    def store_broadcasts(self, streams, timestamp, conn):
-        """
-        Stores top game entries using conn.
-
-        There is no error checking in this function so the games id field
-        must already exist in the games table.  Call store_games on the
-        list of game entries first to make sure this function does not crash.
-        """
-        if not streams:
-            return
-        cursor = conn.cursor()
-        query = ('INSERT INTO twitch_broadcasts '
-                 'VALUES {} '
-                 'ON CONFLICT DO NOTHING ')
-
-        # Sanitize values
-        values = []
-        game_ids = {}
-        for channel_id, stream in streams.items():
-            gn = stream['game_name']
-            if gn not in game_ids:
-                game_ids[gn] = self.game_name_to_id(conn, gn)
-            tup = (int(channel_id),
-                   timestamp,
-                   game_ids[gn],
-                   stream['viewers'],
-                   stream['stream_title'])
-            values.append(cursor.mogrify("(%s,%s,%s,%s,%s)", tup).decode())
-        query = query.format(','.join(values))
-        cursor.execute(query)
-        logging.debug("Broadcasts stored from: " + self.strtime(timestamp))
-
-    def game_name_to_id(self, conn, name):
-        # TODO: Figure out source of inconsistent naming data
-        if name not in self.esports_games:
-            for game in self.esports_games:
-                if name.lower() == game.lower():
-                    name = game
-                    break
-        query = ('SELECT game_id '
-                 'FROM games '
-                 'WHERE name = %s')
-        cursor = conn.cursor()
-        cursor.execute(query, (name,))
-        return cursor.fetchone()[0]
-
     def agg_top_games(self):
         """
         Aggregates and stores twitch game info.
@@ -192,18 +120,19 @@ class Aggregator:
         self.client = MongoClient(self.twitch_db['host'],
                                   self.twitch_db['port'])
         curhrstart, curhrend, last = self._agg_ts(man,
-                                                  'twitch_game_viewer_count',
+                                                  'twitch_game_vc',
                                                   self.twitch_db['top_games'])
         while curhrend < last:
             docs = self.docsbetween(curhrstart, curhrend,
                                        self.twitch_db['top_games'])
-            games = [TwitchGamesAPIResponse(doc) for doc in docs]
-            vcs = self.average_viewers(games, curhrstart, curhrend)
+            apiresp = [TwitchGamesAPIResponse(doc) for doc in docs]
+            vcs = self.average_viewers(apiresp, curhrstart, curhrend)
             vcs = TwitchGameViewerCount.from_vcs(vcs, curhrstart)
             # Some hours empty due to server failure
-            if games:
-                man.store_games(games)
-                man.store_twitch_game_viewer_count(vcs)
+            if apiresp:
+                games = Game.api_responses_to_games(apiresp).values()
+                man.store_rows(games, 'game')
+                man.store_rows(vcs, 'twitch_game_vc')
             curhrstart += 3600
             curhrend += 3600
         man.commit()
@@ -219,11 +148,11 @@ class Aggregator:
 
         :return:
         """
-        conn = self.postgresconn()
+        man = PostgresManager.from_config(self.postgres)
         self.client = MongoClient(self.twitch_db['host'],
                                   self.twitch_db['port'])
-        hrstart, hrend, last = self._agg_ts(conn,
-                                            'twitch_broadcasts',
+        hrstart, hrend, last = self._agg_ts(man,
+                                            'twitch_stream',
                                             self.twitch_db['top_streams'])
         while hrend < last:
             entries = self.docsbetween(hrstart, hrend,
@@ -231,12 +160,12 @@ class Aggregator:
             streams = self.agg_twitch_broadcasts_period(entries, hrstart, hrend)
             # Some hours empty due to server failure
             if streams:
-                self.store_twitch_channel(streams, conn)
-                self.store_broadcasts(streams, hrstart, conn)
+                man.store_rows(streams, 'twitch_channel')
+                man.store_rows(streams, 'twitch_stream')
             hrstart += 3600
             hrend += 3600
-        conn.commit()
-        conn.close()
+        man.commit()
+        man.close()
         self.client.close()
 
     @staticmethod
