@@ -3,6 +3,8 @@ import psycopg2
 import logging
 from psycopg2 import sql
 from psycopg2 import extras
+import pymongo
+from pymongo import MongoClient
 
 
 class PostgresManager:
@@ -197,5 +199,55 @@ class PostgresManager:
 
 
 class MongoManager:
-    def __init__(self):
-        pass
+    def __init__(self, host, port, db_name, user=None, password=None):
+        self.host = host
+        self.port = port
+        self.db_name = db_name
+        self.user = user
+        self.password = password
+        if user:
+            self.client = MongoClient(host, port,
+                                      user=user,
+                                      password=password)
+        else:
+            self.client = MongoClient(host, port)
+
+    def first_entry_after(self, start, collname):
+        """
+        Returns the timestamp of the first document after start.
+
+        The instance variable client must be initialized to a MongoClient.
+
+        :param start: int, unix epoch.
+        :param collname: str, name of the collection to search in.
+        :return: int, unix epoch of the document with the smallest timestamp
+        greater than start.
+        """
+        conn = self.client[self.db_name]
+        topgames = conn[collname]
+        cursor = topgames.find(
+            {'timestamp': {'$gt': start}}
+        ).sort('timestamp', pymongo.ASCENDING)
+        if cursor.count() > 0:
+            return int(cursor[0]['timestamp'])
+        else:
+            return 1 << 31 - 1
+
+    def docsbetween(self, start, end, collname):
+        """
+        Returns cursor to entries with timestamps between start and end.
+
+        Returns a cursor to documents in the specified Mongo collection that
+        have a field 'timestamp' with values greater than or equal to start
+        and less than end.
+
+        :param start: int, Timestamp of the earliest entry
+        :param end: int, Timestamp of the last entry
+        :return: pymongo.cursor.Cursor
+        """
+        conn = self.client[self.db_name]
+        coll = conn[collname]
+        cursor = coll.find(
+            {'timestamp': {'$gte': start, '$lt': end}}
+        ).sort('timestamp', pymongo.ASCENDING)
+        return cursor

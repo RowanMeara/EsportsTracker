@@ -2,11 +2,10 @@ import time
 import logging
 from ruamel import yaml
 import pymongo
-from pymongo import MongoClient
 from datetime import datetime
 import pytz
 from models import *
-from dbinterface import PostgresManager
+from dbinterface import PostgresManager, MongoManager
 
 
 class Aggregator:
@@ -24,47 +23,6 @@ class Aggregator:
         self.esports_games = set(config['twitch']['esports_channels'].keys())
         self.postgres['user'] = keys['postgres']['user']
         self.postgres['password'] = keys['postgres']['passwd']
-
-        self.client = None
-
-    def first_entry_after(self, start, collname):
-        """
-        Returns the timestamp of the first entry after start.
-
-        The instance variable client must be initialized to a MongoClient.
-
-        :param start: int
-        :param collname: str
-        :return: int
-        """
-        db = self.client[self.twitch_db['db_name']]
-        topgames = db[collname]
-        cursor = topgames.find(
-            {'timestamp': {'$gt': start}}
-        ).sort('timestamp', pymongo.ASCENDING)
-        if cursor.count() > 0:
-            return int(cursor[0]['timestamp'])
-        else:
-            return 1 << 31
-
-    def docsbetween(self, start, end, collname):
-        """
-        Returns cursor to entries with timestamps between start and end.
-
-        Returns a cursor to documents in the specified Mongo collection that
-        have a field 'timestamp' with values greater than or equal to start
-        and less than end.
-
-        :param start: int, Timestamp of the earliest entry
-        :param end: int, Timestamp of the last entry
-        :return: pymongo.cursor.Cursor
-        """
-        db = self.client[self.twitch_db['db_name']]
-        coll = db[collname]
-        cursor = coll.find(
-            {'timestamp': {'$gte': start, '$lt': end}}
-        ).sort('timestamp', pymongo.ASCENDING)
-        return cursor
 
     @staticmethod
     def average_viewers(entries, start, end):
@@ -104,7 +62,7 @@ class Aggregator:
         dt = datetime.fromtimestamp(timestamp, tz)
         return dt.strftime("%Z - %Y/%m/%d, %H:%M:%S")
 
-    def agg_top_games(self):
+    def agg_twitch_games(self):
         """
         Aggregates and stores twitch game info.
 
@@ -117,13 +75,14 @@ class Aggregator:
         # start is the first second of the next hour that we need to aggregate
         # end is the last second of the most recent full hour
         man = PostgresManager.from_config(self.postgres)
-        self.client = MongoClient(self.twitch_db['host'],
-                                  self.twitch_db['port'])
-        curhrstart, curhrend, last = self._agg_ts(man,
+        mongo = MongoManager(self.twitch_db['host'],
+                                   self.twitch_db['port'],
+                                   self.twitch_db['db_name'])
+        curhrstart, curhrend, last = self._agg_ts(man, mongo,
                                                   'twitch_game_vc',
                                                   self.twitch_db['top_games'])
         while curhrend < last:
-            docs = self.docsbetween(curhrstart, curhrend,
+            docs = mongo.docsbetween(curhrstart, curhrend,
                                        self.twitch_db['top_games'])
             apiresp = [TwitchGamesAPIResponse(doc) for doc in docs]
             vcs = self.average_viewers(apiresp, curhrstart, curhrend)
@@ -136,7 +95,7 @@ class Aggregator:
             curhrstart += 3600
             curhrend += 3600
         man.commit()
-        self.client.close()
+        mongo.client.close()
 
     def agg_twitch_broadcasts(self):
         """
@@ -149,9 +108,9 @@ class Aggregator:
         :return:
         """
         man = PostgresManager.from_config(self.postgres)
-        self.client = MongoClient(self.twitch_db['host'],
+        mongo = MongoManager(self.twitch_db['host'],
                                   self.twitch_db['port'])
-        hrstart, hrend, last = self._agg_ts(man,
+        hrstart, hrend, last = self._agg_ts(man, mongo,
                                             'twitch_stream',
                                             self.twitch_db['top_streams'])
         while hrend < last:
@@ -165,8 +124,7 @@ class Aggregator:
             hrstart += 3600
             hrend += 3600
         man.commit()
-        man.close()
-        self.client.close()
+        mongo.client.close()
 
     @staticmethod
     def agg_twitch_broadcasts_period(entries, start, end):
@@ -201,7 +159,7 @@ class Aggregator:
                 chnl['game_name'] = stream['game']
         return avgviewers
 
-    def _agg_ts(self, man, table_name, collname):
+    def _agg_ts(self, man, mongo, table_name, collname):
         """
         Helper function for aggregation timestamps.
 
@@ -210,6 +168,7 @@ class Aggregator:
         curhrstart), and last (the first second in the current hour).
 
         :param man: PostgresManager
+        :param mongo: MongoManager
         :param table_name: str, Name of Postgres table
         :param collname: str, Name of Mongo collection
         :return: tuple, (curhrstart, curhrend, last)
@@ -218,7 +177,7 @@ class Aggregator:
         sechr = 3600
         start = man.last_postgres_update(table_name) + sechr
         last = self.epoch_to_hour(time.time())
-        earliest_entry = self.first_entry_after(start, collname)
+        earliest_entry = mongo.first_entry_after(start, collname)
         curhrstart = earliest_entry // sechr*sechr
         curhrend = curhrstart + sechr
         return curhrstart, curhrend, last
@@ -244,7 +203,7 @@ if __name__ == '__main__':
     logging.debug("Aggregator Starting.")
     a = Aggregator()
     start = time.time()
-    a.agg_top_games()
+    a.agg_twitch_games()
     #a.agg_twitch_broadcasts()
     end = time.time()
     print("Total Time: {:.2f}".format(end-start))
