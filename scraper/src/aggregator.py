@@ -130,7 +130,9 @@ class Aggregator:
                 vcbygame = []
                 for game, resp in sortedbygame.items():
                     vcbygame.append(self.average_viewers(resp, hrstart, hrend))
-                vcs = self.average_viewers(apiresp, hrstart, hrend)
+                vcs = {}
+                for vc in vcbygame:
+                    vcs.update(vc)
                 channels = TwitchChannel.from_api_resp(apiresp).values()
                 man.store_rows(channels, 'twitch_channel')
                 streams = TwitchStream.from_vcs(apiresp, vcs, hrstart, man)
