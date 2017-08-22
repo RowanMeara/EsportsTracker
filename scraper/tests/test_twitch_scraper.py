@@ -2,11 +2,13 @@ import pytest
 import os
 from src import twitch_scraper
 
-config_path = 'scraper/tests/res/test_scraper_config.yml'
-key_path = 'scraper/tests/res/test_keys.yml'
-
+config_path = 'res/test_scraper_config.yml'
+key_path = 'res/test_keys.yml'
 
 def test_init():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    print("SEXY")
+    print(dir_path)
     scraper = twitch_scraper.TwitchScraper(config_path, key_path)
     assert scraper.update_interval == 20
     assert scraper.db_name == 'test'

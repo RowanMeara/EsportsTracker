@@ -4,8 +4,8 @@ from ruamel import yaml
 import pymongo
 from datetime import datetime
 import pytz
-from models import *
-from dbinterface import PostgresManager, MongoManager
+from src.models import *
+from src.dbinterface import PostgresManager, MongoManager
 
 
 class Aggregator:
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     logging.debug("Aggregator Starting.")
     a = Aggregator()
     start = time.time()
-    #a.agg_twitch_games()
+    a.agg_twitch_games()
     a.agg_twitch_broadcasts()
     end = time.time()
     print("Total Time: {:.2f}".format(end-start))
