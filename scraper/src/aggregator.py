@@ -118,9 +118,18 @@ class Aggregator:
             docs = mongo.docsbetween(hrstart, hrend,
                                      self.twitch_db['top_streams'])
             apiresp = [TwitchStreamsAPIResponse(doc) for doc in docs]
+            # Need to sort responses by game
+            sortedbygame = {}
+            for resp in apiresp:
+                if resp.game not in sortedbygame:
+                    sortedbygame[resp.game] = []
+                sortedbygame[resp.game].append(resp)
 
             # Some hours empty due to server failure
             if apiresp:
+                vcbygame = []
+                for game, resp in sortedbygame.items():
+                    vcbygame.append(self.average_viewers(resp, hrstart, hrend))
                 vcs = self.average_viewers(apiresp, hrstart, hrend)
                 channels = TwitchChannel.from_api_resp(apiresp).values()
                 man.store_rows(channels, 'twitch_channel')

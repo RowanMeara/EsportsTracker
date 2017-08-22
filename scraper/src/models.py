@@ -58,11 +58,12 @@ class TwitchStreamsAPIResponse(Aggregatable):
     """
     Model representing Twitch streams API response.
     """
-    __slots__ = ['ts', 'streams']
+    __slots__ = ['ts', 'streams', 'game']
 
     def __init__(self, mongodoc):
         self.ts = mongodoc['timestamp']
         self.streams = {}
+        self.game = mongodoc['game']
         for gid, stream in mongodoc['streams'].items():
             self.streams[gid] = TwitchStreamSnapshot(stream)
 
