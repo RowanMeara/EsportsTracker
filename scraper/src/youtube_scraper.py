@@ -203,9 +203,9 @@ if __name__ == "__main__":
     fmt = '%(asctime)s %(levelname)s:%(message)s'
     logging.basicConfig(format=fmt, filename='youtube.log',
                         level=logging.WARNING)
-    a = YoutubeScraper()
     while True:
         try:
+            a = YoutubeScraper()
             a.scrape()
         except:
             exc_type, exc_obj, exc_tb = sys.exc_info()
