@@ -295,6 +295,7 @@ class YoutubeChannel(Row):
 
 LANGUAGE_DETECTION = True
 
+
 class YoutubeStream(Row):
     """
     A row in the youtube_stream table.
@@ -337,6 +338,6 @@ class YoutubeStream(Row):
 
     def to_row(self):
         if LANGUAGE_DETECTION and self.language == 'unknown':
-            self.language = 'd_' + langid.classify(self.language)[0]
+            self.language = 'd_' + langid.classify(self.stream_title)[0]
         return (self.channel_id, self.epoch, self.game_id, self.viewers,
                 self.stream_title, self.language, str(self.tags))
