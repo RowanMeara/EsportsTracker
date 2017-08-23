@@ -192,3 +192,4 @@ if __name__ == '__main__':
     a.agg_twitch_games()
     a.agg_twitch_broadcasts()
     end = time.time()
+    print("Total Time: {:.2f}".format(end - start))

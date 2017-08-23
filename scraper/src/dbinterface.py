@@ -127,6 +127,7 @@ class PostgresManager:
             '    viewers integer NOT NULL, '
             '    stream_title text, '
             '    language text, '
+            '    tags text, '
             '    PRIMARY KEY (channel_id, epoch)'
             ');'
         )

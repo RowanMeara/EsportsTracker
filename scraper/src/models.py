@@ -88,7 +88,50 @@ class TwitchStreamSnapshot:
         self.broadcaster_id = stream['broadcaster_id']
 
 
-class Game:
+class YoutubeStreamsAPIResponse(Aggregatable):
+    """
+    Model representing document in youtube_top_streams Mongo collection.
+    """
+    __slots__ = ['ts', 'streams']
+
+    def __init__(self, mongodoc):
+        self.ts = mongodoc['timestamp']
+        self.streams = {}
+        for chanid, stream in mongodoc['broadcasts'].items():
+            self.streams[chanid] = YoutubeStreamSnapshot(stream, chanid)
+
+    def viewercounts(self):
+        return {s.broadcaster_id: s.viewers for s in self.streams.values()}
+
+    def timestamp(self):
+        return self.ts
+
+
+class YoutubeStreamSnapshot:
+    """
+    One stream in a YoutubeStreamsAPIResponse
+    """
+    __slots__ = ['name', 'viewers', 'stream_title', 'broadcaster_id',
+                 'language', 'tags']
+    def __init__(self, stream, chanid):
+        self.name = stream['broadcaster_name']
+        self.broadcaster_id = chanid
+        self.viewers = stream['concurrent_viewers']
+        self.language = stream['language']
+        self.tags = stream['tags']
+        self.stream_title = stream['title']
+
+
+class Row(ABC):
+    @abstractmethod
+    def to_row(self):
+        """
+        Returns a tuple that can be inserted into Postgres.
+        """
+        pass
+
+
+class Game(Row):
     """
     A row in the game table.
 
@@ -120,7 +163,7 @@ class Game:
         return self.game_id, self.name, self.giantbomb_id
 
 
-class TwitchGameVC:
+class TwitchGameVC(Row):
     """
     A row in the twitch_top_game table.
 
@@ -144,7 +187,7 @@ class TwitchGameVC:
         return self.game_id, self.epoch, self.viewers
 
 
-class TwitchChannel:
+class TwitchChannel(Row):
     """
     A mapping between a Twitch channel name and its id.
     """
@@ -174,7 +217,7 @@ class TwitchChannel:
         return self.channel_id, self.name
 
 
-class TwitchStream:
+class TwitchStream(Row):
     """
     A row in the twitch_stream table.
 
@@ -188,6 +231,81 @@ class TwitchStream:
         self.game_id = game_id
         self.viewers = viewers
         self.stream_title = stream_title
+
+    @staticmethod
+    def from_vcs(api_resp, vcs, timestamp, man):
+        # Combine api_resp so that we can look across all api responses
+        comb = {}
+        for resp in api_resp:
+            for snp in resp.streams.values():
+                if snp.broadcaster_id not in comb:
+                    comb[snp.broadcaster_id] = snp
+
+        ts = []
+        for sid, viewers in vcs.items():
+            chid = sid
+            ep = timestamp
+            gid = man.game_name_to_id(comb[sid].game)
+            vc = viewers
+            tit = comb[sid].stream_title
+            ts.append(TwitchStream(chid, ep, gid, vc, tit))
+        return ts
+
+    def to_row(self):
+        return (self.channel_id, self.epoch, self.game_id, self.viewers,
+                self.stream_title)
+
+
+class YoutubeChannel(Row):
+    """
+    A mapping between a Youtube channel name and its id.
+    """
+    __slots__ = ['channel_id', 'name', 'main_language']
+
+    def __init__(self, channel_id, name, main_language="unknown"):
+        self.channel_id = channel_id
+        self.name = name
+        self.main_language = main_language
+
+    @staticmethod
+    def from_api_resp(resps):
+        """
+        Creates YoutubeChannel objects for each unique game.
+
+        :param resps: list[TwitchStreamsAPIResponse],
+        :return: list[Game]
+        """
+        streams = {}
+        for resp in resps:
+            for snp in resp.streams.values():
+                if snp.broadcaster_id not in streams:
+                    channel = YoutubeChannel(snp.broadcaster_id, snp.name,
+                                             snp.main_language)
+                    streams[snp.broadcaster_id] = channel
+        return streams
+
+    def to_row(self):
+        return self.channel_id, self.name, self.main_language
+
+
+class YoutubeStream(Row):
+    """
+    A row in the youtube_stream table.
+
+    The title and number of viewers of a stream for a given hour.
+    """
+    __slots__ = ['channel_id', 'epoch', 'game_id', 'viewers', 'stream_title',
+                 'language', 'tags']
+
+    def __init__(self, channel_id, epoch, game_id, viewers, stream_title,
+                 language, tags):
+        self.channel_id = channel_id
+        self.epoch = epoch
+        self.game_id = game_id
+        self.viewers = viewers
+        self.stream_title = stream_title
+        self.language = language
+        self.tags = tags
 
     @staticmethod
     def from_vcs(api_resp, vcs, timestamp, man):

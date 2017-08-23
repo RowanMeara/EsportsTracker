@@ -110,7 +110,7 @@ class YoutubeScraper:
             if len(json_result['items']) < self.res_per_request:
                 break
         if DEBUG:
-            print("API result: {}".format(api_result))
+            print(f"API result: {api_result}")
 
         broadcasts = {}
         video_ids = [k['id']['videoId'] for k in raw_broadcasts]
