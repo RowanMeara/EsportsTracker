@@ -104,7 +104,7 @@ class YoutubeStreamsAPIResponse(Aggregatable):
         return {s.broadcaster_id: s.viewers for s in self.streams.values()}
 
     def timestamp(self):
-        return self.ts
+        return int(self.ts)
 
 
 class YoutubeStreamSnapshot:
@@ -113,10 +113,11 @@ class YoutubeStreamSnapshot:
     """
     __slots__ = ['name', 'viewers', 'stream_title', 'broadcaster_id',
                  'language', 'tags']
+
     def __init__(self, stream, chanid):
         self.name = stream['broadcaster_name']
         self.broadcaster_id = chanid
-        self.viewers = stream['concurrent_viewers']
+        self.viewers = int(stream['concurrent_viewers'])
         self.language = stream['language']
         self.tags = stream['tags']
         self.stream_title = stream['title']
@@ -280,7 +281,7 @@ class YoutubeChannel(Row):
             for snp in resp.streams.values():
                 if snp.broadcaster_id not in streams:
                     channel = YoutubeChannel(snp.broadcaster_id, snp.name,
-                                             snp.main_language)
+                                             snp.language)
                     streams[snp.broadcaster_id] = channel
         return streams
 
@@ -316,16 +317,18 @@ class YoutubeStream(Row):
                 if snp.broadcaster_id not in comb:
                     comb[snp.broadcaster_id] = snp
 
-        ts = []
+        ys = []
         for sid, viewers in vcs.items():
             chid = sid
             ep = timestamp
-            gid = man.game_name_to_id(comb[sid].game)
+            gid = None
             vc = viewers
             tit = comb[sid].stream_title
-            ts.append(TwitchStream(chid, ep, gid, vc, tit))
-        return ts
+            l = comb[sid].language
+            tags = comb[sid].tags
+            ys.append(YoutubeStream(chid, ep, gid, vc, tit, l, tags))
+        return ys
 
     def to_row(self):
         return (self.channel_id, self.epoch, self.game_id, self.viewers,
-                self.stream_title)
+                self.stream_title, self.language, str(self.tags))

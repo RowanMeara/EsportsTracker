@@ -104,8 +104,7 @@ class Aggregator:
         Retrieves, aggregates, and stores twitch broadcasts.
 
         Checks the MongoDB specified in the config file for new twitch
-        broadcasts, aggregates them, and stores them in Postgres.  initdb must
-        be called before calling this function.
+        broadcasts, aggregates them, and stores them in Postgres.
 
         :return:
         """
@@ -139,6 +138,40 @@ class Aggregator:
                 man.store_rows(channels, 'twitch_channel')
                 streams = TwitchStream.from_vcs(apiresp, vcs, hrstart, man)
                 man.store_rows(streams, 'twitch_stream')
+            hrstart += 3600
+            hrend += 3600
+        man.commit()
+        mongo.client.close()
+
+    def agg_youtube_streams(self):
+        """
+        Retrieves, aggregates, and stores youtube broadcasts.
+
+        Checks the MongoDB specified in the config file for new youtube
+        broadcasts, aggregates them, and stores them in Postgres.
+
+        :return:
+        """
+        man = PostgresManager.from_config(self.postgres, self.esports_games)
+        mongo = MongoManager(self.youtube_db['host'],
+                             self.youtube_db['port'],
+                             self.youtube_db['db_name'])
+        hrstart, hrend, last = self._agg_ts(man, mongo,
+                                            'youtube_stream',
+                                            self.youtube_db['top_streams'])
+        while hrend < last:
+            docs = mongo.docsbetween(hrstart, hrend,
+                                     self.youtube_db['top_streams'])
+            apiresp = [YoutubeStreamsAPIResponse(doc) for doc in docs]
+
+            # Some hours empty due to server failure
+            if apiresp:
+                channels = YoutubeChannel.from_api_resp(apiresp).values()
+                man.store_rows(channels, 'youtube_channel')
+
+                vcs = self.average_viewers(apiresp, hrstart, hrend)
+                streams = YoutubeStream.from_vcs(apiresp, vcs, hrstart, man)
+                man.store_rows(streams, 'youtube_stream')
             hrstart += 3600
             hrend += 3600
         man.commit()
@@ -189,7 +222,8 @@ if __name__ == '__main__':
     logging.debug("Aggregator Starting.")
     a = Aggregator()
     start = time.time()
-    a.agg_twitch_games()
-    a.agg_twitch_broadcasts()
+    #a.agg_twitch_games()
+    #a.agg_twitch_broadcasts()
+    a.agg_youtube_streams()
     end = time.time()
     print("Total Time: {:.2f}".format(end - start))

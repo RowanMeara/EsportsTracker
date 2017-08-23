@@ -114,14 +114,14 @@ class PostgresManager:
         )
         tables['youtube_channel'] = (
             'CREATE TABLE youtube_channel( '
-            '    channel_id integer PRIMARY KEY, ' 
+            '    channel_id text PRIMARY KEY, ' 
             '    name text NOT NULL,'
             '    main_language text ' 
             ');'
         )
         tables['youtube_stream'] = (
             'CREATE TABLE youtube_stream( ' 
-            '    channel_id integer REFERENCES youtube_channel(channel_id), '
+            '    channel_id text REFERENCES youtube_channel(channel_id), '
             '    epoch integer NOT NULL, '
             '    game_id integer, '
             '    viewers integer NOT NULL, '
