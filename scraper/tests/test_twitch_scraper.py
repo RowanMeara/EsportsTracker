@@ -27,6 +27,7 @@ def test_init():
     assert scraper.session.headers['Client-ID'] == 'twitch_client'
     assert scraper.session.headers['Accept'] == scraper.api_version_url
 
+
 def test_twitch_api_request():
     scraper = twitch_scraper.TwitchScraper(CONFIG_PATH, KEY_PATH)
 

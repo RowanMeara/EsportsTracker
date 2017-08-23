@@ -6,4 +6,4 @@ ruamel.yaml
 psycopg2
 pytz
 setuptools
-langdetect
+langid
