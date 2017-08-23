@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-
+import langdetect
 
 class Aggregatable(ABC):
     @abstractmethod
@@ -115,10 +115,18 @@ class YoutubeStreamSnapshot:
                  'language', 'tags']
 
     def __init__(self, stream, chanid):
+        """
+        Attempts to detect the language if it is 'unknown'.
+
+        :param stream: dict, subdocument.
+        :param chanid: str, youtube channel id string.
+        """
         self.name = stream['broadcaster_name']
         self.broadcaster_id = chanid
         self.viewers = int(stream['concurrent_viewers'])
         self.language = stream['language']
+        if self.language == 'unknown':
+            self.language = 'd_' + langdetect.detect(self.language)
         self.tags = stream['tags']
         self.stream_title = stream['title']
 
