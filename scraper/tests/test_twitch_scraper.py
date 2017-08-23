@@ -2,14 +2,16 @@ import pytest
 import os
 from src import twitch_scraper
 
-config_path = 'res/test_scraper_config.yml'
-key_path = 'res/test_keys.yml'
+TEST_DIRECTORY = os.path.dirname(__file__)
+CONFIG_PATH = TEST_DIRECTORY + '/res/test_scraper_config.yml'
+KEY_PATH = TEST_DIRECTORY +'/res/test_keys.yml'
+
 
 def test_init():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     print("SEXY")
     print(dir_path)
-    scraper = twitch_scraper.TwitchScraper(config_path, key_path)
+    scraper = twitch_scraper.TwitchScraper(CONFIG_PATH, KEY_PATH)
     assert scraper.update_interval == 20
     assert scraper.db_name == 'test'
     assert scraper.db_top_streams == 'test_twitch_streams'
@@ -26,7 +28,7 @@ def test_init():
     assert scraper.session.headers['Accept'] == scraper.api_version_url
 
 def test_twitch_api_request():
-    scraper = twitch_scraper.TwitchScraper(config_path, key_path)
+    scraper = twitch_scraper.TwitchScraper(CONFIG_PATH, KEY_PATH)
 
     pass
 
