@@ -5,7 +5,7 @@ from psycopg2 import sql
 from psycopg2 import extras
 import pymongo
 from pymongo import MongoClient
-
+from collections import OrderedDict
 
 class PostgresManager:
     def __init__(self, host, port, user, password, dbname, esports_games):
@@ -20,7 +20,8 @@ class PostgresManager:
                                      password=password, dbname=dbname)
         self.tablenames = {'game', 'twitch_game_vc', 'twitch_stream',
                            'twitch_channel', 'channel_affiliation',
-                           'esports_org'}
+                           'esports_org', 'youtube_channel', 'youtube_stream'}
+        self.index_names = {'game_name_idx'}
         self.esports_games = esports_games.copy()
         self.gamename_cache = {}
         self.initdb()
@@ -60,15 +61,21 @@ class PostgresManager:
         :param conn: psycopg2 connection
         :return:
         """
-        game = (
+        tables = OrderedDict()
+        indexes = OrderedDict()
+        tables['game'] = (
             'CREATE TABLE game( '
             '    game_id integer PRIMARY KEY, '
             '    name text NOT NULL UNIQUE, '
             '    giantbomb_id integer '
             ');'
         )
-        game_index = 'CREATE INDEX game_name_idx ON game USING HASH (name);'
-        twitch_game_vc = (
+        indexes['game_name_idx'] = (
+            'CREATE INDEX IF NOT EXISTS game_name_idx '
+            'ON game '
+            'USING HASH (name);'
+        )
+        tables['twitch_game_vc'] = (
             'CREATE TABLE twitch_game_vc( '
             '    game_id integer REFERENCES game(game_id), '
             '    epoch integer NOT NULL, '
@@ -76,13 +83,13 @@ class PostgresManager:
             '    PRIMARY KEY (game_id, epoch) '
             ');'
         )
-        twitch_channel = (
+        tables['twitch_channel'] = (
             'CREATE TABLE twitch_channel( '
             '    channel_id integer PRIMARY KEY, ' 
             '    name text NOT NULL ' 
             ');'
         )
-        twitch_stream = (
+        tables['twitch_stream'] = (
             'CREATE TABLE twitch_stream( ' 
             '    channel_id integer REFERENCES twitch_channel(channel_id), '
             '    epoch integer NOT NULL, '
@@ -92,39 +99,44 @@ class PostgresManager:
             '    PRIMARY KEY (channel_id, epoch)'
             ');'
         )
-        esports_org = (
+        tables['esports_org'] = (
             'CREATE TABLE esports_org( '
             '    org_id integer PRIMARY KEY, '
             '    name text NOT NULL '
             ');'
         )
-        channel_affiliation = (
+        tables['channel_affiliation'] = (
             'CREATE TABLE channel_affiliation( '
             '    org_id integer REFERENCES esports_org(org_id), '
             '    channel_id integer REFERENCES twitch_channel(channel_id), '
             '    PRIMARY KEY (channel_id) '
             ');'
         )
+        tables['youtube_channel'] = (
+            'CREATE TABLE youtube_channel( '
+            '    channel_id integer PRIMARY KEY, ' 
+            '    name text NOT NULL,'
+            '    main_language text ' 
+            ');'
+        )
+        tables['youtube_stream'] = (
+            'CREATE TABLE youtube_stream( ' 
+            '    channel_id integer REFERENCES youtube_channel(channel_id), '
+            '    epoch integer NOT NULL, '
+            '    game_id integer, '
+            '    viewers integer NOT NULL, '
+            '    stream_title text, '
+            '    language text, '
+            '    PRIMARY KEY (channel_id, epoch)'
+            ');'
+        )
         curs = self.conn.cursor()
-        if not self.table_exists('game'):
-            curs.execute(game)
-            curs.execute(game_index)
-            logging.info('Created Table: game')
-        if not self.table_exists('twitch_game_vc'):
-            curs.execute(twitch_game_vc)
-            logging.info('Created Table: twitch_game_vc')
-        if not self.table_exists('twitch_channel'):
-            curs.execute(twitch_channel)
-            logging.info('Created Table: twitch_channel')
-        if not self.table_exists('twitch_stream'):
-            curs.execute(twitch_stream)
-            logging.info('Created Table: twitch_stream')
-        if not self.table_exists('esports_org'):
-            curs.execute(esports_org)
-            logging.info('Created Table: esports_org')
-        if not self.table_exists('channel_affiliation'):
-            curs.execute(channel_affiliation)
-            logging.info('Created Table: channel_affiliation')
+        for tname, query in tables.items():
+            if not self.table_exists(tname):
+                curs.execute(query)
+                logging.info('Created Table:' + tname)
+        for iname, query in indexes.items():
+            curs.execute(query)
 
     def table_exists(self, table):
         """
@@ -246,7 +258,7 @@ class MongoManager:
         if cursor.count() > 0:
             return int(cursor[0]['timestamp'])
         else:
-            return 1 << 31 - 1
+            return (1 << 31) - 1
 
     def docsbetween(self, start, end, collname):
         """

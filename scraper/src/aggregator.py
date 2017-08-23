@@ -1,7 +1,6 @@
 import time
 import logging
 from ruamel import yaml
-import pymongo
 from datetime import datetime
 import pytz
 from src.models import *
@@ -182,6 +181,7 @@ class Aggregator:
         seconds_in_hour = 3600
         return int(epoch) // seconds_in_hour * seconds_in_hour
 
+
 if __name__ == '__main__':
     logformat = '%(asctime)s %(levelname)s:%(message)s'
     logging.basicConfig(format=logformat, level=logging.DEBUG,
@@ -192,4 +192,3 @@ if __name__ == '__main__':
     a.agg_twitch_games()
     a.agg_twitch_broadcasts()
     end = time.time()
-    print("Total Time: {:.2f}".format(end-start))
