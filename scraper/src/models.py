@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import langdetect
+import langid
 
 class Aggregatable(ABC):
     @abstractmethod
@@ -116,8 +116,6 @@ class YoutubeStreamSnapshot:
 
     def __init__(self, stream, chanid):
         """
-        Attempts to detect the language if it is 'unknown'.
-
         :param stream: dict, subdocument.
         :param chanid: str, youtube channel id string.
         """
@@ -125,8 +123,6 @@ class YoutubeStreamSnapshot:
         self.broadcaster_id = chanid
         self.viewers = int(stream['concurrent_viewers'])
         self.language = stream['language']
-        if self.language == 'unknown':
-            self.language = 'd_' + langdetect.detect(self.language)
         self.tags = stream['tags']
         self.stream_title = stream['title']
 
@@ -297,6 +293,8 @@ class YoutubeChannel(Row):
         return self.channel_id, self.name, self.main_language
 
 
+LANGUAGE_DETECTION = True
+
 class YoutubeStream(Row):
     """
     A row in the youtube_stream table.
@@ -338,5 +336,7 @@ class YoutubeStream(Row):
         return ys
 
     def to_row(self):
+        if LANGUAGE_DETECTION and self.language == 'unknown':
+            self.language = 'd_' + langid.classify(self.language)[0]
         return (self.channel_id, self.epoch, self.game_id, self.viewers,
                 self.stream_title, self.language, str(self.tags))
