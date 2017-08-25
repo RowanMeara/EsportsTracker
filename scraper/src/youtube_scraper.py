@@ -19,8 +19,9 @@ class YoutubeScraper:
             keys = yaml.load(f)
             self.client_id = keys['youtubeclientid']
             self.secret = keys['youtubesecret']
-            self.mongo_user = keys['mongodb']['write']['user']
-            self.mongo_pwd = keys['mongodb']['write']['pwd']
+            if 'mongodb' in keys:
+                self.mongo_user = keys['mongodb']['write']['user']
+                self.mongo_pwd = keys['mongodb']['write']['pwd']
         with open(config_path) as f:
             config = yaml.load(f)['youtube']
             self.update_interval = config['update_interval']
@@ -144,9 +145,10 @@ class YoutubeScraper:
         :return: psycopg2.MongoClient
         """
         client = MongoClient(self.db_host, self.db_port)
-        client[self.db_name].authenticate(self.mongo_user,
-                                          self.mongo_pwd,
-                                          source='admin')
+        if self.mongo_user:
+            client[self.db_name].authenticate(self.mongo_user,
+                                              self.mongo_pwd,
+                                              source='admin')
         return client[self.db_name]
 
     def get_livestream_details(self, broadcast_ids):
@@ -212,6 +214,7 @@ class YoutubeScraper:
             time_to_sleep = self.update_interval - (time.time() - start_time)
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
+
 
 if __name__ == "__main__":
     fmt = '%(asctime)s %(levelname)s:%(message)s'

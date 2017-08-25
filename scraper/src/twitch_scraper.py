@@ -48,8 +48,9 @@ class TwitchScraper:
             keys = yaml.safe_load(f)
             self.client_id = keys['twitchclientid']
             self.secret = keys['twitchsecret']
-            self.mongo_user = keys['mongodb']['write']['user']
-            self.mongo_pwd = keys['mongodb']['write']['pwd']
+            if 'mongodb' in keys:
+                self.mongo_user = keys['mongodb']['write']['user']
+                self.mongo_pwd = keys['mongodb']['write']['pwd']
 
         # Install twitch authentication
         client_header = {'Client-ID': self.client_id}
@@ -295,9 +296,10 @@ class TwitchScraper:
         :return: psycopg2.MongoClient
         """
         client = MongoClient(self.db_host, self.db_port)
-        client[self.db_name].authenticate(self.mongo_user,
-                                          self.mongo_pwd,
-                                          source='admin')
+        if self.mongo_user:
+            client[self.db_name].authenticate(self.mongo_user,
+                                              self.mongo_pwd,
+                                              source='admin')
         return client[self.db_name]
 
 
