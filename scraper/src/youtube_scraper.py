@@ -8,6 +8,7 @@ import os
 import math
 from pymongo import MongoClient
 import pymongo
+import traceback
 
 DEBUG = True
 
@@ -19,6 +20,8 @@ class YoutubeScraper:
             keys = yaml.load(f)
             self.client_id = keys['youtubeclientid']
             self.secret = keys['youtubesecret']
+            self.mongo_user = keys['mongodb']['write']['user']
+            self.mongo_pwd = keys['mongodb']['write']['pwd']
         with open(config_path) as f:
             config = yaml.load(f)['youtube']
             self.update_interval = config['update_interval']
@@ -128,12 +131,24 @@ class YoutubeScraper:
         return {'timestamp': int(time.time()), 'broadcasts': broadcasts}
 
     def store_top_livestreams(self, top_livestreams):
-        db = MongoClient(self.db_host, self.db_port)[self.db_name]
+        db = self.get_mongoclient()
         collection = db[self.db_streams]
         db_result = collection.insert_one(top_livestreams)
         if DEBUG:
             print(db_result.inserted_id)
             print("Inserted: ", top_livestreams)
+
+    def get_mongoclient(self):
+        """
+        MongoClient wrapper.
+
+        :return: psycopg2.MongoClient
+        """
+        client = MongoClient(self.db_host, self.db_port)
+        client[self.db_name].authenticate(self.mongo_user,
+                                          self.mongo_pwd,
+                                          source='admin')
+        return client[self.db_name]
 
     def get_livestream_details(self, broadcast_ids):
         """
@@ -210,7 +225,8 @@ if __name__ == "__main__":
         except:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            err = "{}. File: {}, line {}"
-            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno))
+            err = "{}. File: {}, line {}. Full: {}"
+            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
+                                       traceback.format_exc()))
             # TODO: Make more informative than line 209
             time.sleep(60)

@@ -11,3 +11,4 @@ dump/
 web/node_modules
 secrets.js
 secrets.*
+admin/

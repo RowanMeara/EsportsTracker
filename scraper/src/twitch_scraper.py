@@ -7,6 +7,7 @@ import time
 import pymongo
 from pymongo import MongoClient
 import logging
+import traceback
 
 DEBUG = True
 
@@ -48,6 +49,8 @@ class TwitchScraper:
             keys = yaml.safe_load(f)
             self.client_id = keys['twitchclientid']
             self.secret = keys['twitchsecret']
+            self.mongo_user = keys['mongodb']['write']['user']
+            self.mongo_pwd = keys['mongodb']['write']['pwd']
 
         # Install twitch authentication
         client_header = {'Client-ID': self.client_id}
@@ -221,7 +224,7 @@ class TwitchScraper:
         db_entry['streams'] = streams
         if DEBUG:
             print(db_entry)
-        db = MongoClient(self.db_host, self.db_port)[self.db_name]
+        db = self.get_mongoclient()
         collection = db[self.db_top_streams]
         db_result = collection.insert_one(db_entry)
         if DEBUG:
@@ -240,7 +243,7 @@ class TwitchScraper:
             }
         db_entry['games'] = games
 
-        db = MongoClient(self.db_host, self.db_port)[self.db_name]
+        db = self.get_mongoclient()
         collection = db[self.db_top_games]
         db_result = collection.insert_one(db_entry)
         if DEBUG:
@@ -253,7 +256,7 @@ class TwitchScraper:
 
         :return:
         """
-        db = MongoClient(self.db_host, self.db_port)[self.db_name]
+        db = self.get_mongoclient()
         for collname in [self.db_top_games, self.db_top_streams]:
             coll = db[collname]
             indexes = coll.index_information()
@@ -286,6 +289,18 @@ class TwitchScraper:
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
 
+    def get_mongoclient(self):
+        """
+        MongoClient wrapper.
+
+        :return: psycopg2.MongoClient
+        """
+        client = MongoClient(self.db_host, self.db_port)
+        client[self.db_name].authenticate(self.mongo_user,
+                                          self.mongo_pwd,
+                                          source='admin')
+        return client[self.db_name]
+
 
 if __name__ == "__main__":
     fmt = '%(asctime)s %(levelname)s:%(message)s'
@@ -297,11 +312,13 @@ if __name__ == "__main__":
         try:
             a = TwitchScraper()
             a.scrape()
+        # TODO: Change
         except:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            err = "{}. File: {}, line {}"
-            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno))
+            err = "{}. File: {}, line {}. Full: {}"
+            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
+                                       traceback.format_exc()))
             # TODO: Remove magic number
             time.sleep(60)
 
