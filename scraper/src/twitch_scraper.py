@@ -19,8 +19,7 @@ class TwitchScraper:
     MongoDB collection.  Data is stored in a raw form, and more processing is
     needed before using due to the significant amount of information collected.
     """
-    def __init__(self, config_path='src/scraper_config.yml',
-                 key_path='keys.yml'):
+    def __init__(self, config_path, key_path):
         """
         Constructor for TwitchScraper.
 
@@ -308,9 +307,12 @@ if __name__ == "__main__":
                         level=logging.WARNING)
     logging.getLogger('requests').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    cfgpath = dir_path + '/scraper_config.yml'
+    keypath = dir_path + '/../keys.yml'
     while True:
         try:
-            a = TwitchScraper()
+            a = TwitchScraper(cfgpath, keypath)
             a.scrape()
         # TODO: Change
         except:

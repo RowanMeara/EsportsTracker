@@ -5,11 +5,11 @@ from datetime import datetime
 import pytz
 from src.models import *
 from src.dbinterface import PostgresManager, MongoManager
+import os
 
 
 class Aggregator:
-    def __init__(self, configpath='src/scraper_config.yml',
-                 keypath='keys.yml'):
+    def __init__(self, configpath, keypath):
         self.aggregation_interval = 3600
         self.config_path = configpath
         with open(configpath) as f:
@@ -220,7 +220,10 @@ if __name__ == '__main__':
     logging.basicConfig(format=logformat, level=logging.DEBUG,
                         filename='aggregator.log')
     logging.debug("Aggregator Starting.")
-    a = Aggregator()
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    cfgpath = dir_path + '/scraper_config.yml'
+    keypath = dir_path + '/../keys.yml'
+    a = Aggregator(cfgpath, keypath)
     start = time.time()
     #a.agg_twitch_games()
     #a.agg_twitch_broadcasts()

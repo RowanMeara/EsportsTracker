@@ -14,8 +14,7 @@ DEBUG = True
 
 
 class YoutubeScraper:
-    def __init__(self, config_path='src/scraper_config.yml',
-                 key_file_path='keys.yml'):
+    def __init__(self, config_path, key_file_path):
         with open(key_file_path) as f:
             keys = yaml.load(f)
             self.client_id = keys['youtubeclientid']
@@ -218,9 +217,12 @@ if __name__ == "__main__":
     fmt = '%(asctime)s %(levelname)s:%(message)s'
     logging.basicConfig(format=fmt, filename='youtube.log',
                         level=logging.WARNING)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    cfgpath = dir_path + '/scraper_config.yml'
+    keypath = dir_path + '/../keys.yml'
     while True:
         try:
-            a = YoutubeScraper()
+            a = YoutubeScraper(cfgpath, keypath)
             a.scrape()
         except:
             exc_type, exc_obj, exc_tb = sys.exc_info()
