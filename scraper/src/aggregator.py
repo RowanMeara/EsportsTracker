@@ -3,8 +3,8 @@ import logging
 from ruamel import yaml
 from datetime import datetime
 import pytz
-from src.models import *
-from src.dbinterface import PostgresManager, MongoManager
+from dbinterface import PostgresManager, MongoManager
+from models import *
 import os
 import traceback
 import sys
