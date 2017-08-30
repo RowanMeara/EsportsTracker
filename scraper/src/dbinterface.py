@@ -7,6 +7,7 @@ import pymongo
 from pymongo import MongoClient
 from collections import OrderedDict
 
+
 class PostgresManager:
     def __init__(self, host, port, user, password, dbname, esports_games):
         """
@@ -227,18 +228,17 @@ class PostgresManager:
 
 class MongoManager:
     def __init__(self, host, port, db_name, user=None,
-                 password=None):
+                 password=None, ssl=True):
         self.host = host
         self.port = port
         self.db_name = db_name
         self.user = user
         self.password = password
+        self.client = MongoClient(self.host, self.port, ssl=ssl)
         if user:
-            self.client = MongoClient(host, port,
-                                      user=user,
-                                      password=password)
-        else:
-            self.client = MongoClient(host, port)
+            self.client[self.db_name].authenticate(user, password,
+                                                   source='admin')
+
 
     def first_entry_after(self, start, collname):
         """

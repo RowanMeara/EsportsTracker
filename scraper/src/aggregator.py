@@ -6,7 +6,8 @@ import pytz
 from src.models import *
 from src.dbinterface import PostgresManager, MongoManager
 import os
-
+import traceback
+import sys
 
 class Aggregator:
     def __init__(self, configpath, keypath):
@@ -22,6 +23,13 @@ class Aggregator:
         self.esports_games = set(config['twitch']['esports_channels'].keys())
         self.postgres['user'] = keys['postgres']['user']
         self.postgres['password'] = keys['postgres']['passwd']
+        mongo_cfg = config['aggregator']['mongodb']
+        self.mongo_host = mongo_cfg['host']
+        self.mongo_port = mongo_cfg['port']
+        self.mongo_ssl = mongo_cfg['ssl']
+        if 'mongodb' in keys:
+            self.mongo_user = keys['mongodb']['write']['user']
+            self.mongo_pwd = keys['mongodb']['write']['pwd']
 
     @staticmethod
     def average_viewers(entries, start, end):
@@ -79,7 +87,10 @@ class Aggregator:
         man = PostgresManager.from_config(self.postgres, self.esports_games)
         mongo = MongoManager(self.twitch_db['host'],
                              self.twitch_db['port'],
-                             self.twitch_db['db_name'])
+                             self.twitch_db['db_name'],
+                             self.mongo_user,
+                             self.mongo_pwd,
+                             self.mongo_ssl)
         curhrstart, curhrend, last = self._agg_ts(man, mongo,
                                                   'twitch_game_vc',
                                                   self.twitch_db['top_games'])
@@ -111,7 +122,10 @@ class Aggregator:
         man = PostgresManager.from_config(self.postgres, self.esports_games)
         mongo = MongoManager(self.twitch_db['host'],
                              self.twitch_db['port'],
-                             self.twitch_db['db_name'])
+                             self.twitch_db['db_name'],
+                             self.mongo_user,
+                             self.mongo_pwd,
+                             self.mongo_ssl)
         hrstart, hrend, last = self._agg_ts(man, mongo,
                                             'twitch_stream',
                                             self.twitch_db['top_streams'])
@@ -155,7 +169,10 @@ class Aggregator:
         man = PostgresManager.from_config(self.postgres, self.esports_games)
         mongo = MongoManager(self.youtube_db['host'],
                              self.youtube_db['port'],
-                             self.youtube_db['db_name'])
+                             self.youtube_db['db_name'],
+                             self.mongo_user,
+                             self.mongo_pwd,
+                             self.mongo_ssl)
         hrstart, hrend, last = self._agg_ts(man, mongo,
                                             'youtube_stream',
                                             self.youtube_db['top_streams'])
@@ -217,16 +234,30 @@ class Aggregator:
 
 if __name__ == '__main__':
     logformat = '%(asctime)s %(levelname)s:%(message)s'
-    logging.basicConfig(format=logformat, level=logging.DEBUG,
+    logging.basicConfig(format=logformat, level=logging.WARNING,
                         filename='aggregator.log')
     logging.debug("Aggregator Starting.")
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    cfgpath = dir_path + '/scraper_config.yml'
+    cfgpath = dir_path + '/config/prod_config.yml'
     keypath = dir_path + '/../keys.yml'
-    a = Aggregator(cfgpath, keypath)
-    start = time.time()
-    #a.agg_twitch_games()
-    #a.agg_twitch_broadcasts()
-    a.agg_youtube_streams()
-    end = time.time()
-    print("Total Time: {:.2f}".format(end - start))
+    print('Starting Aggregator')
+    while True:
+        try:
+            a = Aggregator(cfgpath, keypath)
+            start = time.time()
+            a.agg_twitch_games()
+            a.agg_twitch_broadcasts()
+            a.agg_youtube_streams()
+            end = time.time()
+            print("Total Time: {:.2f}".format(end - start))
+            # Initially refresh every 30 minutes because we need a complete
+            # hour before additional aggregation can occur.
+            time.sleep(60*30 - int(end-start))
+        except:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            err = "{}. File: {}, line {}. Full: {}"
+            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
+                                       traceback.format_exc()))
+            # TODO: Remove magic number
+            time.sleep(60)
