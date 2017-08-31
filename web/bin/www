@@ -26,7 +26,8 @@ var server = http.createServer(app)
  * to expose node.js applications to internet.
  */
 
-server.listen(port, 'localhost')
+// TODO: Set to 'localhost'
+server.listen(port)
 server.on('error', onError)
 server.on('listening', onListening)
 
