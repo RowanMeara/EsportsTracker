@@ -22,10 +22,11 @@ app.set('port', port)
 var server = http.createServer(app)
 
 /**
- * Listen on provided port, on all network interfaces.
+ * Listen on provided port only to local interfaces.  It is not recommended
+ * to expose node.js applications to internet.
  */
 
-server.listen(port)
+server.listen(port, 'localhost')
 server.on('error', onError)
 server.on('listening', onListening)
 

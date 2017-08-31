@@ -1,11 +1,11 @@
-SELECT games.name, v.viewers
-FROM games
+SELECT game.name, v.viewers
+FROM game
 INNER JOIN
 (
     SELECT game_id, SUM(viewers) AS viewers
-    FROM twitch_top_games
+    FROM twitch_game_vc
     WHERE epoch >= $1 AND epoch < $2
     GROUP BY game_id
-) AS v ON v.game_id = games.game_id
+) AS v ON v.game_id = game.game_id
 ORDER BY v.viewers DESC
 LIMIT $3;

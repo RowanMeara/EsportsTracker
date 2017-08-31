@@ -32,7 +32,7 @@ app.use('/api', api)
 
 // TODO: Remove
 app.get('/test', function (req, res) {
-  res.send("TESTING ME")
+  res.send('TESTING ME')
 })
 
 // catch 404 and forward to error handler
