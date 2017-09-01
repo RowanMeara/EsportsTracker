@@ -24,8 +24,11 @@ if (env === 'development') {
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
+
+const MCPath = path.join(__dirname, 'node_modules', 'material-components-web')
+const mainSassPath = path.join(__dirname, 'public')
 app.use(sassMiddleware({
-  src: path.join(__dirname, 'public'),
+  src: path.join(mainSassPath, MCPath, path.delimiter),
   dest: path.join(__dirname, 'public'),
   indentedSyntax: true, // true = .sass and false = .scss
   sourceMap: true

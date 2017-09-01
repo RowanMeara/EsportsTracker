@@ -10,7 +10,8 @@ const queries = require('../server/queries')
 const debug = require('debug')('web:server')
 const http = require('http')
 const cron = require('node-cron')
-
+const path = require('path')
+const fs  = require('fs')
 
 /**
  * Get port from environment and store in Express.
@@ -22,6 +23,10 @@ app.set('port', port)
 // Update Cache so queries are responsive
 cron.schedule('* 30 * * * *', queries.refreshCache, false)
 queries.refreshCache()
+
+// TODO: find less hacky way to serve the material components library
+// TODO: gulp would work?
+loadMaterialComponents()
 
 /**
  * Create HTTP server.
@@ -94,4 +99,17 @@ function onListening () {
     ? 'pipe ' + addr
     : 'port ' + addr.port
   debug('Listening on ' + bind)
+}
+
+function loadMaterialComponents () {
+  let js = path.join(__dirname, '../node_modules/material-components-web/dist/material-components-web.js')
+  let css = path.join(__dirname, '../node_modules/material-components-web/dist/material-components-web.css')
+  let prodJs = path.join(__dirname, '../public/javascripts/material-components-web.js')
+  let prodCSS = path.join(__dirname, '../public/stylesheets/material-components-web.css')
+  if (!fs.existsSync(prodJs)) {
+    fs.createReadStream(js).pipe(fs.createWriteStream(prodJs))
+  }
+  if (!fs.existsSync(prodCSS)){
+    fs.createReadStream(css).pipe(fs.createWriteStream(prodCSS))
+  }
 }
