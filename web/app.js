@@ -8,14 +8,19 @@ const sassMiddleware = require('node-sass-middleware')
 const api = require('./routes/api')
 const index = require('./routes/index')
 
-var app = express()
+let app = express()
+let env = app.get('env')
 
-// view engine setup
+// View Engine Setup
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'pug')
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
-app.use(logger('dev'))
+if (env === 'development') {
+  app.use(logger('dev'))
+} else {
+  app.use(logger('tiny'))
+}
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
@@ -27,28 +32,23 @@ app.use(sassMiddleware({
 }))
 app.use(express.static(path.join(__dirname, 'public')))
 
+// Routes
 app.use('/', index)
 app.use('/api', api)
 
-// TODO: Remove
-app.get('/test', function (req, res) {
-  res.send('TESTING ME')
-})
-
-// catch 404 and forward to error handler
+// 404 Handling
 app.use(function (req, res, next) {
-  var err = new Error('Not Found')
+  let err = new Error('Not Found')
   err.status = 404
   next(err)
 })
 
-// error handler
+// Development Error Handling
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
+  // Only provide error during development
   res.locals.message = err.message
   res.locals.error = req.app.get('env') === 'development' ? err : {}
 
-  // render the error page
   res.status(err.status || 500)
   res.render('error')
 })

@@ -1,6 +1,6 @@
 {
   "name": "EsportsTracker",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
@@ -10,15 +10,16 @@
     "body-parser": "~1.17.1",
     "cookie-parser": "^1.4.3",
     "debug": "^2.6.8",
-    "express": "~4.15.2",
+    "express": "^4.15.4",
     "material-components-web": "^0.17.0",
     "morgan": "~1.8.1",
+    "node-cron": "^1.2.1",
     "node-sass-middleware": "^0.9.8",
-    "pg-promise": "^6.3.6",
+    "pg-promise": "^6.5.1",
     "pug": "^2.0.0-rc.3",
     "serve-favicon": "^2.4.3"
   },
   "devDependencies": {
-    "standard": "^10.0.2"
+    "standard": "^10.0.3"
   }
 }

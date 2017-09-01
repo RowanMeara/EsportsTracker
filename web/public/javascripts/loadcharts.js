@@ -5,10 +5,7 @@ function drawChart () {
   // Create the data table.
   let numbers = new Array()
   var jsonData = $.ajax({
-    url: '/api/twitchtopgames/',
-    data: {
-      'time': 'last30days'
-    },
+    url: '/api/twitchgamescumlast30/',
     dataType: 'json',
     async: false,
     success: function (msg) {
