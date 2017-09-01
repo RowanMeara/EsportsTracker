@@ -12,3 +12,5 @@ web/node_modules
 secrets.js
 secrets.*
 admin/
+material-components-web.css
+material-components-web.js
