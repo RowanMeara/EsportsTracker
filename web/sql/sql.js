@@ -8,6 +8,10 @@ function sql (file) {
 
 module.exports = {
   twitch_top_games: {
-    totalHours: sql('twitch_top_games/totalviewerhours.sql')
+    totalHours: sql('twitch_top_games/totalviewerhours.sql'),
+    cumHours: sql('twitch_top_games/cumulativeviewership.sql')
+  },
+  youtube_stream: {
+    cumHours: sql('youtube_stream/cumulativeviewership.sql')
   }
 }
