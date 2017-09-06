@@ -1,7 +1,12 @@
 extends layout
 
 block content
-  h1.mdc-typography--display1= "Game Marketshare"
-  .mdc-card
-    h3 Twitch Marketshare
-    #chart_div
+  .mdc-layout-grid-max-width
+    .mdc-layout-grid__inner
+      .mdc-layout-grid__cell--span-4.et-mdc-cell= 4
+      .mdc-layout-grid__cell--span-4.et-mdc-cell= 4
+      .mdc-layout-grid__cell--span-4.et-mdc-cell= 4
+  .large-card-container
+    section.mdc-card__primary
+      h2(class="mdc-card mdc-card__title--large") Twitch Marketshare
+        #chart_div

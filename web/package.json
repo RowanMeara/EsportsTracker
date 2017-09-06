@@ -17,6 +17,7 @@
     "node-cron": "^1.2.1",
     "node-sass-middleware": "^0.9.8",
     "pg-promise": "^6.5.1",
+    "plotly": "^1.0.6",
     "pug": "^2.0.0-rc.3",
     "serve-favicon": "^2.4.3"
   },
