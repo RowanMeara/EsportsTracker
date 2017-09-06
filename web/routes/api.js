@@ -22,15 +22,20 @@ router.get('/twitchtopgames', async function (req, res) {
 
 router.get('/twitchgamescumlast30', async function (req, res) {
   try {
-    let q = await queries.twitchGameCumVHLast30()
-    let l = []
-    q.forEach((entry) => {
-      l.push([entry['name'], parseInt(entry['viewers'])])
-    })
-    res.status(200).json(l)
+    console.log(queries.cache.twitchGameCumVHLast30)
+    res.status(200).json(queries.cache.twitchGameCumVHLast30)
   } catch (e) {
     console.log(e.message)
   }
+})
+
+router.get('/marketsharelast30', async function (req, res) {
+  let q = [
+    ['Twitch', queries.cache.twitchTotalVHLast30],
+    ['Youtube', queries.cache.youtubeTotalVHLast30]
+  ]
+  console.log(q)
+  res.status(200).json(q)
 })
 
 module.exports = router
