@@ -1,9 +1,22 @@
 $menu-color: #536DFE
 $brand-color: #304FFE
 $white: #ffffff
+$black: #000000
+$background-grey: #e2e1e0
 
 body
   font: 20px "Lucida Grande", Helvetica, Arial, sans-serif
+  background: $background-grey
+a
+  text-decoration: none !important
+
+.card
+  border: 2px
+  background: $white
+  border-radius: 2px;
+  border-color: $black
+  margin: 0.5rem
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23)
 
 .navbar-default
   background-color: $brand-color
@@ -54,8 +67,7 @@ body
     cursor: pointer
     a
       color: $white
-    a:hover
-      text-decoration: none
+
 
 @media (max-width: 767px)
   .nav-side-menu
