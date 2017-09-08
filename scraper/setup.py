@@ -21,7 +21,8 @@ setup(
         'psycopg2',
         'setuptools',
         'langid',
-        'setproctitle'
+        'setproctitle',
+        'pytz'
     ],
     author='Rowan Meara',
     author_email='rowanmeara@gmail.com',
