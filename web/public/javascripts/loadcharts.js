@@ -1,29 +1,39 @@
 google.charts.load('current', {'packages':['corechart']})
 google.charts.setOnLoadCallback(drawCharts)
 
-function drawCharts () {
-  twitchGameViewershipLast30()
-  marketshareLast30()
+function drawCharts (resize = false) {
+  twitchGameViewershipLast30(resize)
+  marketshareLast30(resize)
 }
 
-function twitchGameViewershipLast30 () {
-  let render = function (numbers) {
-    let data = new google.visualization.DataTable()
-    data.addColumn('string', 'Game')
-    data.addColumn('number', 'Viewer Years')
-    data.addColumn({type: 'string', role: 'tooltip'})
-    toYears(numbers)
-    data.addRows(numbers)
+$(window).resize(() => {
+  drawCharts(true)
+  console.log('Charts redrawn.')
+})
 
-    let options = {
-      title: 'Twitch Viewership by Game Last 30 Days',
-      vAxis: {format: '# years'},
-      width: '100%',
-      height: '100%'
-    }
+function twitchGameViewershipLast30 (resize = false) {
+  let options = {
+    title: 'Twitch Viewership by Game Last 30 Days',
+    vAxis: {format: '# years'},
+    width: '100%',
+    height: '100%'
+  }
+  if (resize) {
+    this.chart1.draw(this.data1, options)
+    console.log('redrew tgv')
+    return
+  }
+  let render = function (numbers) {
+    toYears(numbers)
+    this.data1 = new google.visualization.DataTable()
+    this.data1.addColumn('string', 'Game')
+    this.data1.addColumn('number', 'Viewer Years')
+    this.data1.addColumn({type: 'string', role: 'tooltip'})
+    this.data1.addRows(numbers)
+
     // Instantiate and draw our chart, passing in some options.
-    let chart = new google.visualization.PieChart(document.getElementById('twitchgamevh30'))
-    chart.draw(data, options)
+    this.chart1 = new google.visualization.PieChart(document.getElementById('twitchgamevh30'))
+    this.chart1.draw(this.data1, options)
   }
 
   $.ajax({
@@ -36,25 +46,29 @@ function twitchGameViewershipLast30 () {
   })
 }
 
-function marketshareLast30 () {
+function marketshareLast30 (resize = false) {
+  let options = {
+    title: 'Platform Marketshare',
+    vAxis: {format: '# years'},
+    width: '100%',
+    height: '100%'
+  }
+  if (resize) {
+    this.chart.draw(this.data, options)
+    console.log('marketshare')
+    return
+  }
   let render = function (numbers) {
     toYears(numbers)
-    let data = new google.visualization.DataTable()
-    data.addColumn('string', 'Platform')
-    data.addColumn('number', 'Viewer Years')
-    data.addColumn({type: 'string', role: 'tooltip'})
-    data.addRows(numbers)
-
-    let options = {
-      title: 'Platform Marketshare',
-      vAxis: {format: '# years'},
-      width: '100%',
-      height: '100%'
-    }
+    this.data = new google.visualization.DataTable()
+    this.data.addColumn('string', 'Platform')
+    this.data.addColumn('number', 'Viewer Years')
+    this.data.addColumn({type: 'string', role: 'tooltip'})
+    this.data.addRows(numbers)
 
     // Instantiate and draw our chart, passing in some options.
-    let chart = new google.visualization.PieChart(document.getElementById('marketshare'))
-    chart.draw(data, options)
+    this.chart = new google.visualization.PieChart(document.getElementById('marketshare'))
+    this.chart.draw(this.data, options)
   }
 
   $.ajax({
