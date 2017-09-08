@@ -14,3 +14,7 @@ secrets.*
 admin/
 material-components-web.js
 *.css
+esportstracker.egg-info
+scraper/build/
+scraper/dist/
+*.map

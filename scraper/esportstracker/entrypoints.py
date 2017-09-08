@@ -101,4 +101,3 @@ if __name__ == '__main__':
         setproctitle('YoutubeScraper')
         run_youtubescraper()
     print("No arguments provided.")
-    
