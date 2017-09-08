@@ -3,11 +3,9 @@ import logging
 from ruamel import yaml
 from datetime import datetime
 import pytz
-from dbinterface import PostgresManager, MongoManager
-from models import *
-import os
-import traceback
-import sys
+from esportstracker.dbinterface import PostgresManager, MongoManager
+from esportstracker.models import *
+
 
 class Aggregator:
     def __init__(self, configpath, keypath):
@@ -230,34 +228,3 @@ class Aggregator:
         """
         seconds_in_hour = 3600
         return int(epoch) // seconds_in_hour * seconds_in_hour
-
-
-if __name__ == '__main__':
-    logformat = '%(asctime)s %(levelname)s:%(message)s'
-    logging.basicConfig(format=logformat, level=logging.WARNING,
-                        filename='aggregator.log')
-    logging.debug("Aggregator Starting.")
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    cfgpath = dir_path + '/config/prod_config.yml'
-    keypath = dir_path + '/../keys.yml'
-    print('Starting Aggregator')
-    while True:
-        try:
-            a = Aggregator(cfgpath, keypath)
-            start = time.time()
-            a.agg_twitch_games()
-            a.agg_twitch_broadcasts()
-            a.agg_youtube_streams()
-            end = time.time()
-            print("Total Time: {:.2f}".format(end - start))
-            # Initially refresh every 30 minutes because we need a complete
-            # hour before additional aggregation can occur.
-            time.sleep(60*30 - int(end-start))
-        except:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            err = "{}. File: {}, line {}. Full: {}"
-            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
-                                       traceback.format_exc()))
-            # TODO: Remove magic number
-            time.sleep(60)

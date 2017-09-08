@@ -1,6 +1,6 @@
 import pytest
 import os
-from src import twitch_scraper
+from esportstracker import twitch_scraper
 
 TEST_DIRECTORY = os.path.dirname(__file__)
 CONFIG_PATH = TEST_DIRECTORY + '/res/test_scraper_config.yml'

@@ -1,4 +1,4 @@
-from models import *
+from esportstracker.models import *
 import psycopg2
 import logging
 from psycopg2 import sql

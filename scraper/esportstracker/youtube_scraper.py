@@ -202,8 +202,8 @@ class YoutubeScraper:
         while True:
             start_time = time.time()
             try:
-                res = a.get_top_livestreams(5)
-                a.store_top_livestreams(res)
+                res = self.get_top_livestreams(5)
+                self.store_top_livestreams(res)
             except requests.exceptions.ConnectionError:
                 logging.warning("Youtube API Failed")
             except pymongo.errors.ServerSelectionTimeoutError:
@@ -214,24 +214,3 @@ class YoutubeScraper:
             time_to_sleep = self.update_interval - (time.time() - start_time)
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
-
-
-if __name__ == "__main__":
-    fmt = '%(asctime)s %(levelname)s:%(message)s'
-    logging.basicConfig(format=fmt, filename='youtube.log',
-                        level=logging.WARNING)
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    cfgpath = dir_path + '/scraper_config.yml'
-    keypath = dir_path + '/../keys.yml'
-    while True:
-        try:
-            a = YoutubeScraper(cfgpath, keypath)
-            a.scrape()
-        except:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            err = "{}. File: {}, line {}. Full: {}"
-            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
-                                       traceback.format_exc()))
-            # TODO: Make more informative than line 209
-            time.sleep(60)

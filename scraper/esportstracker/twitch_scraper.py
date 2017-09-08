@@ -276,9 +276,9 @@ class TwitchScraper:
         while True:
             start_time = time.time()
             try:
-                a.scrape_top_games()
+                self.scrape_top_games()
                 for game in self.games:
-                    a.scrape_esports_channels(game)
+                    self.scrape_esports_channels(game)
                 if DEBUG:
                     print("Elapsed time: {:.2f}s".format(time.time() - start_time))
             except requests.exceptions.ConnectionError:
@@ -301,30 +301,3 @@ class TwitchScraper:
                                               self.mongo_pwd,
                                               source='admin')
         return client[self.db_name]
-
-
-if __name__ == "__main__":
-    fmt = '%(asctime)s %(levelname)s:%(message)s'
-    logging.basicConfig(format=fmt, filename='twitch.log',
-                        level=logging.WARNING)
-    logging.getLogger('requests').setLevel(logging.WARNING)
-    logging.getLogger('urllib3').setLevel(logging.WARNING)
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    cfgpath = dir_path + '/scraper_config.yml'
-    keypath = dir_path + '/../keys.yml'
-    while True:
-        try:
-            a = TwitchScraper(cfgpath, keypath)
-            a.scrape()
-        # TODO: Change
-        except:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            err = "{}. File: {}, line {}. Full: {}"
-            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
-                                       traceback.format_exc()))
-            # TODO: Remove magic number
-            time.sleep(60)
-
-    #a = TwitchScraper()
-    #a.scrape()
