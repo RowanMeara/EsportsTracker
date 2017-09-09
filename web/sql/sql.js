@@ -16,5 +16,8 @@ module.exports = {
   },
   game: {
     esportsGames: sql('game/esportsgamelist.sql')
+  },
+  twitch_stream: {
+    gameViewershipHourly: sql('twitch_stream/gameviewershiphourly.sql')
   }
 }

@@ -1,39 +1,45 @@
-google.charts.load('current', {'packages':['corechart']})
+google.charts.load('44', {'packages': ['corechart', 'line']})
 google.charts.setOnLoadCallback(drawCharts)
 
 function drawCharts (resize = false) {
-  twitchGameViewershipLast30(resize)
-  marketshareLast30(resize)
+  let pn = window.location.pathname
+  if (pn === '/') {
+    twitchGameViewershipLast30(resize)
+    marketshareLast30(resize)
+  } else if (pn.includes('/game/')) {
+    let gameID = parseInt(pn.substring(6, pn.length))
+    hourlyGameViewership(gameID, resize)
+  }
 }
 
 $(window).resize(() => {
   drawCharts(true)
-  console.log('Charts redrawn.')
 })
 
+let chartTGV
+let dataTGV
 function twitchGameViewershipLast30 (resize = false) {
   let options = {
     title: 'Twitch Viewership by Game Last 30 Days',
     vAxis: {format: '# years'},
     width: '100%',
-    height: '100%'
+    height: 300
   }
   if (resize) {
-    this.chart1.draw(this.data1, options)
-    console.log('redrew tgv')
+    chartTGV.draw(dataTGV, options)
     return
   }
   let render = function (numbers) {
-    toYears(numbers)
-    this.data1 = new google.visualization.DataTable()
-    this.data1.addColumn('string', 'Game')
-    this.data1.addColumn('number', 'Viewer Years')
-    this.data1.addColumn({type: 'string', role: 'tooltip'})
-    this.data1.addRows(numbers)
+    formatTooltip(numbers)
+    dataTGV = new google.visualization.DataTable()
+    dataTGV.addColumn('string', 'Game')
+    dataTGV.addColumn('number', 'Viewer Years')
+    dataTGV.addColumn({type: 'string', role: 'tooltip'})
+    dataTGV.addRows(numbers)
 
     // Instantiate and draw our chart, passing in some options.
-    this.chart1 = new google.visualization.PieChart(document.getElementById('twitchgamevh30'))
-    this.chart1.draw(this.data1, options)
+    chartTGV = new google.visualization.PieChart(document.getElementById('twitchgamevh30'))
+    chartTGV.draw(dataTGV, options)
   }
 
   $.ajax({
@@ -46,33 +52,84 @@ function twitchGameViewershipLast30 (resize = false) {
   })
 }
 
+let dataMks
+let chartMks
 function marketshareLast30 (resize = false) {
   let options = {
     title: 'Platform Marketshare',
     vAxis: {format: '# years'},
     width: '100%',
-    height: '100%'
+    height: 300
   }
   if (resize) {
-    this.chart.draw(this.data, options)
-    console.log('marketshare')
+    chartMks.draw(dataMks, options)
     return
   }
   let render = function (numbers) {
-    toYears(numbers)
-    this.data = new google.visualization.DataTable()
-    this.data.addColumn('string', 'Platform')
-    this.data.addColumn('number', 'Viewer Years')
-    this.data.addColumn({type: 'string', role: 'tooltip'})
-    this.data.addRows(numbers)
+    formatTooltip(numbers)
+    dataMks = new google.visualization.DataTable()
+    dataMks.addColumn('string', 'Platform')
+    dataMks.addColumn('number', 'Viewer Years')
+    dataMks.addColumn({type: 'string', role: 'tooltip'})
+    dataMks.addRows(numbers)
 
     // Instantiate and draw our chart, passing in some options.
-    this.chart = new google.visualization.PieChart(document.getElementById('marketshare'))
-    this.chart.draw(this.data, options)
+    chartMks = new google.visualization.PieChart(document.getElementById('marketshare'))
+    chartMks.draw(dataMks, options)
   }
 
   $.ajax({
     url: '/api/marketsharelast30/',
+    dataType: 'json',
+    async: true,
+    success: function (msg) {
+      render(msg)
+    }
+  })
+}
+
+let dataHGV
+let chartHGV
+let optionsHGV = {
+  width: '100%',
+  height: 600,
+  legend: {position: 'none'},
+  hAxis: {
+    textStyle: {
+      fontSize: 20
+    }
+  },
+  vAxis: {
+    textPosition: 'in',
+    title: 'Number of Concurrent Viewers'
+  },
+  chart: {}
+}
+function hourlyGameViewership (gameID, resize = false) {
+  if (resize) {
+    chartHGV.draw(dataHGV, optionsHGV)
+    return
+  }
+
+  let render = function (data) {
+    dataHGV = new google.visualization.DataTable()
+    chartHGV = new google.charts.Line(document.getElementById('gameviewership'))
+    data.data.forEach((ts) => {
+      ts[0] = new Date(ts[0] * 1000)
+    })
+    // formatTooltip(data)
+    dataHGV.addColumn('date', 'Date')
+    dataHGV.addColumn('number', 'Concurrent Viewers')
+    // dataHGV.addColumn({type: 'string', role: 'tooltip'})
+    dataHGV.addRows(data.data)
+    optionsHGV.chart.title = data.name + ' Concurrent Viewership'
+    optionsHGV.chart.subtitle = 'in English Language Streams'
+    // Instantiate and draw our chart, passing in some options.
+    chartHGV.draw(dataHGV, optionsHGV)
+  }
+
+  $.ajax({
+    url: '/api/gameviewership?id=' + gameID,
     dataType: 'json',
     async: true,
     success: function (msg) {
@@ -95,7 +152,7 @@ function splitMille (n, separator = ',') {
   return `${num}${decimals}`
 }
 
-function toYears (apiResponse) {
+function formatTooltip (apiResponse) {
   let sum = 0
   apiResponse.forEach((resp) => {
     sum += resp[1]

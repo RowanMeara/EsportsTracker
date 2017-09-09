@@ -5,7 +5,7 @@
  */
 
 const app = require('../app')
-const queries = require('../server/queries')
+const queries = require('../server/query_cache')
 
 const debug = require('debug')('web:server')
 const http = require('http')
@@ -20,8 +20,7 @@ app.set('port', port)
 
 // Update Cache so queries are responsive
 cron.schedule('* 30 * * * *', queries.refreshCache, false)
-queries.refreshCache()
-
+queries.refresh()
 
 /**
  * Create HTTP server.

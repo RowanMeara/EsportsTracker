@@ -1,4 +1,5 @@
 const express = require('express')
+const cache = require('../server/query_cache')
 const queries = require('../server/queries')
 const router = express.Router()
 
@@ -9,7 +10,7 @@ router.get('/twitchtopgames', async function (req, res) {
     if (req.query.time === 'last30days') {
       start = epoch - 2592000
     }
-    let q = await queries.twitchGameCumVH(start, epoch, 10)
+    let q = cache.twitchGameCumVH[30]
     let l = []
     q.forEach((entry) => {
       l.push([entry['name'], parseInt(entry['viewers'])])
@@ -22,8 +23,7 @@ router.get('/twitchtopgames', async function (req, res) {
 
 router.get('/twitchgamescumlast30', async function (req, res) {
   try {
-    console.log(queries.cache.twitchGameCumVHLast30)
-    res.status(200).json(queries.cache.twitchGameCumVHLast30)
+    res.status(200).json(cache.twitchGameCumVH[30])
   } catch (e) {
     console.log(e.message)
   }
@@ -31,11 +31,28 @@ router.get('/twitchgamescumlast30', async function (req, res) {
 
 router.get('/marketsharelast30', async function (req, res) {
   let q = [
-    ['Twitch', queries.cache.twitchTotalVHLast30],
-    ['Youtube', queries.cache.youtubeTotalVHLast30]
+    ['Twitch', cache.twitchTotalVH[30]],
+    ['Youtube', cache.youtubeTotalVH[30]]
   ]
-  console.log(q)
   res.status(200).json(q)
+})
+
+router.get('/gameviewership', async function (req, res) {
+  try {
+    let gameID = req.query.id
+    let epoch = Math.floor(new Date() / 1000)
+    let start = epoch - 2592000
+    let q = await queries.esportsGameHourly(gameID, start, epoch)
+    let r = { name: q[0].name }
+    let l = []
+    q.forEach((entry) => {
+      l.push([entry['epoch'], parseInt(entry['viewers'])])
+    })
+    r.data = l
+    res.status(200).json(r)
+  } catch (e) {
+    console.log(e.message)
+  }
 })
 
 module.exports = router
