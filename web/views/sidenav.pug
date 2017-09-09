@@ -3,9 +3,10 @@
   i.fa.fa-bars.fa-2x.toggle-btn(data-toggle='collapse', data-target='#menu-content')
   .menu-list
     ul#menu-content.menu-content.collapse.out
-      li
-        a(href='#') League of Legends
-      li
-        a(href='#') CS:GO
-      li
-          a(href='#') Overwatch
+      each game in esportsGames
+        if game.game_id == gameID
+          li.active
+            a(href='/game/' + game.game_id)= game.name
+        else
+          li
+            a(href='/game/' + game.game_id)= game.name

@@ -21,15 +21,38 @@ const db = pgp(cn)
 const topGamesTotalHours = new PQ(sql.twitch_top_games.totalHours)
 const qTwitchTotalHours = new PQ(sql.twitch_top_games.cumHours)
 const qYoutubeTotalHours = new PQ(sql.youtube_stream.cumHours)
+const qEsportsGames = new PQ(sql.game.esportsGames)
 
 const timeout = cfg.pg_timeout
 let queryCache = {}
 queryCache.twitchGameCumVHLast30 = {}
 queryCache.youtubeTotalVHLast30 = 0
 queryCache.twitchTotalVHLast30 = 0
+queryCache.esportsGames = {}
 
 const DAYS_30 = 2592000
 const DAY = 86400
+
+/*
+ * Gets the name and game_ids of current esports titles.  Results are in descending order
+ * by popularity.
+ *
+ * @return {Object} raw query result
+ */
+async function esportsGames (refresh = false) {
+  if (refresh) {
+    try {
+      let res = await db.any(qEsportsGames)
+      queryCache.esportsGames = res
+      return res
+    } catch (e) {
+      console.log(e.message)
+    }
+  }
+  else {
+    return queryCache.esportsGames
+  }
+}
 
 /*
  *
@@ -39,7 +62,7 @@ const DAY = 86400
  * @return {Object} raw query result
  */
 async function twitchGameCumVH (start, end, limit) {
-  const res = await db.any(topGamesTotalHours, [start, end, limit])
+  let res = await db.any(topGamesTotalHours, [start, end, limit])
   return res
 }
 
@@ -116,6 +139,7 @@ async function refreshQueryCache () {
   queries.push(twitchGameCumVHLast30(30, 10, false))
   queries.push(twitchTotalVHLast30(true))
   queries.push(youtubeTotalVHLast30(true))
+  queries.push(esportsGames(true))
 
   await Promise.all(queries)
   console.log('Query Cache Updated')
@@ -123,10 +147,6 @@ async function refreshQueryCache () {
 
 function isEmpty (obj) {
   return Object.keys(obj).length === 0
-}
-
-function hoursToYears (hours) {
-  return hours / 8760
 }
 
 module.exports = {

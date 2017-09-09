@@ -7,6 +7,7 @@ const bodyParser = require('body-parser')
 const sassMiddleware = require('node-sass-middleware')
 const api = require('./routes/api')
 const index = require('./routes/index')
+const game = require('./routes/game')
 
 let app = express()
 let env = app.get('env')
@@ -35,6 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 // Routes
 app.use('/', index)
 app.use('/api', api)
+app.use('/game', game)
 
 // 404 Handling
 app.use(function (req, res, next) {

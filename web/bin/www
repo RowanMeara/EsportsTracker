@@ -22,6 +22,7 @@ app.set('port', port)
 cron.schedule('* 30 * * * *', queries.refreshCache, false)
 queries.refreshCache()
 
+
 /**
  * Create HTTP server.
  */

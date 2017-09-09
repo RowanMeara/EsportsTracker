@@ -6,7 +6,4 @@ config.pg_port = 5432
 config.pg_db = 'esports_stats'
 config.pg_timeout = 300
 
-// Environment config
-
-
 module.exports = config

@@ -13,5 +13,8 @@ module.exports = {
   },
   youtube_stream: {
     cumHours: sql('youtube_stream/cumulativeviewership.sql')
+  },
+  game: {
+    esportsGames: sql('game/esportsgamelist.sql')
   }
 }

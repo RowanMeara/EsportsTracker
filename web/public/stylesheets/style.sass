@@ -1,9 +1,10 @@
 $menu-color: #536DFE
+$menu-color-active: #F06292
 $brand-color: #304FFE
 $white: #ffffff
 $black: #000000
 $background-grey: #e2e1e0
-
+$sidebar-width: 370px
 @import url("https://netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css")
 
 body
@@ -52,7 +53,7 @@ i
   background-color: $menu-color
   position: fixed
   top: 0px
-  width: 300px
+  width: $sidebar-width
   height: 100%
   color: $white
   .brand
@@ -65,15 +66,20 @@ i
     display: none
   ul, li
     list-style: none
-    padding: 10px
-    margin: 0px
-    font-size: 20px
+    padding: 0px
+    font-size: 16px
     opacity: 1
     font-weight: 200
     line-height: 35px
     cursor: pointer
     a
+      display: list-item
+      padding: 10px
       color: $white
+    .active
+
+      background-color: $menu-color-active
+
 
 //.nav-side-menu
   ul :not(collapsed) .arrow:before, li :not(collapsed) .arrow:before
@@ -110,5 +116,5 @@ i
   .nav-side-menu .menu-list .menu-content
     display: block
   #main
-    width: calc(100% - 300px)
+    width: calc(100% - #{$sidebar-width})
     float: right
