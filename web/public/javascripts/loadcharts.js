@@ -95,19 +95,20 @@ let optionsHGV = {
   height: 600,
   legend: {position: 'none'},
   hAxis: {
-    textStyle: {
-      fontSize: 20
-    }
+    title: '',
+    textPosition: 'none'
   },
   vAxis: {
-    textPosition: 'in',
-    title: 'Number of Concurrent Viewers'
+    textStyle: {
+      fontSize: 20
+    },
+    //title: 'Concurrent Viewers'
   },
   chart: {}
 }
 function hourlyGameViewership (gameID, resize = false) {
   if (resize) {
-    chartHGV.draw(dataHGV, optionsHGV)
+    chartHGV.draw(dataHGV, google.charts.Line.convertOptions(optionsHGV))
     return
   }
 
@@ -123,9 +124,9 @@ function hourlyGameViewership (gameID, resize = false) {
     // dataHGV.addColumn({type: 'string', role: 'tooltip'})
     dataHGV.addRows(data.data)
     optionsHGV.chart.title = data.name + ' Concurrent Viewership'
-    optionsHGV.chart.subtitle = 'in English Language Streams'
+    optionsHGV.chart.subtitle = 'English Language Streams Only'
     // Instantiate and draw our chart, passing in some options.
-    chartHGV.draw(dataHGV, optionsHGV)
+    chartHGV.draw(dataHGV, google.charts.Line.convertOptions(optionsHGV))
   }
 
   $.ajax({
