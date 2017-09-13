@@ -42,9 +42,12 @@ def run_youtubescraper():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     cfgpath = dir_path + '/scraper_config.yml'
     keypath = dir_path + '/../keys.yml'
+    ytgamespath = dir_path + '/config/youtube_games.yml'
+    #a = YoutubeScraper(cfgpath, keypath, ytgamespath)
+    #a.scrape()
     while True:
         try:
-            a = YoutubeScraper(cfgpath, keypath)
+            a = YoutubeScraper(cfgpath, keypath, ytgamespath)
             a.scrape()
         except:
             exc_type, exc_obj, exc_tb = sys.exc_info()

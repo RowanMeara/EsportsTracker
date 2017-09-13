@@ -161,7 +161,6 @@ class TwitchScraper:
 
         raise Exception
 
-
     def scrape_top_games(self):
         """
         Makes a twitch API Request and stores the result in MongoDB.
