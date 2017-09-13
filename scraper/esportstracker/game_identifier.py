@@ -16,10 +16,10 @@ class YoutubeIdentifier:
             # The International
             'UCTQKT5QqO3h7y32G8VzuySQ': 29595
         }
-        lolkeywords = {'LCK', 'LCS', 'CBLoL'}
-        csgokeywords = {}
-        pubgkeywords = {'PUBG', 'Playerunknown', 'battlegrounds'}
-        dota2keywords = {}
+        lolkeywords = ['LCK', 'LCS', 'CBLoL', 'League of Legends']
+        csgokeywords = ['CSGO', 'CS GO', 'CS:GO', 'Counter Strike']
+        pubgkeywords = ['PUBG', 'Playerunknown', 'battlegrounds']
+        dota2keywords = ['Dota 2', 'dota']
         self.keywords = {
             21779: lolkeywords,
             32399: csgokeywords,
@@ -40,4 +40,9 @@ class YoutubeIdentifier:
         """
         if yts.channel_id in self.channels.keys():
             yts.game_id = self.channels[yts.channel_id]
-
+            return
+        for gid, kws in self.keywords.items():
+            for kw in kws:
+                if kw.lower() in yts.stream_title.lower():
+                    yts.game_id = gid
+                    return

@@ -171,7 +171,7 @@ class YoutubeScraper:
             'type': 'video',
             'eventType': 'live',
             # 'safeSearch': 'none',
-            'channelId': 'UCqu_uXCfIGedoNashYYE_5g'
+            'channelId': channel
         }
         api_result = self.make_api_request(gameurl, params)
         json_result = json.loads(api_result.text)
@@ -212,7 +212,7 @@ class YoutubeScraper:
         """
         api_result = self.get_esports_game(game)
         #exit()
-        #self.store_esports_game(api_result, game)
+        #self.store_esports_game(game, api_result)
 
     def get_livestream_details(self, broadcast_ids):
         """
@@ -268,6 +268,7 @@ class YoutubeScraper:
                 res = self.get_top_livestreams(5)
                 self.store_top_livestreams(res)
                 #self.scrape_esports_game('League of Legends')
+                #exit()
             except requests.exceptions.ConnectionError:
                 logging.warning("Youtube API Failed")
             except pymongo.errors.ServerSelectionTimeoutError:
