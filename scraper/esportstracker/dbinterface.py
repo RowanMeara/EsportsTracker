@@ -239,7 +239,7 @@ class PostgresManager:
         """
         query = ('SELECT * '
                  'FROM youtube_stream '
-                 'WHERE epoch > %s '
+                 'WHERE epoch >= %s '
                  'ORDER BY epoch ASC '
                  'LIMIT %s ')
         cursor = self.conn.cursor()

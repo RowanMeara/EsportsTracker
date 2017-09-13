@@ -8,6 +8,9 @@ from esportstracker.aggregator import Aggregator
 
 def classifydb():
     """
+    Attempts to determine and update the game_id of every youtube stream in
+    the database.
+
     Standalone classifier for testing purposes.
     """
     cfgpath = '../esportstracker/config/dev_config.yml'
@@ -24,7 +27,7 @@ def classifydb():
     pgm = PostgresManager(host, port, user, pwd, dbn, {})
     yti = YoutubeIdentifier()
     epoch = 0
-    limit = 200
+    limit = 2000
     now = Aggregator.epoch_to_hour(time.time())
     count = 0
     updated = 0
@@ -45,6 +48,7 @@ def classifydb():
     print('Classification Complete')
     print('Total scanned: ', count)
     print('Total updated: ', updated)
+
 
 if __name__ == '__main__':
     classifydb()
