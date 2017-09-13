@@ -35,7 +35,7 @@ def classifydb():
         if count % 10000 == 0:
             print(f'Total Scanned: {count} Total Updated: {updated}')
         yts = pgm.get_yts(epoch, limit)
-        if not yts:
+        if not yts or epoch == yts[-1].epoch:
             break
         epoch = yts[-1].epoch
         for stream in yts:
@@ -45,7 +45,6 @@ def classifydb():
                 pgm.update_ytstream_game(stream)
         count += len(yts)
         pgm.commit()
-    pgm.commit()
     print('Classification Complete')
     print('Total scanned: ', count)
     print('Total updated: ', updated)
