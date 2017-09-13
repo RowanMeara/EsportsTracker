@@ -16,15 +16,33 @@ class YoutubeIdentifier:
             # The International
             'UCTQKT5QqO3h7y32G8VzuySQ': 29595
         }
-        lolkeywords = ['LCK', 'LCS', 'CBLoL', 'League of Legends']
-        csgokeywords = ['CSGO', 'CS GO', 'CS:GO', 'Counter Strike']
-        pubgkeywords = ['PUBG', 'Playerunknown', 'battlegrounds']
-        dota2keywords = ['Dota 2', 'dota']
+        lol = ['LCK', 'LCS', 'CBLoL', 'League of Legends']
+        csgo = ['CSGO', 'CS GO', 'CS:GO', 'Counter Strike']
+        pubg = ['PUBG', 'Playerunknown', 'battlegrounds']
+        dota2 = ['Dota 2', 'dota']
+        hearthstone = ['Hearthstone']
+        overwatch = ['Overwatch']
+        heroes = ['Heroes of the Storm', 'HOTS']
+        rocketleague = ['Rocket League']
+        sc2 = ['sc2', 'Starcraft']
+        smite = ['Smite']
+        streetfighter = ['Street Fighter V', 'Street Fighter 5']
+        codiw = ['COD', 'Call of Duty']
+        melee = ['smash']
         self.keywords = {
-            21779: lolkeywords,
-            32399: csgokeywords,
-            493057: pubgkeywords,
-            29595: dota2keywords
+            493057: pubg,
+            21779: lol,
+            16282: hearthstone,
+            29595: dota2,
+            32399: csgo,
+            488552: overwatch,
+            32959: heroes,
+            30921: rocketleague,
+            490422: sc2,
+            32507: smite,
+            488615: streetfighter,
+            491437: codiw,
+            16282: melee
         }
 
     def classify(self, yts):
