@@ -211,7 +211,7 @@ class Aggregator:
         """
         # TODO: Rename function
         sechr = 3600
-        start = man.last_postgres_update(table_name) + sechr
+        start = man.most_recent_epoch(table_name) + sechr
         last = self.epoch_to_hour(time.time())
         earliest_entry = mongo.first_entry_after(start, collname)
         curhrstart = earliest_entry // sechr*sechr

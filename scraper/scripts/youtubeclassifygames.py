@@ -27,10 +27,11 @@ def classifydb():
     pgm = PostgresManager(host, port, user, pwd, dbn, {})
     yti = YoutubeIdentifier()
     epoch = 0
-    limit = 2000
+    limit = 2000000
     now = Aggregator.epoch_to_hour(time.time())
     count = 0
     updated = 0
+    start = pgm.earliest_epoch('youtube_stream')
     while epoch < now:
         if count % 10000 == 0:
             print(f'Total Scanned: {count} Total Updated: {updated}')
@@ -45,7 +46,8 @@ def classifydb():
                 pgm.update_ytstream_game(stream)
         count += len(yts)
         pgm.commit()
-    print('Classification Complete')
+    end = time.time()
+    print('Classification Complete: {:.2}s'.format(end - start))
     print('Total scanned: ', count)
     print('Total updated: ', updated)
 

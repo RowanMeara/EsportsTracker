@@ -157,7 +157,7 @@ class PostgresManager:
         cursor.execute(exists.format(table))
         return cursor.fetchone()[0] > 0
 
-    def last_postgres_update(self, table):
+    def most_recent_epoch(self, table):
         """
         Returns the largest entry in the epoch column.
 
@@ -168,7 +168,25 @@ class PostgresManager:
         :param table: str, Name of table.
         :return: int, Epoch corresponding to last update.
         """
+        if table not in self.tables:
+            return 0
         query = ('SELECT COALESCE(MAX(epoch), 0) '
+                 'FROM {}')
+        query = sql.SQL(query).format(sql.Identifier(table))
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        return cursor.fetchone()[0]
+
+    def earliest_epoch(self, table):
+        """
+        Returns the smallest epoch in the table.
+
+        :param table: str, name of table.
+        :return: int
+        """
+        if table not in self.tables:
+            return 0
+        query = ('SELECT COALESCE(MIN(epoch), 0) '
                  'FROM {}')
         query = sql.SQL(query).format(sql.Identifier(table))
         cursor = self.conn.cursor()

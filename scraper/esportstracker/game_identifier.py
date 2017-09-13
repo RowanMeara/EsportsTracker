@@ -1,5 +1,5 @@
 from esportstracker.models import YoutubeStream
-from dbinterface import PostgresManager
+from esportstracker.dbinterface import PostgresManager
 
 
 class YoutubeIdentifier:
@@ -14,7 +14,10 @@ class YoutubeIdentifier:
             'UCHKuLpFy9q8XDp0i9WNHkDw': 21779,
 
             # The International
-            'UCTQKT5QqO3h7y32G8VzuySQ': 29595
+            'UCTQKT5QqO3h7y32G8VzuySQ': 29595,
+
+            # Garena RoV
+            'UCy19QXxbCHh8qVVCbuGk-ig': 495931
         }
         lol = ['LCK', 'LCS', 'CBLoL', 'League of Legends']
         csgo = ['CSGO', 'CS GO', 'CS:GO', 'Counter Strike']
@@ -27,12 +30,16 @@ class YoutubeIdentifier:
         sc2 = ['sc2', 'Starcraft']
         smite = ['Smite']
         streetfighter = ['Street Fighter V', 'Street Fighter 5']
-        codiw = ['COD', 'Call of Duty']
+        codbo = ['Black Ops']
+        codiw = ['COD', 'Call of Duty', 'IW']
         melee = ['smash']
+        destiny2 = ['destiny 2']
+        minecraft = ['Minecraft']
+        fifa = ['FIFA']
         self.keywords = {
             493057: pubg,
             21779: lol,
-            16282: hearthstone,
+            138585: hearthstone,
             29595: dota2,
             32399: csgo,
             488552: overwatch,
@@ -41,8 +48,12 @@ class YoutubeIdentifier:
             490422: sc2,
             32507: smite,
             488615: streetfighter,
-            491437: codiw,
-            16282: melee
+            489401: codbo,
+            16282: melee,
+            497057: destiny2,
+            27471: minecraft,
+            493091: fifa,
+            491437: codiw
         }
 
     def classify(self, yts):
@@ -59,10 +70,9 @@ class YoutubeIdentifier:
         if yts.channel_id in self.channels.keys():
             yts.game_id = self.channels[yts.channel_id]
             return
-        title = yts.stream_title.lower()
-        tags = ' '.join(yts.tags)
+        titletags = yts.stream_title + ' '.join(yts.tags)
         for gid, kws in self.keywords.items():
             for kw in kws:
-                if kw.lower() in title or kw.lower() in tags:
+                if kw.lower() in titletags.lower():
                     yts.game_id = gid
                     return
