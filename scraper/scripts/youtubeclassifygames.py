@@ -44,6 +44,7 @@ def classifydb():
                 updated += 1
                 pgm.update_ytstream_game(stream)
         count += len(yts)
+        pgm.commit()
     pgm.commit()
     print('Classification Complete')
     print('Total scanned: ', count)
