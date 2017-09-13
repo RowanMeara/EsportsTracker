@@ -5,7 +5,7 @@ from datetime import datetime
 import pytz
 from esportstracker.dbinterface import PostgresManager, MongoManager
 from esportstracker.models import *
-
+from esportstracker.game_identifier import YoutubeIdentifier
 
 class Aggregator:
     def __init__(self, configpath, keypath):
@@ -25,6 +25,7 @@ class Aggregator:
         self.mongo_host = mongo_cfg['host']
         self.mongo_port = mongo_cfg['port']
         self.mongo_ssl = mongo_cfg['ssl']
+        self.yti = YoutubeIdentifier()
         if 'mongodb' in keys:
             self.mongo_user = keys['mongodb']['write']['user']
             self.mongo_pwd = keys['mongodb']['write']['pwd']
@@ -185,7 +186,9 @@ class Aggregator:
                 man.store_rows(channels, 'youtube_channel')
 
                 vcs = self.average_viewers(apiresp, hrstart, hrend)
-                streams = YoutubeStream.from_vcs(apiresp, vcs, hrstart, man)
+                streams = YoutubeStream.from_vcs(apiresp, vcs, hrstart)
+                for stream in streams:
+                    self.yti.classify(stream)
                 man.store_rows(streams, 'youtube_stream')
             hrstart += 3600
             hrend += 3600

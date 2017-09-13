@@ -8,7 +8,6 @@ import os
 import math
 from pymongo import MongoClient
 import pymongo
-import traceback
 
 DEBUG = True
 

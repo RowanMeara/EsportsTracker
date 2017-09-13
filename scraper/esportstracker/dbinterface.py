@@ -198,6 +198,7 @@ class PostgresManager:
             self.conn.commit()
         return True
 
+
     # Stream Functions
     def game_name_to_id(self, name):
         """
@@ -224,6 +225,40 @@ class PostgresManager:
         cursor.execute(query, (name,))
         self.gamename_cache[name] = cursor.fetchone()[0]
         return self.gamename_cache[name]
+
+    def get_yts(self, epoch, limit):
+        """
+        Gets YoutubeStream objects.
+
+        Gets the first limit number of YoutubeStream objects with epochs
+        greater than epoch.
+
+        :param epoch: int, minimum epoch.
+        :param limit: int, the maximum number of streams to return.
+        :return: YoutubeStream
+        """
+        query = ('SELECT * '
+                 'FROM youtube_stream '
+                 'WHERE epoch > %s '
+                 'ORDER BY epoch ASC '
+                 'LIMIT %s ')
+        cursor = self.conn.cursor()
+        cursor.execute(query, (epoch, limit))
+        rows = cursor.fetchall()
+        return list(map(lambda x: YoutubeStream.from_row(x), rows))
+
+    def update_ytstream_game(self, yts):
+        """
+        Updates a YoutubeStream row.
+
+        :param yts: YoutubeStream, the stream to be updated.
+        :return:
+        """
+        query = ('UPDATE youtube_stream '
+                 'SET game_id = %s '
+                 'WHERE channel_id = %s AND epoch = %s ')
+        cursor = self.conn.cursor()
+        cursor.execute(query, (yts.game_id, yts.channel_id, yts.epoch))
 
 
 class MongoManager:

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import langid
 
+
 class Aggregatable(ABC):
     @abstractmethod
     def timestamp(self):
@@ -134,6 +135,9 @@ class Row(ABC):
         Returns a tuple that can be inserted into Postgres.
         """
         pass
+
+    def __str__(self):
+        return self.to_row()
 
 
 class Game(Row):
@@ -316,7 +320,7 @@ class YoutubeStream(Row):
         self.tags = tags
 
     @staticmethod
-    def from_vcs(api_resp, vcs, timestamp, man):
+    def from_vcs(api_resp, vcs, timestamp):
         # Combine api_resp so that we can look across all api responses
         comb = {}
         for resp in api_resp:
@@ -335,6 +339,11 @@ class YoutubeStream(Row):
             tags = comb[sid].tags
             ys.append(YoutubeStream(chid, ep, gid, vc, tit, l, tags))
         return ys
+
+    @staticmethod
+    def from_row(row):
+        return YoutubeStream(row[0], row[1], row[2], row[3], row[4], row[5],
+                             row[6])
 
     def to_row(self):
         if LANGUAGE_DETECTION and self.language == 'unknown':
