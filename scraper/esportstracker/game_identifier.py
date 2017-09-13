@@ -59,8 +59,10 @@ class YoutubeIdentifier:
         if yts.channel_id in self.channels.keys():
             yts.game_id = self.channels[yts.channel_id]
             return
+        title = yts.stream_title.lower()
+        tags = ' '.join(yts.tags)
         for gid, kws in self.keywords.items():
             for kw in kws:
-                if kw.lower() in yts.stream_title.lower():
+                if kw.lower() in title or kw.lower() in tags:
                     yts.game_id = gid
                     return
