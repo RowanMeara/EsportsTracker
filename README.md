@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/RowanMeara/EsportsTracker.svg?branch=master)](https://travis-ci.org/RowanMeara/EsportsStats)
+[![Build Status](https://travis-ci.org/RowanMeara/EsportsTracker.svg?branch=master)](https://travis-ci.org/RowanMeara/EsportsTracker)
 # EsportsTracker
 Currently there are several websites that track the esports scene on Twitch and 
 the health and viewership of various games. However, Youtube Gaming's 

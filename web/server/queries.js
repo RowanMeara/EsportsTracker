@@ -25,11 +25,7 @@ const qEsportsGames = new PQ(sql.game.esportsGames)
 const qEsportsGameHourly = new PQ(sql.twitch_stream.gameViewershipHourly)
 
 const timeout = cfg.pg_timeout
-let queryCache = {}
-queryCache.twitchGameCumVHLast30 = {}
-queryCache.youtubeTotalVHLast30 = 0
-queryCache.twitchTotalVHLast30 = 0
-queryCache.esportsGames = {}
+var cacheEsportsGames = {}
 
 /*
  * Gets the name and game_ids of current esports titles.  Results are in descending order
@@ -80,10 +76,23 @@ async function twitchTotalVH (start, end) {
   return res
 }
 
+async function refreshESG () {
+  let res = await esportsGames()
+  cacheEsportsGames = res
+}
+
+function getEsportsGames () {
+  return cacheEsportsGames
+}
+
 module.exports = {
   twitchGamesCumVH: twitchGameCumVH,
   esportsGameHourly: esportsGameHourly,
   esportsGames: esportsGames,
   youtubeTotalVH: youtubeTotalVH,
   twitchTotalVH: twitchTotalVH,
+  cache: {
+    esportsGames: getEsportsGames,
+    refreshESG: refreshESG
+  }
 }

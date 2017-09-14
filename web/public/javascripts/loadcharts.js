@@ -43,7 +43,7 @@ function twitchGameViewershipLast30 (resize = false) {
   }
 
   $.ajax({
-    url: '/api/twitchgamescumlast30/',
+    url: '/api/twitchtopgames?days=30&numgames=10',
     dataType: 'json',
     async: true,
     success: function (msg) {
@@ -79,7 +79,7 @@ function marketshareLast30 (resize = false) {
   }
 
   $.ajax({
-    url: '/api/marketsharelast30/',
+    url: '/api/marketshare?days=30',
     dataType: 'json',
     async: true,
     success: function (msg) {

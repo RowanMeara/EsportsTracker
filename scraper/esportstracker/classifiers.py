@@ -39,6 +39,8 @@ class YoutubeIdentifier:
         destiny2 = ['destiny 2']
         minecraft = ['Minecraft']
         fifa = ['FIFA']
+        nba = ['NBA 2K17']
+        gtav = ['GTA V', 'GTA 5']
         self.keywords = {
             493057: pubg,
             21779: lol,
@@ -56,7 +58,9 @@ class YoutubeIdentifier:
             497057: destiny2,
             27471: minecraft,
             493091: fifa,
-            491437: codiw
+            491437: codiw,
+            493112: nba,
+            32982: gtav
         }
 
     def classify(self, yts):

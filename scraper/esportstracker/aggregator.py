@@ -106,6 +106,8 @@ class Aggregator:
                 man.store_rows(vcs, 'twitch_game_vc')
             curhrstart += 3600
             curhrend += 3600
+            if curhrstart % 36000 == 0:
+                man.commit()
         man.commit()
         mongo.client.close()
 
@@ -153,6 +155,8 @@ class Aggregator:
                 man.store_rows(streams, 'twitch_stream')
             hrstart += 3600
             hrend += 3600
+            if hrstart % 36000 == 0:
+                man.commit()
         man.commit()
         mongo.client.close()
 
@@ -192,6 +196,8 @@ class Aggregator:
                 man.store_rows(streams, 'youtube_stream')
             hrstart += 3600
             hrend += 3600
+            if hrstart % 36000 == 0:
+                man.commit()
         man.commit()
         mongo.client.close()
 
