@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
-from classifiers import classify_language
+from esportstracker.classifiers import classify_language
+
 
 class Aggregatable(ABC):
+    """
+    ABC for an API response that has viewer counts to be aggregated.
+    """
     @abstractmethod
     def timestamp(self):
         """
@@ -143,7 +147,7 @@ class Game(Row):
     """
     A row in the game table.
 
-    Represents a game
+    See schema.png.
     """
     __slots__ = ['game_id', 'name', 'giantbomb_id']
 

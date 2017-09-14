@@ -79,7 +79,7 @@ def run_aggregator():
             a.agg_youtube_streams()
             end = time.time()
             print("Total Time: {:.2f}".format(end - start))
-            # Initially refresh every 30 minutes because we need a complete
+            # Refresh every 30 minutes because we need a complete
             # hour before additional aggregation can occur.
             time.sleep(60 * 30 - int(end - start))
         except:

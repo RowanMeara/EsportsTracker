@@ -19,7 +19,8 @@ let port = normalizePort(process.env.PORT || '3000')
 app.set('port', port)
 
 // Update Cache so queries are responsive
-cron.schedule('* 30 * * * *', queries.refreshCache, false)
+cron.schedule('* 35 * * * *', queries.refreshCache, false)
+cron.schedule('* 5 * * * *', queries.refreshCache, false)
 queries.refresh()
 
 /**

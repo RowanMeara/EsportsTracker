@@ -1,5 +1,6 @@
 import pytest
 import os
+
 from esportstracker import twitch_scraper
 
 TEST_DIRECTORY = os.path.dirname(__file__)

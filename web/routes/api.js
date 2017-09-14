@@ -29,6 +29,10 @@ router.get('/twitchgamescumlast30', async function (req, res) {
   }
 })
 
+async function marketshareHandler(start, end) {
+
+}
+
 router.get('/marketsharelast30', async function (req, res) {
   let q = [
     ['Twitch', cache.twitchTotalVH[30]],

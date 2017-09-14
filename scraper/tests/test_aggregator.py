@@ -1,5 +1,6 @@
 import pytest
 import os
+
 from esportstracker.aggregator import Aggregator
 from esportstracker.models import TwitchGamesAPIResponse
 
