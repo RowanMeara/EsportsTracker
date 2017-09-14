@@ -5,6 +5,10 @@ import sys
 import traceback
 import argparse
 from setproctitle import setproctitle
+
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, "DIRPATH")
+
 from esportstracker.twitch_scraper import TwitchScraper
 from esportstracker.youtube_scraper import YoutubeScraper
 from esportstracker.aggregator import Aggregator
