@@ -1,5 +1,5 @@
-from esportstracker.models import YoutubeStream
-from esportstracker.dbinterface import PostgresManager
+import langid
+import pycld2 as cld2
 
 
 class YoutubeIdentifier:
@@ -70,9 +70,30 @@ class YoutubeIdentifier:
         if yts.channel_id in self.channels.keys():
             yts.game_id = self.channels[yts.channel_id]
             return
-        titletags = yts.stream_title + yts.tags
+        if isinstance(yts.tags, list):
+            titletags = yts.stream_title + ' '.join(yts.tags)
+        else:
+            titletags = yts.stream_title + yts.tags
         for gid, kws in self.keywords.items():
             for kw in kws:
                 if kw.lower() in titletags.lower():
                     yts.game_id = gid
                     return
+
+
+def classify_language(title):
+    """
+    Classifies the language of a stream title.
+
+    :param title: str, title to be classified.
+    :return: str, language code.
+    """
+    langidcode = langid.classify(title)[0]
+    dn, c, r, = cld2.detect(title)
+    cldcode = r[0][1]
+    if langidcode == cldcode or cldcode == 'un':
+        return langidcode
+    elif langidcode == 'en':
+        return cldcode
+    else:
+        return langidcode

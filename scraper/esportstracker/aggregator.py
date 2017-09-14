@@ -5,7 +5,8 @@ from datetime import datetime
 import pytz
 from esportstracker.dbinterface import PostgresManager, MongoManager
 from esportstracker.models import *
-from esportstracker.game_classifier import YoutubeIdentifier
+from esportstracker.classifiers import YoutubeIdentifier
+
 
 class Aggregator:
     def __init__(self, configpath, keypath):

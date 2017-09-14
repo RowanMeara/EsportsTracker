@@ -1,6 +1,6 @@
 import os
 from ruamel import yaml
-from esportstracker.game_classifier import YoutubeIdentifier
+from esportstracker.classifiers import YoutubeIdentifier
 from esportstracker.dbinterface import PostgresManager
 import time
 from esportstracker.aggregator import Aggregator
