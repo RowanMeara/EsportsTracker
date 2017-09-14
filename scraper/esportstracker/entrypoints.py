@@ -7,7 +7,7 @@ import argparse
 from setproctitle import setproctitle
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, "DIRPATH")
+sys.path.insert(0, DIR_PATH)
 
 from esportstracker.twitch_scraper import TwitchScraper
 from esportstracker.youtube_scraper import YoutubeScraper
