@@ -7,4 +7,6 @@ psycopg2
 pytz
 setuptools
 langid
+langdetect
 setproctitle
+pycld2

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import langid
-
+import pycld2 as cld2
 
 class Aggregatable(ABC):
     @abstractmethod
@@ -347,6 +347,18 @@ class YoutubeStream(Row):
 
     def to_row(self):
         if LANGUAGE_DETECTION and self.language == 'unknown':
-            self.language = 'd_' + langid.classify(self.stream_title)[0]
+            self.language = 'd_' + self.detect_language(self.stream_title)
         return (self.channel_id, self.epoch, self.game_id, self.viewers,
                 self.stream_title, self.language, str(self.tags))
+
+    @staticmethod
+    def detect_language(title):
+        langidcode = langid.classify(title)[0]
+        dn, c, r, = cld2.detect(title)
+        cldcode = r[0][1]
+        if langidcode == cldcode or cldcode == 'un':
+            return langidcode
+        elif langidcode == 'en':
+            return cldcode
+        else:
+            return langidcode
