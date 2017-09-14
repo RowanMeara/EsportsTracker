@@ -4,6 +4,7 @@ import langid
 import pycld2 as cld2
 from esportstracker.models import YoutubeStream
 
+
 def main():
     titles = [
         'مباراة  الأهلي والقطن الكاميروني بث مباشر ',
@@ -15,7 +16,6 @@ def main():
         'PROVAS AO VIVO CONTRA INVASOR!! 4 / 4'
     ]
     iterations = 2
-
 
     start = time.time()
     for i in range(iterations):

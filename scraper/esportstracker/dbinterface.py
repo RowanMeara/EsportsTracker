@@ -9,12 +9,20 @@ from collections import OrderedDict
 
 
 class PostgresManager:
+    """
+    Class for interacting with the Postgres instance.
+    """
     def __init__(self, host, port, user, password, dbname, esports_games):
         """
-        Class for interacting with the Postgres instance.
+        Initializes a PostgresManager.
 
-        Initializes
-        :param host: str,
+        :param host: str, host of the database.
+        :param port: int, port of the database.
+        :param user: str, username.
+        :param password: str, password.
+        :param dbname: str, name of the database to connect to.
+        :param esports_games: list, list of Game objects.
+        :return None
         """
 
         self.conn = psycopg2.connect(host=host, port=port, user=user,
@@ -33,14 +41,19 @@ class PostgresManager:
             'user'], dbconfig['password'], dbconfig['db_name'], esports_games)
 
     def commit(self):
+        """
+        Wrapper for Postgres commit.
+
+        :return: None
+        """
         self.conn.commit()
 
     def initdb(self):
         """
-        Creates tables if they don't exist.
+        Initializes the database for use.
 
         Initializes the database using the schema shown in the schema
-        design file (PNG).
+        design file (schema.png).
         """
         try:
 
@@ -56,11 +69,10 @@ class PostgresManager:
 
     def create_tables(self):
         """
-        Creates Postgres tables.
+        Creates database tables if they do not exist.
 
-
-        :param conn: psycopg2 connection
-        :return:
+        Initializes the database using the schema shown in the schema
+        design file (schema.png).
         """
         tables = OrderedDict()
         indexes = OrderedDict()
@@ -181,8 +193,10 @@ class PostgresManager:
         """
         Returns the smallest epoch in the table.
 
+        The table must have a column named epoch and be a part of the schema.
+
         :param table: str, name of table.
-        :return: int
+        :return: int, timestamp of earliest entry.
         """
         if table not in self.tablenames:
             return 0
@@ -197,10 +211,13 @@ class PostgresManager:
         """
         Stores the rows in the specified table.
 
-        Conflicting rows are ignored
+        Conflicting rows are ignored.  If the commit variable is not
+        specified, the transaction is not committed and the commit method
+        must be called at a later point.
 
-        :param rows: list[Object], Objects must have a to_row method.
+        :param rows: list[Row], Rows to be stored.
         :param tablename: str, name of the table to insert into.
+        :param commit: bool, commits if True.
         :return: bool
         """
         if not rows or tablename not in self.tablenames:
@@ -216,19 +233,16 @@ class PostgresManager:
             self.conn.commit()
         return True
 
-
-    # Stream Functions
     def game_name_to_id(self, name):
         """
-        Retrieves the id number of the game with the given name.
+        Retrieves the twitch id number of the game with the given name.
 
-        Caches responses from previous invocations.
+        Caches responses from previous invocations.  Fixes the case for some
+        Twitch games that have inconsistent casing across the API.
 
-        :param name:
-        :return:
+        :param name: str, name of the game.
+        :return: int, twitch game id number.
         """
-        # The Twitch API appears to give inconsistent casing for the names
-        # which we must fix.
         if name not in self.esports_games:
             for game in self.esports_games:
                 if name.lower() == game.lower():
@@ -246,14 +260,14 @@ class PostgresManager:
 
     def get_yts(self, epoch, limit):
         """
-        Gets YoutubeStream objects.
+        Gets YoutubeStream objects with the given epoch.
 
-        Gets the first limit number of YoutubeStream objects with epochs
+        Retrieves the first limit number of YoutubeStream objects with epochs
         equal to the epoch param.
 
         :param epoch: int, epoch of entries.
         :param limit: int, the maximum number of streams to return.
-        :return: YoutubeStream
+        :return: list[YoutubeStream]
         """
         query = ('SELECT * '
                  'FROM youtube_stream '
@@ -267,10 +281,10 @@ class PostgresManager:
 
     def update_ytstream_game(self, yts):
         """
-        Updates a YoutubeStream row.
+        Updates the game_id of a YoutubeStream row.
 
         :param yts: YoutubeStream, the stream to be updated.
-        :return:
+        :return: None
         """
         query = ('UPDATE youtube_stream '
                  'SET game_id = %s '
@@ -280,6 +294,9 @@ class PostgresManager:
 
 
 class MongoManager:
+    """
+    Class for interacting with the MongoDB instance.
+    """
     def __init__(self, host, port, db_name, user=None,
                  password=None, ssl=True):
         self.host = host
@@ -291,7 +308,6 @@ class MongoManager:
         if user:
             self.client[self.db_name].authenticate(user, password,
                                                    source='admin')
-
 
     def first_entry_after(self, start, collname):
         """

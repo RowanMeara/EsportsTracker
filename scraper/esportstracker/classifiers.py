@@ -3,6 +3,9 @@ import pycld2 as cld2
 
 
 class YoutubeIdentifier:
+    """
+    Identifies the game that a Youtuber is broadcasting.
+    """
     def __init__(self):
         """
         Predicts the game_id of YoutubeStream objects.
@@ -58,11 +61,11 @@ class YoutubeIdentifier:
 
     def classify(self, yts):
         """
-        Determines the game of a youtube_stream.
+        Determines the game of a youtube stream.
 
         Takes a YoutubeStream object and attempts to classify the game that
-        is playing based on the stream's contents. If a high-confidence match is
-        found, the stream's game_id instance variable is modified.
+        based on the stream's channel, title, and tags. If a high-confidence
+        match is found, the stream's game_id instance variable is modified.
 
         :param yts: YoutubeStream
         :return: None

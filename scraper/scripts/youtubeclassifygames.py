@@ -1,8 +1,13 @@
 import os
+import sys
+import time
 from ruamel import yaml
+
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('esportstracker/')])
+
 from esportstracker.classifiers import YoutubeIdentifier
 from esportstracker.dbinterface import PostgresManager
-import time
 from esportstracker.aggregator import Aggregator
 
 
@@ -34,7 +39,7 @@ def classifydb():
     now = Aggregator.epoch_to_hour(time.time())
     epoch = pgm.earliest_epoch('youtube_stream')
     while epoch < now:
-        if epoch % (360000) == 0:
+        if epoch % 360000 == 0:
             print(f'Total Scanned: {count} Total Updated: {updated}')
         yts = pgm.get_yts(epoch, limit)
         for stream in yts:

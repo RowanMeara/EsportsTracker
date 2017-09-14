@@ -1,5 +1,4 @@
 import time
-import logging
 from ruamel import yaml
 from datetime import datetime
 import pytz
@@ -94,7 +93,7 @@ class Aggregator:
         curhrstart, curhrend, last = self._agg_ts(man, mongo,
                                                   'twitch_game_vc',
                                                   self.twitch_db['top_games'])
-        while curhrend < last:
+        while curhrend <= last:
             docs = mongo.docsbetween(curhrstart, curhrend,
                                        self.twitch_db['top_games'])
             apiresp = [TwitchGamesAPIResponse(doc) for doc in docs]
@@ -129,7 +128,7 @@ class Aggregator:
         hrstart, hrend, last = self._agg_ts(man, mongo,
                                             'twitch_stream',
                                             self.twitch_db['top_streams'])
-        while hrend < last:
+        while hrend <= last:
             docs = mongo.docsbetween(hrstart, hrend,
                                      self.twitch_db['top_streams'])
             apiresp = [TwitchStreamsAPIResponse(doc) for doc in docs]
@@ -176,7 +175,7 @@ class Aggregator:
         hrstart, hrend, last = self._agg_ts(man, mongo,
                                             'youtube_stream',
                                             self.youtube_db['top_streams'])
-        while hrend < last:
+        while hrend <= last:
             docs = mongo.docsbetween(hrstart, hrend,
                                      self.youtube_db['top_streams'])
             apiresp = [YoutubeStreamsAPIResponse(doc) for doc in docs]
