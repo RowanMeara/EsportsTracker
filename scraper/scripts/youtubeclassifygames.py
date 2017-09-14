@@ -1,6 +1,6 @@
 import os
 from ruamel import yaml
-from esportstracker.game_identifier import YoutubeIdentifier
+from esportstracker.game_classifier import YoutubeIdentifier
 from esportstracker.dbinterface import PostgresManager
 import time
 from esportstracker.aggregator import Aggregator
@@ -13,6 +13,7 @@ def classifydb():
 
     Standalone classifier for testing purposes.
     """
+    start = time.time()
     cfgpath = '../esportstracker/config/dev_config.yml'
     keypath = '../keys.yml'
     with open(cfgpath) as f:
@@ -26,28 +27,27 @@ def classifydb():
     pwd = keys['postgres']['passwd']
     pgm = PostgresManager(host, port, user, pwd, dbn, {})
     yti = YoutubeIdentifier()
-    epoch = 0
-    limit = 2000000
-    now = Aggregator.epoch_to_hour(time.time())
+    limit = 200000
+
     count = 0
     updated = 0
-    start = pgm.earliest_epoch('youtube_stream')
+    now = Aggregator.epoch_to_hour(time.time())
+    epoch = pgm.earliest_epoch('youtube_stream')
     while epoch < now:
-        if count % 10000 == 0:
+        if epoch % (360000) == 0:
             print(f'Total Scanned: {count} Total Updated: {updated}')
         yts = pgm.get_yts(epoch, limit)
-        if not yts or epoch == yts[-1].epoch:
-            break
-        epoch = yts[-1].epoch
         for stream in yts:
             yti.classify(stream)
             if stream.game_id:
                 updated += 1
                 pgm.update_ytstream_game(stream)
+        epoch += 3600
         count += len(yts)
-        pgm.commit()
+
+    pgm.commit()
     end = time.time()
-    print('Classification Complete: {:.2}s'.format(end - start))
+    print('Classification Complete: {:.02f}s'.format(end - start))
     print('Total scanned: ', count)
     print('Total updated: ', updated)
 

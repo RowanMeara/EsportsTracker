@@ -168,7 +168,7 @@ class PostgresManager:
         :param table: str, Name of table.
         :return: int, Epoch corresponding to last update.
         """
-        if table not in self.tables:
+        if table not in self.tablenames:
             return 0
         query = ('SELECT COALESCE(MAX(epoch), 0) '
                  'FROM {}')
@@ -184,7 +184,7 @@ class PostgresManager:
         :param table: str, name of table.
         :return: int
         """
-        if table not in self.tables:
+        if table not in self.tablenames:
             return 0
         query = ('SELECT COALESCE(MIN(epoch), 0) '
                  'FROM {}')
@@ -249,15 +249,15 @@ class PostgresManager:
         Gets YoutubeStream objects.
 
         Gets the first limit number of YoutubeStream objects with epochs
-        greater than epoch.
+        equal to the epoch param.
 
-        :param epoch: int, minimum epoch.
+        :param epoch: int, epoch of entries.
         :param limit: int, the maximum number of streams to return.
         :return: YoutubeStream
         """
         query = ('SELECT * '
                  'FROM youtube_stream '
-                 'WHERE epoch >= %s '
+                 'WHERE epoch = %s '
                  'ORDER BY epoch ASC '
                  'LIMIT %s ')
         cursor = self.conn.cursor()
