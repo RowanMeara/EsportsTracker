@@ -35,7 +35,7 @@ app.use(sassMiddleware({
 if (env === 'development') {
   app.use(express.static(path.join(__dirname, 'public')))
 } else {
-  app.use(express.static(path.join(__dirname, 'public'), { maxage: '10d' }))
+  app.use(express.static(path.join(__dirname, 'public'), { maxage: '1d' }))
 }
 
 // Routes
