@@ -9,10 +9,9 @@ html(class='mdc-typography')
   body
     include navbar
     include sidenav
-    main
-      block content
-    //script(src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js' crossorigin='anonymous')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.js')
     script(src='https://cdn.plot.ly/plotly-latest.min.js')
-    script(src='/javascripts/bundle.js')
+    script(src='/javascripts/commons.js')
+    main
+      block content

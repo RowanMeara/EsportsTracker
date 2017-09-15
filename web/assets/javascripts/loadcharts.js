@@ -1,24 +1,5 @@
 import {GoogleCharts} from './googleCharts.js'
-import $ from 'jquery'
 import Bootstrap from 'bootstrap/dist/js/bootstrap.js'
-
-//GoogleCharts.load('44', {'packages': ['corechart', 'line']})
-GoogleCharts.load(drawCharts)
-
-function drawCharts (resize = false) {
-  let pn = window.location.pathname
-  if (pn === '/') {
-    twitchGameViewershipLast30(resize)
-    marketshareLast30(resize)
-  } else if (pn.includes('/game/')) {
-    let gameID = parseInt(pn.substring(6, pn.length))
-    hourlyGameViewership(gameID, resize)
-  }
-}
-
-$(window).resize(() => {
-  drawCharts(true)
-})
 
 let chartTGV
 let dataTGV
@@ -111,7 +92,7 @@ let optionsHGV = {
 }
 function hourlyGameViewership (gameID, resize = false) {
   if (resize) {
-    chartHGV.draw(dataHGV, GoogleCharts.Line.convertOptions(optionsHGV))
+    chartHGV.draw(dataHGV, GoogleCharts.api.charts.Line.convertOptions(optionsHGV))
     return
   }
 
@@ -171,4 +152,10 @@ function formatTooltip (apiResponse) {
     let tooltip = gamename + time + percent
     resp.push(tooltip)
   })
+}
+
+export let charts = {
+  twitchGameViewershipLast30: twitchGameViewershipLast30,
+  marketshareLast30: marketshareLast30,
+  hourlyGameViewership: hourlyGameViewership
 }
