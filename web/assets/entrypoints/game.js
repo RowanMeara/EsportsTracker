@@ -1,6 +1,6 @@
 import $ from 'jquery'
-import {charts} from '../javascripts/loadcharts.js'
-import {GoogleCharts} from '../javascripts/googleCharts.js'
+import {charts} from '../modules/loadcharts.js'
+import {GoogleCharts} from '../modules/googleCharts.js'
 
 GoogleCharts.load(drawCharts)
 let pn = window.location.pathname

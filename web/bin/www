@@ -20,8 +20,10 @@ let port = normalizePort(process.env.PORT || '3000')
 app.set('port', port)
 
 // Update api cache so queries are responsive
+cron.schedule('* 5 * * * *', queries.cache.refreshESG(), false)
 cron.schedule('* 35 * * * *', queries.cache.refreshESG(), false)
 cron.schedule('* 5 * * * *', refreshCache(), false)
+cron.schedule('* 35 * * * *', refreshCache(), false)
 queries.cache.refreshESG()
 refreshCache()
 
