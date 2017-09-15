@@ -1,5 +1,9 @@
-google.charts.load('44', {'packages': ['corechart', 'line']})
-google.charts.setOnLoadCallback(drawCharts)
+import {GoogleCharts} from './googleCharts.js'
+import $ from 'jquery'
+import Bootstrap from 'bootstrap/dist/js/bootstrap.js'
+
+//GoogleCharts.load('44', {'packages': ['corechart', 'line']})
+GoogleCharts.load(drawCharts)
 
 function drawCharts (resize = false) {
   let pn = window.location.pathname
@@ -31,14 +35,14 @@ function twitchGameViewershipLast30 (resize = false) {
   }
   let render = function (numbers) {
     formatTooltip(numbers)
-    dataTGV = new google.visualization.DataTable()
+    dataTGV = new GoogleCharts.api.visualization.DataTable()
     dataTGV.addColumn('string', 'Game')
     dataTGV.addColumn('number', 'Viewer Years')
     dataTGV.addColumn({type: 'string', role: 'tooltip'})
     dataTGV.addRows(numbers)
 
     // Instantiate and draw our chart, passing in some options.
-    chartTGV = new google.visualization.PieChart(document.getElementById('twitchgamevh30'))
+    chartTGV = new GoogleCharts.api.visualization.PieChart(document.getElementById('twitchgamevh30'))
     chartTGV.draw(dataTGV, options)
   }
 
@@ -67,14 +71,14 @@ function marketshareLast30 (resize = false) {
   }
   let render = function (numbers) {
     formatTooltip(numbers)
-    dataMks = new google.visualization.DataTable()
+    dataMks = new GoogleCharts.api.visualization.DataTable()
     dataMks.addColumn('string', 'Platform')
     dataMks.addColumn('number', 'Viewer Years')
     dataMks.addColumn({type: 'string', role: 'tooltip'})
     dataMks.addRows(numbers)
 
     // Instantiate and draw our chart, passing in some options.
-    chartMks = new google.visualization.PieChart(document.getElementById('marketshare'))
+    chartMks = new GoogleCharts.api.visualization.PieChart(document.getElementById('marketshare'))
     chartMks.draw(dataMks, options)
   }
 
@@ -101,20 +105,19 @@ let optionsHGV = {
   vAxis: {
     textStyle: {
       fontSize: 20
-    },
-    //title: 'Concurrent Viewers'
+    }
   },
   chart: {}
 }
 function hourlyGameViewership (gameID, resize = false) {
   if (resize) {
-    chartHGV.draw(dataHGV, google.charts.Line.convertOptions(optionsHGV))
+    chartHGV.draw(dataHGV, GoogleCharts.Line.convertOptions(optionsHGV))
     return
   }
 
   let render = function (data) {
-    dataHGV = new google.visualization.DataTable()
-    chartHGV = new google.charts.Line(document.getElementById('gameviewership'))
+    dataHGV = new GoogleCharts.api.visualization.DataTable()
+    chartHGV = new GoogleCharts.api.charts.Line(document.getElementById('gameviewership'))
     data.data.forEach((ts) => {
       ts[0] = new Date(ts[0] * 1000)
     })
@@ -126,7 +129,7 @@ function hourlyGameViewership (gameID, resize = false) {
     optionsHGV.chart.title = data.name + ' Concurrent Viewership'
     optionsHGV.chart.subtitle = 'English Language Streams Only'
     // Instantiate and draw our chart, passing in some options.
-    chartHGV.draw(dataHGV, google.charts.Line.convertOptions(optionsHGV))
+    chartHGV.draw(dataHGV, GoogleCharts.api.charts.Line.convertOptions(optionsHGV))
   }
 
   $.ajax({
