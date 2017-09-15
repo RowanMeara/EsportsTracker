@@ -1,5 +1,6 @@
 let path = require('path')
 let webpack = require('webpack')
+const Uglify = require('uglifyjs-webpack-plugin')
 
 module.exports = {
   entry: {
@@ -15,7 +16,8 @@ module.exports = {
     new webpack.optimize.CommonsChunkPlugin({
       filename: 'commons.js',
       name: 'commons'
-    })
+    }),
+    new Uglify()
   ],
-  devtool: 'inline-source-map'
+  //devtool: 'inline-source-map'
 }

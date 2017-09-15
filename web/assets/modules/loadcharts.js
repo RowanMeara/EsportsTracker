@@ -1,4 +1,5 @@
 import {GoogleCharts} from './googleCharts.js'
+import $ from 'jquery'
 import Bootstrap from 'bootstrap/dist/js/bootstrap.js'
 
 let chartTGV
@@ -8,7 +9,7 @@ function twitchGameViewershipLast30 (resize = false) {
     title: 'Twitch Viewership by Game Last 30 Days',
     vAxis: {format: '# years'},
     width: '100%',
-    height: 300
+    height: 0.7 * $('#twitchgamevh').width()
   }
   if (resize) {
     chartTGV.draw(dataTGV, options)
@@ -23,7 +24,7 @@ function twitchGameViewershipLast30 (resize = false) {
     dataTGV.addRows(numbers)
 
     // Instantiate and draw our chart, passing in some options.
-    chartTGV = new GoogleCharts.api.visualization.PieChart(document.getElementById('twitchgamevh30'))
+    chartTGV = new GoogleCharts.api.visualization.PieChart(document.getElementById('twitchgamevh'))
     chartTGV.draw(dataTGV, options)
   }
 
@@ -44,7 +45,7 @@ function marketshareLast30 (resize = false) {
     title: 'Platform Marketshare',
     vAxis: {format: '# years'},
     width: '100%',
-    height: 300
+    height: 0.7 * $('#marketshare').width()
   }
   if (resize) {
     chartMks.draw(dataMks, options)
@@ -75,25 +76,27 @@ function marketshareLast30 (resize = false) {
 
 let dataHGV
 let chartHGV
-let optionsHGV = {
-  width: '100%',
-  height: 600,
-  legend: {position: 'none'},
-  hAxis: {
-    title: '',
-    textPosition: 'none'
-  },
-  vAxis: {
-    textStyle: {
-      fontSize: 20
-    }
-  },
-  chart: {}
-}
+let optionsHGV
 function hourlyGameViewership (gameID, resize = false) {
   if (resize) {
+    optionsHGV.height = 0.7 * $('#gameviewership').width()
     chartHGV.draw(dataHGV, GoogleCharts.api.charts.Line.convertOptions(optionsHGV))
     return
+  }
+  optionsHGV = {
+    width: '100%',
+    height: 0.7 * $('#gameviewership').width(),
+    legend: {position: 'none'},
+    hAxis: {
+      title: '',
+      textPosition: 'none'
+    },
+    vAxis: {
+      textStyle: {
+        fontSize: 20
+      }
+    },
+    chart: {}
   }
 
   let render = function (data) {

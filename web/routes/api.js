@@ -16,8 +16,8 @@ let DAY = 60 * 60 * 24
 
 router.get('/twitchtopgames', cache('30 minutes'), async function (req, res) {
   try {
-    let days = req.query.days || 30
-    let numGames = req.query.numgames || 10
+    var days = req.query.days || 30
+    var numGames = req.query.numgames || 10
     let now = Math.floor(new Date() / 1000)
     let start = now - days * DAY
 
@@ -34,7 +34,7 @@ router.get('/twitchtopgames', cache('30 minutes'), async function (req, res) {
     data.push(['Other', other])
     res.status(200).json(data)
   } catch (e) {
-    console.log(e.message)
+    console.trace(e.message)
   }
 })
 
@@ -53,7 +53,7 @@ router.get('/marketshare', cache('30 minutes'), async function (req, res) {
     ]
     res.status(200).json(q)
   } catch (e) {
-    console.log(e.message)
+    console.trace(e.message)
   }
 })
 
@@ -71,7 +71,7 @@ router.get('/gameviewership', cache('30 minutes'), async function (req, res) {
     r.data = l
     res.status(200).json(r)
   } catch (e) {
-    console.log(e.message)
+    console.trace(e.message)
   }
 })
 

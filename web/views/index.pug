@@ -3,10 +3,12 @@ extends layout
 block content
   #main.container-fluid
     .row
-      .col-md-6
-        .card
-          #twitchgamevh30
-      .col-md-6
-        .card
-          #marketshare
+      .col-6
+        .card.pi-graph
+          .chart-container
+            #twitchgamevh
+      .col-6
+        .card.pi-graph
+          .chart-container
+            #marketshare
   script(src='/javascripts/index.entry.js')

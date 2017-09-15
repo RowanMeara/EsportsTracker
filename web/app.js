@@ -32,7 +32,11 @@ app.use(sassMiddleware({
   outputStyle: 'compressed',
   sourceMap: true
 }))
-app.use(express.static(path.join(__dirname, 'public'), { maxage: '10d' }))
+if (env === 'development') {
+  app.use(express.static(path.join(__dirname, 'public')))
+} else {
+  app.use(express.static(path.join(__dirname, 'public'), { maxage: '10d' }))
+}
 
 // Routes
 app.use('/', index)

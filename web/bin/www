@@ -105,27 +105,31 @@ function onListening () {
  * Refresh the api cache.
  */
 async function refreshCache () {
-  let days = ['1', '7', '30', '60']
-  let esg = await queries.esportsGames()
-  let esgid = []
-  esg.forEach((g) => {
-    esgid.push(g.game_id)
-  })
-  let daypaths = [
-    'http://localhost:3000/api/marketshare?days=',
-    'http://localhost:3000/api/twitchtopgames?days='
-  ]
-  let urls = []
-  esgid.forEach((gid) => {
-    urls.push('http://localhost:3000/api/gameviewership?id=' + gid.toString())
-  })
-
-  daypaths.forEach((path) => {
-    days.forEach((day) => {
-      urls.push(path + day)
+  try {
+    let days = ['1', '7', '30', '60']
+    let esg = await queries.esportsGames()
+    let esgid = []
+    esg.forEach((g) => {
+      esgid.push(g.game_id)
     })
-  })
-  urls.forEach((url) => {
-    http.get(url)
-  })
+    let daypaths = [
+      'http://localhost:3000/api/marketshare?days=',
+      'http://localhost:3000/api/twitchtopgames?days='
+    ]
+    let urls = []
+    esgid.forEach((gid) => {
+      urls.push('http://localhost:3000/api/gameviewership?id=' + gid.toString())
+    })
+
+    daypaths.forEach((path) => {
+      days.forEach((day) => {
+        urls.push(path + day)
+      })
+    })
+    urls.forEach((url) => {
+      http.get(url)
+    })
+  } catch (e) {
+    console.trace(e.message)
+  }
 }

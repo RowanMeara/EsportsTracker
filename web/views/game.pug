@@ -3,7 +3,9 @@ extends layout
 block content
   #main.container-fluid
     .row
-      .col-md-12
-        #game_viewership_card.card
-          #gameviewership
+      .col-12
+        .card.line-graph
+          .margin-container
+            .chart-container
+              #gameviewership
   script(src='/javascripts/game.entry.js')
