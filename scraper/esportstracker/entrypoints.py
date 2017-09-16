@@ -13,6 +13,7 @@ from esportstracker.twitch_scraper import TwitchScraper
 from esportstracker.youtube_scraper import YoutubeScraper
 from esportstracker.aggregator import Aggregator
 
+__DEBUG__ = False
 
 def config_logger(fname):
     fmt = '%(asctime)s %(levelname)s:%(message)s'
@@ -24,8 +25,9 @@ def config_logger(fname):
 def run_twitchscraper():
     config_logger('twitch.log')
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    cfgpath = dir_path + '/scraper_config.yml'
+    cfgpath = dir_path + '/config/config.yml'
     keypath = dir_path + '/../keys.yml'
+
     while True:
         try:
             a = TwitchScraper(cfgpath, keypath)
@@ -44,7 +46,7 @@ def run_twitchscraper():
 def run_youtubescraper():
     config_logger('youtube.log')
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    cfgpath = dir_path + '/scraper_config.yml'
+    cfgpath = dir_path + '/config/config.yml'
     keypath = dir_path + '/../keys.yml'
     ytgamespath = dir_path + '/config/youtube_games.yml'
     #a = YoutubeScraper(cfgpath, keypath, ytgamespath)
@@ -67,7 +69,7 @@ def run_aggregator():
     config_logger('aggregator.log')
     logging.debug("Aggregator Starting.")
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    cfgpath = dir_path + '/config/prod_config.yml'
+    cfgpath = dir_path + '/config/config.yml'
     keypath = dir_path + '/../keys.yml'
     print('Starting Aggregator')
     while True:
@@ -97,7 +99,10 @@ if __name__ == '__main__':
     parser.add_argument('--twitch', action='store_true', default=False)
     parser.add_argument('--youtube', action='store_true', default=False)
     parser.add_argument('--aggregator', action='store_true', default=False)
+    parser.add_argument('--debug', action='store_true', default=False)
     args = parser.parse_args()
+    if args.debug:
+        __DEBUG__ = True
     if args.twitch:
         setproctitle('TwitchScraper')
         run_twitchscraper()

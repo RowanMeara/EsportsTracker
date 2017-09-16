@@ -243,6 +243,7 @@ class PostgresManager:
         :param name: str, name of the game.
         :return: int, twitch game id number.
         """
+        # Twitch API is inconsistent on capitalization so we fix it here.
         if name not in self.esports_games:
             for game in self.esports_games:
                 if name.lower() == game.lower():

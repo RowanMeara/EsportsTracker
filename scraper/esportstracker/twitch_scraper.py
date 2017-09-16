@@ -30,7 +30,10 @@ class TwitchScraper:
         """
         self.config_path = config_path
         with open(config_path) as f:
-            config = yaml.safe_load(f)['twitch']
+            config = yaml.safe_load(f)
+            self.esportsgames = config['esportsgames']
+
+            config = config['twitch']
             self.update_interval = config['update_interval']
             self.db_name = config['db']['db_name']
             self.db_top_streams = config['db']['top_streams']
@@ -41,9 +44,7 @@ class TwitchScraper:
             self.live_streams_url = config['api']['live_streams']
             self.api_version_url = config['api']['version']
             self.user_id_url = config['api']['user_ids']
-            self.game_ids_url = config['api']['game_ids']
-            self.esports_channels = config['esports_channels']
-            self.games = self.esports_channels.keys()
+
         with open(key_path) as f:
             keys = yaml.safe_load(f)
             self.client_id = keys['twitchclientid']
@@ -59,58 +60,6 @@ class TwitchScraper:
         self.session = requests.Session()
         self.session.headers.update(client_header)
         self.session.headers.update(api_version_header)
-
-    def check_userids(self):
-        """
-        Retrieves user IDs for channels that are only specified by name in
-        the config file.
-
-        Gets the userids associated with the channel names specified in the
-        config file.  The user IDs are then dumped into the config file for
-        later use.  Nothing is written if there are no ids to retrieve.
-        Allows channels to be specified in the config file as:
-
-        - name: channel_display_name
-
-        :return: Boolean, True if user IDs were retrieved.
-        """
-        # TODO: Make function clearer
-        new_ids_found = False
-        with open(self.config_path) as f:
-            data = yaml.safe_load(f)
-            esports_channels = data['twitch']['esports_channels']
-        for game_name, game in esports_channels.items():
-            display_names = []
-            if not game:
-                continue
-            for broadcaster_org, channels in game.items():
-                for channel in channels:
-                    if 'id' not in channel:
-                        display_names.append(channel['name'])
-            if not display_names:
-                continue
-
-            # Make API request to retrieve user IDs
-            url = self.user_id_url.format(','.join(display_names))
-            resp = self.twitch_api_request(url)
-            api_resp_channels = json.loads(resp.text)['users']
-            ids = {}
-            for channel in api_resp_channels:
-                ids[channel['name']] = channel['_id']
-
-            # Modify the config that is going to be dumped
-            for broadcaster_org, channels in game.items():
-                for channel in channels:
-                    if channel['name'] in ids:
-                        new_ids_found = True
-                        channel['id'] = ids[channel['name']]
-
-        if new_ids_found:
-            with open(self.config_path, 'w') as f:
-                yaml.safe_dump(data, default_flow_style=False, stream=f)
-            self.esports_channels = data['twitch']['esports_channels']
-            return True
-        return False
 
     def twitch_api_request(self, url, params=None):
         """
@@ -201,18 +150,7 @@ class TwitchScraper:
         db_entry = {'timestamp': int(time.time()), 'game': game}
         streams, json_result = {}, json.loads(api_result.text)
 
-        broadcasters = []
-        for bc_name, bc_channels in self.esports_channels[game].items():
-            for channel in bc_channels:
-                if 'id' in channel:
-                    broadcasters.append(channel['id'])
-        # TODO: investigate the issue surrounding wrong channels.
         for stream in json_result['streams']:
-            broadcaster_id = str(stream['channel']['_id'])
-            if broadcaster_id not in broadcasters:
-                pass
-                # TODO: Should I only track esports broadcasts or filter them
-                # continue
             streams[str(stream['channel']['_id'])] = {
                 'display_name':     stream['channel']['display_name'],
                 'viewers':          stream['viewers'],
@@ -270,13 +208,12 @@ class TwitchScraper:
 
         :return:
         """
-        self.check_userids()
         self.check_indexes()
         while True:
             start_time = time.time()
             try:
                 self.scrape_top_games()
-                for game in self.games:
+                for game in self.esportsgames:
                     self.scrape_esports_channels(game)
                 if DEBUG:
                     print("Elapsed time: {:.2f}s".format(time.time() - start_time))

@@ -18,7 +18,7 @@ class Aggregator:
         self.twitch_db = config['twitch']['db']
         self.youtube_db = config['youtube']['db']
         self.postgres = config['postgres']
-        self.esports_games = set(config['twitch']['esports_channels'].keys())
+        self.esportsgames = set(config['esportsgames'])
         self.postgres['user'] = keys['postgres']['user']
         self.postgres['password'] = keys['postgres']['passwd']
         mongo_cfg = config['aggregator']['mongodb']
@@ -26,9 +26,11 @@ class Aggregator:
         self.mongo_port = mongo_cfg['port']
         self.mongo_ssl = mongo_cfg['ssl']
         self.yti = YoutubeIdentifier()
+        self.mongo_user = None
+        self.mongo_pwd = None
         if 'mongodb' in keys:
-            self.mongo_user = keys['mongodb']['write']['user']
-            self.mongo_pwd = keys['mongodb']['write']['pwd']
+            self.mongo_user = keys['mongodb']['read']['user']
+            self.mongo_pwd = keys['mongodb']['read']['pwd']
 
     @staticmethod
     def average_viewers(entries, start, end):
@@ -83,9 +85,9 @@ class Aggregator:
         """
         # start is the first second of the next hour that we need to aggregate
         # end is the last second of the most recent full hour
-        man = PostgresManager.from_config(self.postgres, self.esports_games)
-        mongo = MongoManager(self.twitch_db['host'],
-                             self.twitch_db['port'],
+        man = PostgresManager.from_config(self.postgres, self.esportsgames)
+        mongo = MongoManager(self.mongo_host,
+                             self.mongo_port,
                              self.twitch_db['db_name'],
                              self.mongo_user,
                              self.mongo_pwd,
@@ -120,9 +122,9 @@ class Aggregator:
 
         :return:
         """
-        man = PostgresManager.from_config(self.postgres, self.esports_games)
-        mongo = MongoManager(self.twitch_db['host'],
-                             self.twitch_db['port'],
+        man = PostgresManager.from_config(self.postgres, self.esportsgames)
+        mongo = MongoManager(self.mongo_host,
+                             self.mongo_port,
                              self.twitch_db['db_name'],
                              self.mongo_user,
                              self.mongo_pwd,
@@ -169,9 +171,9 @@ class Aggregator:
 
         :return:
         """
-        man = PostgresManager.from_config(self.postgres, self.esports_games)
-        mongo = MongoManager(self.youtube_db['host'],
-                             self.youtube_db['port'],
+        man = PostgresManager.from_config(self.postgres, self.esportsgames)
+        mongo = MongoManager(self.mongo_host,
+                             self.mongo_port,
                              self.youtube_db['db_name'],
                              self.mongo_user,
                              self.mongo_pwd,
