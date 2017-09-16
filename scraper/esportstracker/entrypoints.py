@@ -81,9 +81,11 @@ def run_aggregator():
             a.agg_youtube_streams()
             end = time.time()
             print("Total Time: {:.2f}".format(end - start))
-            # Refresh every 30 minutes because we need a complete
-            # hour before additional aggregation can occur.
-            time.sleep(60 * 30 - int(end - start))
+
+            # Refresh on the 1st and 31st minute of each hour
+            x = (int(end) % 1800)
+            timesleep = 1860 - x if x > 0 else 60 - x
+            time.sleep(timesleep)
         except:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
