@@ -9,7 +9,7 @@ class googleCharts {
         script.type = 'text/javascript'
         script.onload = function () {
           GoogleCharts.api = window.google
-          GoogleCharts.api.charts.load('44', {'packages': ['corechart', 'line']})
+          GoogleCharts.api.charts.load('current', {'packages': ['corechart', 'line']})
           GoogleCharts.api.charts.setOnLoadCallback(() => {
             resolve()
           })
@@ -21,10 +21,10 @@ class googleCharts {
     return this.scriptPromise
   }
 
-  load(callback, type) {
+  load (callback, type) {
     return this[loadScript]().then(() => {
       if (type) {
-        if  (!Array.isArray(type)) {
+        if (!Array.isArray(type)) {
           type = [type]
         }
         this.api.charts.load('current', {'packages': type})

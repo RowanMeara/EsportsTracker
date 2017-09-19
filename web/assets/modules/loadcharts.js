@@ -89,7 +89,7 @@ function hourlyGameViewership (gameID, resize = false) {
   optionsHGV = {
     width: '100%',
     height: 0.7 * $('#gameviewership').width(),
-    legend: {position: 'none'},
+    legend: {position: 'bottom'},
     hAxis: {
       title: '',
       textPosition: 'none'
@@ -110,8 +110,9 @@ function hourlyGameViewership (gameID, resize = false) {
     })
     // formatTooltip(data)
     dataHGV.addColumn('date', 'Date')
-    dataHGV.addColumn('number', 'Concurrent Viewers')
-    // dataHGV.addColumn({type: 'string', role: 'tooltip'})
+    dataHGV.addColumn('number', 'Twitch')
+    dataHGV.addColumn('number', 'Youtube')
+    //dataHGV.addColumn({type: 'string', role: 'tooltip'})
     dataHGV.addRows(data.data)
     optionsHGV.chart.title = data.name + ' Concurrent Viewership'
     optionsHGV.chart.subtitle = 'English Language Streams Only'

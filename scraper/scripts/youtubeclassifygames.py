@@ -19,7 +19,7 @@ def classifydb():
     Standalone classifier for testing purposes.
     """
     start = time.time()
-    cfgpath = '../esportstracker/config/dev_config.yml'
+    cfgpath = '../esportstracker/config/config.yml'
     keypath = '../keys.yml'
     with open(cfgpath) as f:
         config = yaml.safe_load(f)

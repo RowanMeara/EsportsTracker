@@ -57,7 +57,7 @@ router.get('/marketshare', cache('30 minutes'), async function (req, res) {
   }
 })
 
-router.get('/gameviewership', cache('30 minutes'), async function (req, res) {
+router.get('/twitchgameviewership', cache('30 minutes'), async function (req, res) {
   try {
     let gameID = req.query.id
     let epoch = Math.floor(new Date() / 1000)
@@ -67,6 +67,42 @@ router.get('/gameviewership', cache('30 minutes'), async function (req, res) {
     let l = []
     q.forEach((entry) => {
       l.push([entry['epoch'], parseInt(entry['viewers'])])
+    })
+    r.data = l
+    res.status(200).json(r)
+  } catch (e) {
+    console.trace(e.message)
+  }
+})
+
+router.get('/youtubegameviewership', cache('30 minutes'), async function (req, res) {
+  try {
+    let gameID = req.query.id
+    let epoch = Math.floor(new Date() / 1000)
+    let start = epoch - 2592000
+    let q = await queries.youtubeEsportsGameHourly(gameID, start, epoch)
+    let r = { name: q[0].name }
+    let l = []
+    q.forEach((entry) => {
+      l.push([entry['epoch'], parseInt(entry['viewers'])])
+    })
+    r.data = l
+    res.status(200).json(r)
+  } catch (e) {
+    console.trace(e.message)
+  }
+})
+
+router.get('/gameviewership', cache('30 minutes'), async function (req, res) {
+  try {
+    let gameID = req.query.id
+    let epoch = Math.floor(new Date() / 1000)
+    let start = epoch - 2592000
+    let q = await queries.combinedGameVHHourly(gameID, start, epoch)
+    let r = { name: q[0].name }
+    let l = []
+    q.forEach((entry) => {
+      l.push([entry.epoch, parseInt(entry.viewers), parseInt(entry.ytviewers)])
     })
     r.data = l
     res.status(200).json(r)

@@ -23,7 +23,8 @@ const qTwitchTotalHours = new PQ(sql.twitch_top_games.cumHours)
 const qYoutubeTotalHours = new PQ(sql.youtube_stream.cumHours)
 const qEsportsGames = new PQ(sql.game.esportsGames)
 const qEsportsGameHourly = new PQ(sql.twitch_stream.gameViewershipHourly)
-
+const qYoutubeEsportsGameHourly = new PQ(sql.youtube_stream.gameViewershipHourly)
+const qCombinedGameHourly = new PQ(sql.youtube_stream.combinedGameViewershipHourly)
 const timeout = cfg.pg_timeout
 var cacheEsportsGames = {}
 
@@ -51,6 +52,30 @@ async function esportsGames () {
  */
 async function esportsGameHourly (gameID, start, end) {
   let res = await db.any(qEsportsGameHourly, [gameID, start, end])
+  return res
+}
+
+/*
+ * Return hourly English language viewership data for the given game.
+ *
+ * @param {Number} gameID - Twitch's game id number
+ * @param {Number} start - unix epoch
+ * @param {Number} end - unix epoch
+ */
+async function youtubeEsportsGameHourly (gameID, start, end) {
+  let res = await db.any(qYoutubeEsportsGameHourly, [gameID, start, end])
+  return res
+}
+
+/*
+ * Return hourly English language viewership data for the given game.
+ *
+ * @param {Number} gameID - Twitch's game id number
+ * @param {Number} start - unix epoch
+ * @param {Number} end - unix epoch
+ */
+async function combinedGameVHHourly (gameID, start, end) {
+  let res = await db.any(qCombinedGameHourly, [gameID, start, end])
   return res
 }
 
@@ -91,6 +116,8 @@ module.exports = {
   esportsGames: esportsGames,
   youtubeTotalVH: youtubeTotalVH,
   twitchTotalVH: twitchTotalVH,
+  youtubeEsportsGameHourly: youtubeEsportsGameHourly,
+  combinedGameVHHourly: combinedGameVHHourly,
   cache: {
     esportsGames: getEsportsGames,
     refreshESG: refreshESG
