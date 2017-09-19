@@ -17,6 +17,12 @@ module.exports = {
       filename: 'commons.js',
       name: 'commons'
     }),
+    new webpack.ProvidePlugin({
+      jQuery: 'jquery',
+      $: 'jquery',
+      'window.jQuery': 'jquery',
+      Tether: 'tether'
+    }),
     new Uglify()
   ],
   //devtool: 'inline-source-map'
