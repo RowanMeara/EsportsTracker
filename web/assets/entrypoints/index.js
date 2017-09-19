@@ -5,8 +5,8 @@ import {GoogleCharts} from '../modules/googleCharts.js'
 GoogleCharts.load(drawCharts)
 
 function drawCharts (resize = false) {
-  charts.twitchGameViewershipLast30(resize)
-  charts.marketshareLast30(resize)
+  charts.twitchGameViewership(resize)
+  charts.marketshare(resize)
 }
 
 $(window).resize(() => {

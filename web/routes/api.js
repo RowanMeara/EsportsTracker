@@ -16,8 +16,8 @@ let DAY = 60 * 60 * 24
 
 router.get('/twitchtopgames', cache('30 minutes'), async function (req, res) {
   try {
-    var days = req.query.days || 30
-    var numGames = req.query.numgames || 10
+    let days = parseInt(req.query.days) || 30
+    let numGames = req.query.numgames || 10
     let now = Math.floor(new Date() / 1000)
     let start = now - days * DAY
 
@@ -40,7 +40,7 @@ router.get('/twitchtopgames', cache('30 minutes'), async function (req, res) {
 
 router.get('/marketshare', cache('30 minutes'), async function (req, res) {
   try {
-    let days = req.query.days || 30
+    let days = parseInt(req.query.days) || 30
     let now = Math.floor(new Date() / 1000)
     let start = now - days * DAY
     let tvh = queries.twitchTotalVH(start, now)
@@ -59,9 +59,10 @@ router.get('/marketshare', cache('30 minutes'), async function (req, res) {
 
 router.get('/twitchgameviewership', cache('30 minutes'), async function (req, res) {
   try {
+    let days = parseInt(req.query.days) || 30
     let gameID = req.query.id
     let epoch = Math.floor(new Date() / 1000)
-    let start = epoch - 2592000
+    let start = epoch - days * DAY
     let q = await queries.esportsGameHourly(gameID, start, epoch)
     let r = { name: q[0].name }
     let l = []
@@ -77,9 +78,10 @@ router.get('/twitchgameviewership', cache('30 minutes'), async function (req, re
 
 router.get('/youtubegameviewership', cache('30 minutes'), async function (req, res) {
   try {
+    let days = parseInt(req.query.days) || 30
     let gameID = req.query.id
     let epoch = Math.floor(new Date() / 1000)
-    let start = epoch - 2592000
+    let start = epoch - days * DAY
     let q = await queries.youtubeEsportsGameHourly(gameID, start, epoch)
     let r = { name: q[0].name }
     let l = []
@@ -95,9 +97,10 @@ router.get('/youtubegameviewership', cache('30 minutes'), async function (req, r
 
 router.get('/gameviewership', cache('30 minutes'), async function (req, res) {
   try {
+    let days = parseInt(req.query.days) || 30
     let gameID = req.query.id
     let epoch = Math.floor(new Date() / 1000)
-    let start = epoch - 2592000
+    let start = epoch - days * DAY
     let q = await queries.combinedGameVHHourly(gameID, start, epoch)
     let r = { name: q[0].name }
     let l = []

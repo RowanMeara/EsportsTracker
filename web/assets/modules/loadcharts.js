@@ -4,15 +4,17 @@ import Bootstrap from 'bootstrap/dist/js/bootstrap.js'
 
 // TODO: Figure out a better location for sass loaders
 
+let lineChartHeight = 0.55
+let piChartHeight = 0.7
 
 let chartTGV
 let dataTGV
-function twitchGameViewershipLast30 (resize = false) {
+function twitchGameViewership (resize = false, days = 30) {
   let options = {
-    title: 'Twitch Viewership by Game Last 30 Days',
+    title: 'Twitch Viewership by Game Last ' + days + ' Days',
     vAxis: {format: '# years'},
     width: '100%',
-    height: 0.7 * $('#twitchgamevh').width()
+    height: piChartHeight * $('#twitchgamevh').width()
   }
   if (resize) {
     chartTGV.draw(dataTGV, options)
@@ -32,7 +34,8 @@ function twitchGameViewershipLast30 (resize = false) {
   }
 
   $.ajax({
-    url: '/api/twitchtopgames?days=30&numgames=10',
+    url: '/api/twitchtopgames?numgames=10',
+    data: {days: days},
     dataType: 'json',
     async: true,
     success: function (msg) {
@@ -43,12 +46,12 @@ function twitchGameViewershipLast30 (resize = false) {
 
 let dataMks
 let chartMks
-function marketshareLast30 (resize = false) {
+function marketshare (resize = false, days = 30) {
   let options = {
-    title: 'Platform Marketshare',
+    title: 'Platform Marketshare Last ' + days + ' Days',
     vAxis: {format: '# years'},
     width: '100%',
-    height: 0.7 * $('#marketshare').width()
+    height: piChartHeight * $('#marketshare').width()
   }
   if (resize) {
     chartMks.draw(dataMks, options)
@@ -68,7 +71,8 @@ function marketshareLast30 (resize = false) {
   }
 
   $.ajax({
-    url: '/api/marketshare?days=30',
+    url: '/api/marketshare',
+    data: {days: days},
     dataType: 'json',
     async: true,
     success: function (msg) {
@@ -80,15 +84,15 @@ function marketshareLast30 (resize = false) {
 let dataHGV
 let chartHGV
 let optionsHGV
-function hourlyGameViewership (gameID, resize = false) {
+function hourlyGameViewership (gameID, resize = false, days = 30) {
   if (resize) {
-    optionsHGV.height = 0.7 * $('#gameviewership').width()
+    optionsHGV.height = lineChartHeight * $('#gameviewership').width()
     chartHGV.draw(dataHGV, GoogleCharts.api.charts.Line.convertOptions(optionsHGV))
     return
   }
   optionsHGV = {
     width: '100%',
-    height: 0.7 * $('#gameviewership').width(),
+    height: lineChartHeight * $('#gameviewership').width(),
     legend: {position: 'bottom'},
     hAxis: {
       title: '',
@@ -114,14 +118,15 @@ function hourlyGameViewership (gameID, resize = false) {
     dataHGV.addColumn('number', 'Youtube')
     //dataHGV.addColumn({type: 'string', role: 'tooltip'})
     dataHGV.addRows(data.data)
-    optionsHGV.chart.title = data.name + ' Concurrent Viewership'
+    optionsHGV.chart.title = data.name + ' Concurrent Viewership Last ' + days + ' Days'
     optionsHGV.chart.subtitle = 'English Language Streams Only'
     // Instantiate and draw our chart, passing in some options.
     chartHGV.draw(dataHGV, GoogleCharts.api.charts.Line.convertOptions(optionsHGV))
   }
 
   $.ajax({
-    url: '/api/gameviewership?id=' + gameID,
+    url: '/api/gameviewership',
+    data: {id: gameID, days: days},
     dataType: 'json',
     async: true,
     success: function (msg) {
@@ -162,7 +167,7 @@ function formatTooltip (apiResponse) {
 }
 
 export let charts = {
-  twitchGameViewershipLast30: twitchGameViewershipLast30,
-  marketshareLast30: marketshareLast30,
+  twitchGameViewership: twitchGameViewership,
+  marketshare: marketshare,
   hourlyGameViewership: hourlyGameViewership
 }

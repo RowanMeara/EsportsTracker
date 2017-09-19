@@ -9,4 +9,7 @@ config.pg_timeout = 300
 config.site = {}
 config.site.title = 'EsportsTracker'
 
+config.api = {}
+config.api.days = ['1', '7', '30', '60']
+
 module.exports = config

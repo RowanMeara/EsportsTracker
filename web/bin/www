@@ -6,11 +6,11 @@
 
 const debug = require('debug')('web:server')
 const http = require('http')
-const https = require('https')
 const cron = require('node-cron')
 
 const app = require('../app')
 const queries = require('../server/queries')
+const config = require('../config')
 
 /**
  * Get port from environment and store in Express.
@@ -109,7 +109,7 @@ function onListening () {
  */
 async function refreshCache () {
   try {
-    let days = ['1', '7', '30', '60']
+    let days = config.api.days
     let esg = await queries.esportsGames()
     let esgid = []
     esg.forEach((g) => {
@@ -123,6 +123,7 @@ async function refreshCache () {
     esgid.forEach((gid) => {
       urls.push('http://localhost:3000/api/twitchgameviewership?id=' + gid.toString())
       urls.push('http://localhost:3000/api/youtubegameviewership?id=' + gid.toString())
+      urls.push('http://localhost:3000/api/gameviewership?id=' + gid.toString())
     })
 
     daypaths.forEach((path) => {
@@ -131,9 +132,13 @@ async function refreshCache () {
       })
     })
     urls.forEach((url) => {
-      http.get(url)
+      let req = http.get(url)
+      req.on('error', (req) => {
+        console.log('API request failed: ' + url)
+      })
     })
   } catch (e) {
+    console.log('Refresh Partially Failed')
     console.trace(e.message)
   }
 }
