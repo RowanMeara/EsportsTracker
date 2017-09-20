@@ -2,10 +2,10 @@ extends layout
 
 block content
   #main.container-fluid
+    include timeperiod
     .row.no-gutters
       .col-12
         .card.line-graph
-          .margin-container
-            .chart-container
-              #gameviewership
+          .chart-container
+            #gameviewership
   script(src='/webpack/game.entry.js')

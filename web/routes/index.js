@@ -6,7 +6,12 @@ const queries = require('../server/queries')
 
 /* GET home page. */
 router.get('/', async function (req, res) {
-  res.render('index', {title: config.site.title, esportsGames: queries.cache.esportsGames()})
+  let vars = {
+    title: config.site.title,
+    esportsGames: queries.cache.esportsGames(),
+    timePeriods: config.api.days
+  }
+  res.render('index', vars)
 })
 
 module.exports = router

@@ -87,20 +87,27 @@ let optionsHGV
 function hourlyGameViewership (gameID, resize = false, days = 30) {
   if (resize) {
     optionsHGV.height = lineChartHeight * $('#gameviewership').width()
-    chartHGV.draw(dataHGV, GoogleCharts.api.charts.Line.convertOptions(optionsHGV))
+    chartHGV.draw(dataHGV, optionsHGV)
     return
   }
   optionsHGV = {
     width: '100%',
     height: lineChartHeight * $('#gameviewership').width(),
     legend: {position: 'bottom'},
-    hAxis: {
-      title: '',
-      textPosition: 'none'
+    title: '',
+    titleTextStyle: {
+      fontName: 'Helvetica',
+      fontSize: 16,
+      bold: true
     },
     vAxis: {
       textStyle: {
-        fontSize: 20
+        fontSize: 14
+      }
+    },
+    hAxis: {
+      textStyle: {
+        fontSize: 14
       }
     },
     chart: {}
@@ -108,7 +115,7 @@ function hourlyGameViewership (gameID, resize = false, days = 30) {
 
   let render = function (data) {
     dataHGV = new GoogleCharts.api.visualization.DataTable()
-    chartHGV = new GoogleCharts.api.charts.Line(document.getElementById('gameviewership'))
+    chartHGV = new GoogleCharts.api.visualization.LineChart(document.getElementById('gameviewership'))
     data.data.forEach((ts) => {
       ts[0] = new Date(ts[0] * 1000)
     })
@@ -118,10 +125,10 @@ function hourlyGameViewership (gameID, resize = false, days = 30) {
     dataHGV.addColumn('number', 'Youtube')
     //dataHGV.addColumn({type: 'string', role: 'tooltip'})
     dataHGV.addRows(data.data)
-    optionsHGV.chart.title = data.name + ' Concurrent Viewership Last ' + days + ' Days'
-    optionsHGV.chart.subtitle = 'English Language Streams Only'
+    optionsHGV.title = data.name + ' Concurrent Viewership Last ' + days + ' Days'
+    optionsHGV.subtitle = 'English Language Streams Only'
     // Instantiate and draw our chart, passing in some options.
-    chartHGV.draw(dataHGV, GoogleCharts.api.charts.Line.convertOptions(optionsHGV))
+    chartHGV.draw(dataHGV, optionsHGV)
   }
 
   $.ajax({

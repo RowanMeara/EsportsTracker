@@ -9,7 +9,8 @@ router.get('/:gameid(\\d+)/', async function (req, res) {
   let vars = {
     title: config.site.title,
     esportsGames: queries.cache.esportsGames(),
-    gameID: req.params.gameid
+    gameID: req.params.gameid,
+    timePeriods: config.api.days
   }
   res.render('game', vars)
 })
