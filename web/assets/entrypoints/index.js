@@ -3,9 +3,9 @@ import {charts} from '../modules/loadcharts.js'
 import {GoogleCharts} from '../modules/googleCharts.js'
 
 GoogleCharts.load(drawCharts)
-let days = 7
+let days = 30
 
-function drawCharts (resize = false, days = 7) {
+function drawCharts (resize = false, days = 30) {
   charts.twitchGameViewership(resize, days)
   charts.marketshare(resize, days)
 }

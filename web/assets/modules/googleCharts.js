@@ -1,6 +1,6 @@
 const loadScript = Symbol('loadScript')
 
-class googleCharts {
+class ExportGoogleCharts {
   [loadScript] () {
     if (!this.scriptPromise) {
       this.scriptPromise = new Promise((resolve) => {
@@ -36,7 +36,7 @@ class googleCharts {
   }
 }
 
-export let GoogleCharts = new googleCharts()
+export let GoogleCharts = new ExportGoogleCharts()
 
 if (module.hot) {
   module.hot.accept()
