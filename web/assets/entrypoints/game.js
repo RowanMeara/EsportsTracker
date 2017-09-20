@@ -22,6 +22,6 @@ $('#time_period_btn').change(async () => {
   drawCharts(false, days)
 })
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function sleep (ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
