@@ -7,6 +7,7 @@ const extractSass = new ExtractTextPlugin({
   filename: 'style.css'
 })
 
+
 module.exports = {
   entry: {
     index: './assets/entrypoints/index.js',
@@ -43,13 +44,12 @@ module.exports = {
       Tether: 'tether'
     }),
     // Sass
-   extractSass,
+    extractSass,
     // JavaScript
     new webpack.optimize.CommonsChunkPlugin({
       filename: 'commons.js',
       name: 'commons'
     }),
-    new Uglify()
-  ],
-  //devtool: 'inline-source-map'
+   // new Uglify()
+  ]
 }

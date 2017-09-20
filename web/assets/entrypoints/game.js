@@ -1,14 +1,14 @@
 import $ from 'jquery'
 import {charts} from '../modules/loadcharts.js'
-import {GoogleCharts} from '../modules/googleCharts.js'
 
-GoogleCharts.load(drawCharts)
-let days = 7
+let days = 30
+let pn = window.location.pathname
+let gameID = parseInt(pn.substring(6, pn.length))
+let hgv = new charts.HourlyGameViewership(gameID, 'gameviewership', days)
+drawCharts()
 
-function drawCharts (resize = false, days = 7) {
-  let pn = window.location.pathname
-  let gameID = parseInt(pn.substring(6, pn.length))
-  charts.hourlyGameViewership(gameID, resize, days)
+function drawCharts (resize = false, days = 30) {
+  hgv.draw(resize, days)
 }
 
 $(window).resize(() => {
