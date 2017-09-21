@@ -121,9 +121,9 @@ async function refreshCache () {
     ]
     let urls = []
     esgid.forEach((gid) => {
-      urls.push('http://localhost:3000/api/twitchgameviewership?id=' + gid.toString())
-      urls.push('http://localhost:3000/api/youtubegameviewership?id=' + gid.toString())
-      urls.push('http://localhost:3000/api/gameviewership?id=' + gid.toString())
+      daypaths.push('http://localhost:3000/api/twitchgameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push('http://localhost:3000/api/youtubegameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push('http://localhost:3000/api/gameviewership?id=' + gid.toString() + '&days=')
     })
 
     daypaths.forEach((path) => {
