@@ -33,7 +33,7 @@ if (env === 'development') {
 
 // Routes
 app.use('/', index)
-app.use('/api', api)
+app.use('/api', api.router)
 app.use('/game', game)
 
 // 404 Handling

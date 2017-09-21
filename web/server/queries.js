@@ -25,6 +25,7 @@ const qEsportsGames = new PQ(sql.game.esportsGames)
 const qEsportsGameHourly = new PQ(sql.twitch_stream.gameViewershipHourly)
 const qYoutubeEsportsGameHourly = new PQ(sql.youtube_stream.gameViewershipHourly)
 const qCombinedGameHourly = new PQ(sql.youtube_stream.combinedGameViewershipHourly)
+const qGameidToName = new PQ(sql.game.gameidToName)
 const timeout = cfg.pg_timeout
 var cacheEsportsGames = {}
 
@@ -110,6 +111,11 @@ function getEsportsGames () {
   return cacheEsportsGames
 }
 
+async function gameidToName (gid) {
+  const res = await db.any(qGameidToName, [gid])
+  return res
+}
+
 module.exports = {
   twitchGamesCumVH: twitchGameCumVH,
   esportsGameHourly: esportsGameHourly,
@@ -118,6 +124,7 @@ module.exports = {
   twitchTotalVH: twitchTotalVH,
   youtubeEsportsGameHourly: youtubeEsportsGameHourly,
   combinedGameVHHourly: combinedGameVHHourly,
+  gameidToName: gameidToName,
   cache: {
     esportsGames: getEsportsGames,
     refreshESG: refreshESG

@@ -17,7 +17,8 @@ module.exports = {
     combinedGameViewershipHourly: sql('youtube_stream/twitchyoutubegameviewershiphourly.sql')
   },
   game: {
-    esportsGames: sql('game/esportsgamelist.sql')
+    esportsGames: sql('game/esportsgamelist.sql'),
+    gameidToName: sql('game/gamename.sql')
   },
   twitch_stream: {
     gameViewershipHourly: sql('twitch_stream/gameviewershiphourly.sql')

@@ -1,6 +1,9 @@
+const http = require('http')
+
 const express = require('express')
 const apicache = require('apicache')
 
+const config = require('../config')
 const queries = require('../server/queries')
 
 let app = express()
@@ -63,11 +66,11 @@ router.get('/twitchgameviewership', cache('30 minutes'), async function (req, re
     let gameID = req.query.id
     let epoch = Math.floor(new Date() / 1000)
     let start = epoch - days * DAY
-    let q = await queries.esportsGameHourly(gameID, start, epoch)
-    let r = { name: q[0].name }
+    let rows = await queries.esportsGameHourly(gameID, start, epoch)
+    let r = { name: rows[0].name }
     let l = []
-    q.forEach((entry) => {
-      l.push([entry['epoch'], parseInt(entry['viewers'])])
+    rows.forEach((row) => {
+      l.push([row['epoch'], parseInt(row['viewers'])])
     })
     r.data = l
     res.status(200).json(r)
@@ -82,14 +85,20 @@ router.get('/youtubegameviewership', cache('30 minutes'), async function (req, r
     let gameID = req.query.id
     let epoch = Math.floor(new Date() / 1000)
     let start = epoch - days * DAY
-    let q = await queries.youtubeEsportsGameHourly(gameID, start, epoch)
-    let r = { name: q[0].name }
-    let l = []
-    q.forEach((entry) => {
-      l.push([entry['epoch'], parseInt(entry['viewers'])])
-    })
-    r.data = l
-    res.status(200).json(r)
+    let rows = await queries.youtubeEsportsGameHourly(gameID, start, epoch)
+    if (rows.length > 0) {
+      let resp = { name: rows[0].name }
+      let l = []
+      rows.forEach((row) => {
+        l.push([row['epoch'], parseInt(row['viewers'])])
+      })
+      resp.data = l
+      res.status(200).json(resp)
+    } else {
+      let name = await queries.gameidToName(gameID)
+      let resp = {name: name, data: []}
+      res.status(200).json(resp)
+    }
   } catch (e) {
     console.trace(e.message)
   }
@@ -114,4 +123,47 @@ router.get('/gameviewership', cache('30 minutes'), async function (req, res) {
   }
 })
 
-module.exports = router
+/**
+ * Refresh the api cache.
+ */
+async function refreshCache () {
+  try {
+    apicache.clear()
+    let days = config.api.days
+    let esg = await queries.esportsGames()
+    let esgid = []
+    esg.forEach((g) => {
+      esgid.push(g.game_id)
+    })
+    let daypaths = [
+      'http://localhost:3000/api/marketshare?days=',
+      'http://localhost:3000/api/twitchtopgames?days='
+    ]
+    let urls = []
+    esgid.forEach((gid) => {
+      daypaths.push('http://localhost:3000/api/twitchgameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push('http://localhost:3000/api/youtubegameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push('http://localhost:3000/api/gameviewership?id=' + gid.toString() + '&days=')
+    })
+
+    daypaths.forEach((path) => {
+      days.forEach((day) => {
+        urls.push(path + day)
+      })
+    })
+    urls.forEach((url) => {
+      let req = http.get(url)
+      req.on('error', (req) => {
+        console.log('API request failed: ' + url)
+      })
+    })
+  } catch (e) {
+    console.log('Refresh Partially Failed')
+    console.trace(e.message)
+  }
+}
+
+module.exports = {
+  router: router,
+  refreshCache: refreshCache
+}
