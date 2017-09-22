@@ -17,7 +17,7 @@ if (app.get('env') === 'development') {
 }
 let DAY = 60 * 60 * 24
 
-router.get('/twitchtopgames', cache('30 minutes'), async function (req, res) {
+router.get('/twitchtopgames', cache('60 minutes'), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let numGames = req.query.numgames || 10
@@ -41,7 +41,7 @@ router.get('/twitchtopgames', cache('30 minutes'), async function (req, res) {
   }
 })
 
-router.get('/marketshare', cache('30 minutes'), async function (req, res) {
+router.get('/marketshare', cache('60 minutes'), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let now = Math.floor(new Date() / 1000)
@@ -60,7 +60,7 @@ router.get('/marketshare', cache('30 minutes'), async function (req, res) {
   }
 })
 
-router.get('/twitchgameviewership', cache('30 minutes'), async function (req, res) {
+router.get('/twitchgameviewership', cache('60 minutes'), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let gameID = req.query.id
@@ -79,7 +79,7 @@ router.get('/twitchgameviewership', cache('30 minutes'), async function (req, re
   }
 })
 
-router.get('/youtubegameviewership', cache('30 minutes'), async function (req, res) {
+router.get('/youtubegameviewership', cache('60 minutes'), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let gameID = req.query.id
@@ -104,7 +104,7 @@ router.get('/youtubegameviewership', cache('30 minutes'), async function (req, r
   }
 })
 
-router.get('/gameviewership', cache('30 minutes'), async function (req, res) {
+router.get('/gameviewership', cache('60 minutes'), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let gameID = req.query.id
@@ -128,6 +128,7 @@ router.get('/gameviewership', cache('30 minutes'), async function (req, res) {
  */
 async function refreshCache () {
   try {
+    let start = Date.now()
     apicache.clear()
     let days = config.api.days
     let esg = await queries.esportsGames()
@@ -151,12 +152,33 @@ async function refreshCache () {
         urls.push(path + day)
       })
     })
-    urls.forEach((url) => {
-      let req = http.get(url)
-      req.on('error', (req) => {
-        console.log('API request failed: ' + url)
+
+    let httpPromise = async (url) => {
+      return new Promise((resolve, reject) => {
+        let req = http.get(url)
+        req.on('response', res => {
+          resolve(res)
+        })
+        req.on('error', err => {
+          console.log('API request failed: ' + url)
+          resolve(err)
+        })
       })
-    })
+    }
+
+    let reqs = []
+    for (let i = 0; i < urls.length; i++) {
+      if (i % 10 === 0) {
+        await Promise.all(reqs)
+        reqs = []
+      }
+      let target = urls[i].substring('http://localhost:3000'.length, urls[i].length)
+      apicache.clear(target)
+      reqs.push(httpPromise(urls[i]))
+    }
+    await Promise.all(reqs)
+    let total = (Date.now() - start) / 1000
+    console.log('Refresh Complete: ' + urls.length + ' requests in ' + total + 's')
   } catch (e) {
     console.log('Refresh Partially Failed')
     console.trace(e.message)

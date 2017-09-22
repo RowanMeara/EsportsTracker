@@ -21,14 +21,12 @@ app.set('port', port)
 
 // Update api cache so queries are responsive
 let env = process.env.NODE_ENV || 'development'
-cron.schedule('* 5 * * * *', queries.cache.refreshESG(), false)
-cron.schedule('* 35 * * * *', queries.cache.refreshESG(), false)
+cron.schedule('* 5 * * * *', queries.cache.refreshESG, true)
+queries.cache.refreshESG()
 if (env === 'production') {
-  cron.schedule('* 5 * * * *', api.refreshCache(), false)
-  cron.schedule('* 35 * * * *', api.refreshCache(), false)
+  cron.schedule('* 5 * * * *', api.refreshCache, true)
   api.refreshCache()
 }
-queries.cache.refreshESG()
 
 /**
  * Create HTTP server.

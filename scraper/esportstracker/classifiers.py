@@ -105,7 +105,7 @@ def classify_language(title):
     Classifies the language of a stream title.
 
     :param title: str, title to be classified.
-    :return: str, language code.
+    :return: str, ISO 2 letter language code.
     """
     langidcode = langid.classify(title)[0]
 
