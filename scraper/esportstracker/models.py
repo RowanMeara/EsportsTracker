@@ -274,7 +274,7 @@ class YoutubeChannel(Row):
     """
     __slots__ = ['channel_id', 'name', 'main_language']
 
-    def __init__(self, channel_id, name, main_language="unknown"):
+    def __init__(self, channel_id, name, main_language='unknown'):
         self.channel_id = channel_id
         self.name = name
         self.main_language = main_language
@@ -350,6 +350,10 @@ class YoutubeStream(Row):
 
     def to_row(self):
         if LANGUAGE_DETECTION and self.language == 'unknown':
-            self.language = 'd_' + classify_language(self.stream_title)
+            if type(self.tags) == list:
+                info = self.stream_title + ' '.join(self.tags)
+            else:
+                info = self.stream_title + self.tags
+            self.language = 'd_' + classify_language(info)
         return (self.channel_id, self.epoch, self.game_id, self.viewers,
                 self.stream_title, self.language, str(self.tags))

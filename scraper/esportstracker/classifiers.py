@@ -37,10 +37,19 @@ class YoutubeIdentifier:
         codiw = ['COD', 'Call of Duty', 'IW']
         melee = ['smash']
         destiny2 = ['destiny 2']
-        minecraft = ['Minecraft']
-        fifa = ['FIFA']
-        nba = ['NBA 2K17']
+        minecraft = ['Minecraft', 'BEDWARS']
+        fifa17 = ['FIFA 17', 'FIFA 2K17']
+        fifa18 = ['FIFA 18', 'FIFA 2K18']
+        nba17 = ['NBA 2K17', 'NBA 17']
+        nba18 = ['NBA 2K18', 'NBA 18']
         gtav = ['GTA V', 'GTA 5']
+        # Youtube is infested with TV restreams pretending to be games
+        # because YouTube Gaming appears to lack any kind of manual moderation.
+        # Twitch has traditionally broadcast TV shows in the 'Creative' category
+        # so it is used as the 'game' for all of YouTube Gaming's illegal
+        # restreams.
+        tv = ['Family Guy', 'South Park', 'Rick and Morty', 'Full Episodes',
+              'Futurama', 'SpongeBob SquarePants', 'The Simpsons', ]
         self.keywords = {
             493057: pubg,
             21779: lol,
@@ -57,10 +66,13 @@ class YoutubeIdentifier:
             16282: melee,
             497057: destiny2,
             27471: minecraft,
-            493091: fifa,
+            493091: fifa17,
+            495589: fifa18,
             491437: codiw,
-            493112: nba,
-            32982: gtav
+            493112: nba17,
+            495056: nba18,
+            32982: gtav,
+            488191: tv
         }
 
     def classify(self, yts):
