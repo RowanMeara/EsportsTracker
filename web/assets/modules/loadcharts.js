@@ -125,7 +125,7 @@ class HourlyGameViewership {
       chart: {},
       legend: {
         textStyle: {
-          fontSize: 14
+          fontSize: 16
         }
       }
     }
@@ -136,10 +136,10 @@ class HourlyGameViewership {
       let div = document.getElementById(this.divID)
       let width = div.getBoundingClientRect().width
       if (window.innerWidth > MOBILE_WIDTH) {
-        this.options.legend.textStyle.fontSize = 16
         this.options.height = LINE_CHART_HEIGHT * width
+        this.options.legend.position = 'bottom'
       } else {
-        this.options.legend.textStyle.fontSize = 10
+        this.options.legend.position = 'none'
         this.options.height = LINE_CHART_HEIGHT_MOBILE * width
       }
       let opt = GoogleCharts.api.charts.Line.convertOptions(this.options)
