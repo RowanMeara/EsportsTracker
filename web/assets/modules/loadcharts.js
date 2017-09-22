@@ -1,5 +1,4 @@
 import {GoogleCharts} from './googleCharts.js'
-import 'bootstrap/dist/js/bootstrap.js'
 import $ from 'jquery'
 
 let lineChartHeight = 0.55

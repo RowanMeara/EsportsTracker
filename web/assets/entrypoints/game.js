@@ -1,6 +1,7 @@
 import $ from 'jquery'
 import {charts} from '../modules/loadcharts.js'
 import {GoogleCharts} from '../modules/googleCharts.js'
+import '../modules/reqs.js'
 
 let hgv, gameID, days
 GoogleCharts.load(onLoad)

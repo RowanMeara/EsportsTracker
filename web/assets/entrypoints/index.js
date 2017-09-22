@@ -1,7 +1,7 @@
 import $ from 'jquery'
 import {charts} from '../modules/loadcharts.js'
 import {GoogleCharts} from '../modules/googleCharts.js'
-
+import '../modules/reqs.js'
 let tgv, mks, days
 GoogleCharts.load(onLoad)
 

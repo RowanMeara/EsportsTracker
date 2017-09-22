@@ -11,7 +11,6 @@ module.exports = {
   entry: {
     index: './assets/entrypoints/index.js',
     game: './assets/entrypoints/game.js',
-    req: './assets/stylesheets/styles.js'
   },
   output: {
     path: path.join(__dirname, 'public', 'webpack'),
