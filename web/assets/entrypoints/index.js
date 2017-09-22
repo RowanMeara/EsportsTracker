@@ -2,23 +2,30 @@ import $ from 'jquery'
 import {charts} from '../modules/loadcharts.js'
 import {GoogleCharts} from '../modules/googleCharts.js'
 
-GoogleCharts.load(drawCharts)
 let days = 30
+let tgv, mks
+GoogleCharts.load(onLoad)
 
-function drawCharts (resize = false, days = 30) {
-  charts.twitchGameViewership(resize, days)
-  charts.marketshare(resize, days)
+function onLoad () {
+  tgv = new charts.TwitchGameViewership('twitchgamevh', days)
+  mks = new charts.Marketshare('marketshare', days)
+  drawCharts(days)
+}
+
+function drawCharts (ldays) {
+  tgv.draw(ldays)
+  mks.draw(ldays)
 }
 
 $(window).resize(() => {
-  drawCharts(true, days)
+  drawCharts(days)
 })
 
 $('#time_period_btn').change(async () => {
   await sleep(1)
   let active = $('div.btn.period-btn.active').text()
   days = parseInt(active.substring(0, active.length - ' Days'.length))
-  drawCharts(false, days)
+  drawCharts(days)
 })
 
 function sleep (ms) {

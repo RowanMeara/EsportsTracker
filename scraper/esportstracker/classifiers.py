@@ -108,8 +108,15 @@ def classify_language(title):
     :return: str, language code.
     """
     langidcode = langid.classify(title)[0]
-    dn, c, r, = cld2.detect(title)
-    cldcode = r[0][1]
+
+    # Sometimes cld2 believes valid utf-8 is invalid.
+    # I believe the utf-8 is valid because encoding and decoding the string
+    # while using the 'ignore' invalid characters option did not help.
+    try:
+        dn, c, r, = cld2.detect(title)
+        cldcode = r[0][1]
+    except cld2.error:
+        cldcode = 'un'
     if langidcode == cldcode or cldcode == 'un':
         return langidcode
     elif langidcode == 'en':

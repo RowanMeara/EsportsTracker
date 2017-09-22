@@ -1,25 +1,31 @@
 import $ from 'jquery'
 import {charts} from '../modules/loadcharts.js'
+import {GoogleCharts} from '../modules/googleCharts.js'
 
 let days = 30
-let pn = window.location.pathname
-let gameID = parseInt(pn.substring(6, pn.length))
-let hgv = new charts.HourlyGameViewership(gameID, 'gameviewership', days)
-drawCharts()
+let hgv, gameID
+GoogleCharts.load(onLoad)
 
-function drawCharts (resize = false, days = 30) {
-  hgv.draw(resize, days)
+function onLoad () {
+  let pn = window.location.pathname
+  gameID = parseInt(pn.substring(6, pn.length))
+  hgv = new charts.HourlyGameViewership(gameID, 'gameviewership', days)
+  drawCharts(days)
+}
+
+function drawCharts (days) {
+  hgv.draw(days)
 }
 
 $(window).resize(() => {
-  drawCharts(true, days)
+  drawCharts(days)
 })
 
 $('#time_period_btn').change(async () => {
   await sleep(1)
   let active = $('div.btn.period-btn.active').text()
   days = parseInt(active.substring(0, active.length - ' Days'.length))
-  drawCharts(false, days)
+  drawCharts(days)
 })
 
 function sleep (ms) {

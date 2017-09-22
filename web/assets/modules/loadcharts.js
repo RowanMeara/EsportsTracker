@@ -1,205 +1,158 @@
 import {GoogleCharts} from './googleCharts.js'
-import $ from 'jquery'
 import 'bootstrap/dist/js/bootstrap.js'
-const Plotly = require('./customPlotly')
-const dateFormat = require('dateformat')
+import $ from 'jquery'
 
 let lineChartHeight = 0.55
 let piChartHeight = 0.7
 
-let chartTGV
-let dataTGV
-function twitchGameViewership (resize = false, days = 30) {
-  let options = {
-    title: 'Twitch Viewership by Game Last ' + days + ' Days',
-    vAxis: {format: '# years'},
-    width: '100%',
-    height: piChartHeight * $('#twitchgamevh').width()
-  }
-  if (resize) {
-    chartTGV.draw(dataTGV, options)
-    return
-  }
-  let render = function (numbers) {
-    formatTooltip(numbers)
-    dataTGV = new GoogleCharts.api.visualization.DataTable()
-    dataTGV.addColumn('string', 'Game')
-    dataTGV.addColumn('number', 'Viewer Years')
-    dataTGV.addColumn({type: 'string', role: 'tooltip'})
-    dataTGV.addRows(numbers)
-
-    // Instantiate and draw our chart, passing in some options.
-    chartTGV = new GoogleCharts.api.visualization.PieChart(document.getElementById('twitchgamevh'))
-    chartTGV.draw(dataTGV, options)
-  }
-
-  $.ajax({
-    url: '/api/twitchtopgames?numgames=10',
-    data: {days: days},
-    dataType: 'json',
-    async: true,
-    success: function (msg) {
-      render(msg)
+class TwitchGameViewership {
+  constructor (divID, days) {
+    this.divID = divID
+    this.data = null
+    let div = document.getElementById(divID)
+    this.chart = new GoogleCharts.api.visualization.PieChart(div)
+    this.options = {
+      title: 'Twitch Viewership by Game Last ' + days + ' Days',
+      vAxis: {format: '# years'},
+      width: '100%'
     }
-  })
-}
-
-let dataMks
-let chartMks
-function marketshare (resize = false, days = 30) {
-  let options = {
-    title: 'Platform Marketshare Last ' + days + ' Days',
-    vAxis: {format: '# years'},
-    width: '100%',
-    height: piChartHeight * $('#marketshare').width()
-  }
-  if (resize) {
-    chartMks.draw(dataMks, options)
-    return
-  }
-  let render = function (numbers) {
-    formatTooltip(numbers)
-    dataMks = new GoogleCharts.api.visualization.DataTable()
-    dataMks.addColumn('string', 'Platform')
-    dataMks.addColumn('number', 'Viewer Years')
-    dataMks.addColumn({type: 'string', role: 'tooltip'})
-    dataMks.addRows(numbers)
-
-    // Instantiate and draw our chart, passing in some options.
-    chartMks = new GoogleCharts.api.visualization.PieChart(document.getElementById('marketshare'))
-    chartMks.draw(dataMks, options)
   }
 
-  $.ajax({
-    url: '/api/marketshare',
-    data: {days: days},
-    dataType: 'json',
-    async: true,
-    success: function (msg) {
-      render(msg)
+  draw (days) {
+    if (this.data && days === this.days) {
+      let div = document.getElementById(this.divID)
+      let width = div.getBoundingClientRect().width
+      this.options.height = piChartHeight * width
+      this.chart.draw(this.data, this.options)
+      return
     }
-  })
-}
-
-let dataHGV
-let chartHGV
-let optionsHGV
-function hourlyGameViewership (gameID, resize = false, days = 30) {
-  if (resize) {
-    optionsHGV.height = lineChartHeight * $('#gameviewership').width()
-    chartHGV.draw(dataHGV, optionsHGV)
-    return
-  }
-  optionsHGV = {
-    width: '100%',
-    height: lineChartHeight * $('#gameviewership').width(),
-    legend: {position: 'bottom'},
-    title: '',
-    subtitle: 'English Language Streams Only',
-    titleTextStyle: {
-      fontName: 'Helvetica',
-      fontSize: 16,
-      bold: true
-    },
-    vAxis: {
-      textStyle: {
-        fontSize: 14
+    this.days = days
+    let render = (msg) => {
+      formatTooltip(msg)
+      this.data = new GoogleCharts.api.visualization.DataTable()
+      this.data.addColumn('string', 'Game')
+      this.data.addColumn('number', 'Viewer Years')
+      this.data.addColumn({type: 'string', role: 'tooltip'})
+      this.data.addRows(msg)
+      this.options.title = 'Twitch Viewership by Game Last ' + days + ' Days'
+      this.draw(days)
+    }
+    $.ajax({
+      url: '/api/twitchtopgames?numgames=10',
+      data: {days: days},
+      dataType: 'json',
+      async: true,
+      success: function (msg) {
+        render(msg)
       }
-    },
-    hAxis: {
-      textStyle: {
-        fontSize: 14
-      }
-    },
-    chart: {}
-  }
-
-  let render = function (data) {
-    dataHGV = new GoogleCharts.api.visualization.DataTable()
-    chartHGV = new GoogleCharts.api.visualization.LineChart(document.getElementById('gameviewership'))
-    data.data.forEach((ts) => {
-      ts[0] = new Date(ts[0] * 1000)
     })
-    // formatTooltip(data)
-    dataHGV.addColumn('date', 'Date')
-    dataHGV.addColumn('number', 'Twitch')
-    dataHGV.addColumn('number', 'Youtube')
-    dataHGV.addRows(data.data)
-    optionsHGV.title = data.name + ' Concurrent Viewership Last ' + days + ' Days'
-    optionsHGV.subtitle = 'English Language Streams Only'
-    // Instantiate and draw our chart, passing in some options.
-    chartHGV.draw(dataHGV, optionsHGV)
+  }
+}
+
+class Marketshare {
+  constructor (divID, days) {
+    this.days = days
+    this.divID = divID
+    let div = document.getElementById(divID)
+    this.chart = new GoogleCharts.api.visualization.PieChart(div)
+    this.data = null
+    this.options = {
+      vAxis: {format: '# years'},
+      width: '100%'
+    }
   }
 
-  $.ajax({
-    url: '/api/gameviewership',
-    data: {id: gameID, days: days},
-    dataType: 'json',
-    async: true,
-    success: function (msg) {
-      render(msg)
+  draw (days) {
+    if (this.data && days === this.days) {
+      let div = document.getElementById(this.divID)
+      let width = div.getBoundingClientRect().width
+      this.options.height = piChartHeight * width
+      this.chart.draw(this.data, this.options)
+      return
     }
-  })
+    this.days = days
+    let render = (numbers) => {
+      formatTooltip(numbers)
+      this.data = new GoogleCharts.api.visualization.DataTable()
+      this.data.addColumn('string', 'Platform')
+      this.data.addColumn('number', 'Viewer Years')
+      this.data.addColumn({type: 'string', role: 'tooltip'})
+      this.data.addRows(numbers)
+      this.options.title = 'Platform Marketshare Last ' + days + ' Days'
+      this.draw(this.days)
+    }
+
+    $.ajax({
+      url: '/api/marketshare',
+      data: {days: days},
+      dataType: 'json',
+      async: true,
+      success: function (msg) {
+        render(msg)
+      }
+    })
+  }
 }
 
 class HourlyGameViewership {
-  constructor (gameID, divID, days = 30) {
+  constructor (gameID, divID, days) {
     this.gameID = gameID
     this.divID = divID
     this.days = days
-    this.traces = []
-    this.layout = {
-      autosize: true,
-      legend: {
-        orientation: 'h'
-      },
+    this.data = null
+    let div = document.getElementById(divID)
+    this.chart = new GoogleCharts.api.charts.Line(div)
+    this.options = {
+      width: '100%',
+      legend: {position: 'bottom'},
       title: '',
-      titlefont: {
-        size: 16
+      subtitle: 'English Language Streams Only',
+      titleTextStyle: {
+        fontName: 'Helvetica',
+        fontSize: 16,
+        bold: true
       },
-      yaxis: {
-        title: 'Concurrent Viewers',
-      }
+      vAxis: {
+        textStyle: {
+          fontSize: 14
+        }
+      },
+      hAxis: {
+        textStyle: {
+          fontSize: 14
+        }
+      },
+      chart: {}
     }
   }
 
-  draw (resize = false, days = 30) {
-    if (resize) {
-      Plotly.newPlot(this.divID, this.traces, this.layout)
+  draw (days) {
+    if (this.data && this.days === days) {
+      let div = document.getElementById(this.divID)
+      let width = div.getBoundingClientRect().width
+      this.options.height = lineChartHeight * width
+      let opt = GoogleCharts.api.charts.Line.convertOptions(this.options)
+      this.chart.draw(this.data, opt)
       return
     }
-
     this.days = days
 
     let render = (msg) => {
-      let dates = []
-      let twitch = []
-      let youtube = []
-      msg.data.forEach((row) => {
-        dates.push(epochToDateString(row[0]))
-        twitch.push(row[1])
-        youtube.push(row[2])
+      this.data = new GoogleCharts.api.visualization.DataTable()
+      msg.data.forEach((ts) => {
+        ts[0] = new Date(ts[0] * 1000)
       })
-      let twitchTrace = {
-        x: dates,
-        y: twitch,
-        mode: 'lines',
-        name: 'Twitch'
-      }
-      let youtubeTrace = {
-        x: dates,
-        y: youtube,
-        mode: 'lines',
-        name: 'YouTube'
-      }
-      this.layout.title = msg.name + ' Viewership Last ' + this.days + ' Days <br> (English Streams Only)'
-      this.traces = [twitchTrace, youtubeTrace]
-      Plotly.newPlot(this.divID, this.traces, this.layout)
+      this.data.addColumn('date', 'Date')
+      this.data.addColumn('number', 'Twitch')
+      this.data.addColumn('number', 'Youtube')
+      this.data.addRows(msg.data)
+      this.options.title = msg.name + ' Concurrent Viewership Last ' + this.days + ' Days'
+      this.draw(this.days)
     }
 
     $.ajax({
       url: '/api/gameviewership',
-      data: {id: this.gameID, days: this.days},
+      data: {id: this.gameID, days: days},
       dataType: 'json',
       async: true,
       success: function (msg) {
@@ -240,15 +193,8 @@ function formatTooltip (apiResponse) {
   })
 }
 
-function epochToDateString (epoch) {
-  let d = new Date(0)
-  d.setUTCSeconds(epoch)
-  return dateFormat(d, 'yyyy-mm-dd HH:MM:ss')
-}
-
 export let charts = {
-  twitchGameViewership: twitchGameViewership,
-  marketshare: marketshare,
-  hourlyGameViewership: hourlyGameViewership,
+  TwitchGameViewership: TwitchGameViewership,
+  Marketshare: Marketshare,
   HourlyGameViewership: HourlyGameViewership
 }

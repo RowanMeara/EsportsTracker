@@ -7,7 +7,6 @@ const extractSass = new ExtractTextPlugin({
   filename: 'style.css'
 })
 
-
 module.exports = {
   entry: {
     index: './assets/entrypoints/index.js',

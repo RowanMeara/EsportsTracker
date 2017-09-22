@@ -10,7 +10,7 @@ from collections import OrderedDict
 
 class PostgresManager:
     """
-    Class for interacting with the Postgres instance.
+    Class for managing the Postgres instance.
     """
     def __init__(self, host, port, user, password, dbname, esports_games):
         """
@@ -53,15 +53,15 @@ class PostgresManager:
         Initializes the database for use.
 
         Initializes the database using the schema shown in the schema
-        design file (schema.png).
+        design file (schema.png).  Missing tables and indexes are created.
         """
         try:
-
             if not all(self.table_exists(t) for t in self.tablenames):
                 logging.info('Initializing missing tables.')
                 self.create_tables()
                 self.conn.commit()
                 logging.info('Postgres initialized.')
+            self.init_indexes()
             logging.debug('Postgres ready.')
         except psycopg2.DatabaseError as e:
             logging.warning('Failed to initialize database: {}'.format(e))
@@ -75,18 +75,12 @@ class PostgresManager:
         design file (schema.png).
         """
         tables = OrderedDict()
-        indexes = OrderedDict()
         tables['game'] = (
             'CREATE TABLE game( '
             '    game_id integer PRIMARY KEY, '
             '    name text NOT NULL UNIQUE, '
             '    giantbomb_id integer '
             ');'
-        )
-        indexes['game_name_idx'] = (
-            'CREATE INDEX IF NOT EXISTS game_name_idx '
-            'ON game '
-            'USING HASH (name);'
         )
         tables['twitch_game_vc'] = (
             'CREATE TABLE twitch_game_vc( '
@@ -144,12 +138,27 @@ class PostgresManager:
             '    PRIMARY KEY (channel_id, epoch)'
             ');'
         )
+
         curs = self.conn.cursor()
-        for tname, query in tables.items():
+        for tname, query in tables.values():
             if not self.table_exists(tname):
                 curs.execute(query)
                 logging.info('Created Table:' + tname)
-        for iname, query in indexes.items():
+
+    def init_indexes(self):
+        """
+        Creates database indexes if they do not already exist.
+
+        :return: None
+        """
+        indexes = OrderedDict()
+        indexes['game_name_idx'] = (
+            'CREATE INDEX IF NOT EXISTS game_name_idx '
+            'ON game '
+            'USING HASH (name);'
+        )
+        curs = self.conn.cursor()
+        for query in indexes.values():
             curs.execute(query)
 
     def table_exists(self, table):
@@ -183,7 +192,7 @@ class PostgresManager:
         if table not in self.tablenames:
             return 0
         query = ('SELECT COALESCE(MAX(epoch), 0) '
-                 'FROM {}')
+                 'FROM {} ')
         query = sql.SQL(query).format(sql.Identifier(table))
         cursor = self.conn.cursor()
         cursor.execute(query)
