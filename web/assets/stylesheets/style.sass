@@ -47,8 +47,7 @@ i
   margin: 10px
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23)
 
-.line-graph
-  padding-top: 55%
+
 
 .pi-graph
   padding-top: 70%
@@ -157,10 +156,17 @@ i
     font-size: 22px
     padding-left: 20px
     line-height: 50px !important
-
+  .line-graph
+    padding-top: 70%
+  #time_period_btn
+    font-size: 12px
 @media (min-width: 767px)
   .nav-side-menu .menu-list .menu-content
     display: block
   #main
     width: calc(100% - #{$sidebar-width})
     float: right
+  .line-graph
+    padding-top: 55%
+  #time_period_btn
+    font-size: 16px

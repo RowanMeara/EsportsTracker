@@ -1,8 +1,10 @@
 import {GoogleCharts} from './googleCharts.js'
 import $ from 'jquery'
 
-let lineChartHeight = 0.55
-let piChartHeight = 0.7
+const LINE_CHART_HEIGHT = 0.55
+const LINE_CHART_HEIGHT_MOBILE = 0.7
+const PI_CHART_HEIGHT = 0.7
+const MOBILE_WIDTH = 767
 
 class TwitchGameViewership {
   constructor (divID, days) {
@@ -21,7 +23,7 @@ class TwitchGameViewership {
     if (this.data && days === this.days) {
       let div = document.getElementById(this.divID)
       let width = div.getBoundingClientRect().width
-      this.options.height = piChartHeight * width
+      this.options.height = PI_CHART_HEIGHT * width
       this.chart.draw(this.data, this.options)
       return
     }
@@ -65,7 +67,7 @@ class Marketshare {
     if (this.data && days === this.days) {
       let div = document.getElementById(this.divID)
       let width = div.getBoundingClientRect().width
-      this.options.height = piChartHeight * width
+      this.options.height = PI_CHART_HEIGHT * width
       this.chart.draw(this.data, this.options)
       return
     }
@@ -103,7 +105,6 @@ class HourlyGameViewership {
     this.chart = new GoogleCharts.api.charts.Line(div)
     this.options = {
       width: '100%',
-      legend: {position: 'bottom'},
       title: '',
       subtitle: 'English Language Streams Only',
       titleTextStyle: {
@@ -121,7 +122,12 @@ class HourlyGameViewership {
           fontSize: 14
         }
       },
-      chart: {}
+      chart: {},
+      legend: {
+        textStyle: {
+          fontSize: 14
+        }
+      }
     }
   }
 
@@ -129,7 +135,13 @@ class HourlyGameViewership {
     if (this.data && this.days === days) {
       let div = document.getElementById(this.divID)
       let width = div.getBoundingClientRect().width
-      this.options.height = lineChartHeight * width
+      if (window.innerWidth > MOBILE_WIDTH) {
+        this.options.legend.textStyle.fontSize = 16
+        this.options.height = LINE_CHART_HEIGHT * width
+      } else {
+        this.options.legend.textStyle.fontSize = 10
+        this.options.height = LINE_CHART_HEIGHT_MOBILE * width
+      }
       let opt = GoogleCharts.api.charts.Line.convertOptions(this.options)
       this.chart.draw(this.data, opt)
       return
@@ -145,7 +157,7 @@ class HourlyGameViewership {
       this.data.addColumn('number', 'Twitch')
       this.data.addColumn('number', 'Youtube')
       this.data.addRows(msg.data)
-      this.options.title = msg.name + ' Concurrent Viewership Last ' + this.days + ' Days'
+      this.options.title = msg.name + ' Viewers Last ' + this.days + ' Days'
       this.draw(this.days)
     }
 
