@@ -11,7 +11,7 @@ module.exports = {
   entry: {
     index: './assets/entrypoints/index.js',
     game: './assets/entrypoints/game.js',
-    req: './assets/entrypoints/styles.js'
+    req: './assets/stylesheets/styles.js'
   },
   output: {
     path: path.join(__dirname, 'public', 'webpack'),
@@ -21,7 +21,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.sass$/,
+        test: /\.s[ac]ss$/,
         use: extractSass.extract({
           use: ['css-loader', 'sass-loader']
         })

@@ -2,11 +2,12 @@ import $ from 'jquery'
 import {charts} from '../modules/loadcharts.js'
 import {GoogleCharts} from '../modules/googleCharts.js'
 
-let days = 30
-let tgv, mks
+let tgv, mks, days
 GoogleCharts.load(onLoad)
 
 function onLoad () {
+  let active = $('div.btn.period-btn.active').text()
+  days = parseInt(active.substring(0, active.length - ' Days'.length))
   tgv = new charts.TwitchGameViewership('twitchgamevh', days)
   mks = new charts.Marketshare('marketshare', days)
   drawCharts(days)

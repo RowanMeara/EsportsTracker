@@ -5,6 +5,7 @@ const apicache = require('apicache')
 
 const config = require('../config')
 const queries = require('../server/queries')
+const util = require('../server/et-util')
 
 let app = express()
 const router = express.Router()
@@ -129,22 +130,22 @@ router.get('/gameviewership', cache('60 minutes'), async function (req, res) {
 async function refreshCache () {
   try {
     let start = Date.now()
-    apicache.clear()
     let days = config.api.days
+    let host = 'http://localhost:' + util.getPort()
     let esg = await queries.esportsGames()
     let esgid = []
     esg.forEach((g) => {
       esgid.push(g.game_id)
     })
     let daypaths = [
-      'http://localhost:3000/api/marketshare?days=',
-      'http://localhost:3000/api/twitchtopgames?days='
+      host + '/api/marketshare?days=',
+      host + '/api/twitchtopgames?days='
     ]
     let urls = []
     esgid.forEach((gid) => {
-      daypaths.push('http://localhost:3000/api/twitchgameviewership?id=' + gid.toString() + '&days=')
-      daypaths.push('http://localhost:3000/api/youtubegameviewership?id=' + gid.toString() + '&days=')
-      daypaths.push('http://localhost:3000/api/gameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push(host + '/api/twitchgameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push(host + '/api/youtubegameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push(host + '/api/gameviewership?id=' + gid.toString() + '&days=')
     })
 
     daypaths.forEach((path) => {
@@ -172,7 +173,7 @@ async function refreshCache () {
         await Promise.all(reqs)
         reqs = []
       }
-      let target = urls[i].substring('http://localhost:3000'.length, urls[i].length)
+      let target = urls[i].substring(host.length, urls[i].length)
       apicache.clear(target)
       reqs.push(httpPromise(urls[i]))
     }

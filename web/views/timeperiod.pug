@@ -3,7 +3,7 @@
     .btn-container
       .btn-group(data-toggle='buttons' id='time_period_btn')
         each period in timePeriods
-          if period === 30
+          if period === 7
             .btn-block
               .btn.period-btn.active(value=period)=period
                 input.input-btn(type='radio' name='period' value=period)

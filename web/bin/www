@@ -11,20 +11,17 @@ const cron = require('node-cron')
 const app = require('../app')
 const queries = require('../server/queries')
 const api = require('../routes/api')
+const util = require('../server/et-util')
 
-/**
- * Get port from environment and store in Express.
- */
-
-let port = normalizePort(process.env.PORT || '3000')
+const port = util.getPort()
 app.set('port', port)
 
 // Update api cache so queries are responsive
 let env = process.env.NODE_ENV || 'development'
-cron.schedule('* 5 * * * *', queries.cache.refreshESG, true)
+cron.schedule('0 5 * * * *', queries.cache.refreshESG, true)
 queries.cache.refreshESG()
 if (env === 'production') {
-  cron.schedule('* 5 * * * *', api.refreshCache, true)
+  cron.schedule('0 5 * * * *', api.refreshCache, true)
   api.refreshCache()
 }
 
@@ -39,30 +36,10 @@ let server = http.createServer(app)
  * to expose node.js applications to internet.
  */
 
-server.listen(port, 'localhost')
+server.listen(util.getPort(), 'localhost')
 server.on('error', onError)
 server.on('listening', onListening)
 console.log('Server Listening')
-
-/**
- * Normalize a port into a number, string, or false.
- */
-
-function normalizePort (val) {
-  let port = parseInt(val, 10)
-
-  if (isNaN(port)) {
-    // named pipe
-    return val
-  }
-
-  if (port >= 0) {
-    // port number
-    return port
-  }
-
-  return false
-}
 
 /**
  * Event listener for HTTP server "error" event.
