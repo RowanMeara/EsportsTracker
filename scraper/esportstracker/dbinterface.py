@@ -12,9 +12,12 @@ class PostgresManager:
     """
     Class for managing the Postgres instance.
     """
-    def __init__(self, host, port, user, password, dbname, esports_games):
+    def __init__(self, host, port, user, password, dbname, esports_games=[]):
         """
         Initializes a PostgresManager.
+
+        The esports_games parameter must be specified for the manager to
+        retrieve the id's of games that have improper capitalization.
 
         :param host: str, host of the database.
         :param port: int, port of the database.
@@ -33,6 +36,7 @@ class PostgresManager:
         self.index_names = {'game_name_idx'}
         self.esports_games = esports_games.copy()
         self.gamename_cache = {}
+        self.esports_channels = {}
         self.initdb()
 
     @staticmethod
@@ -108,13 +112,12 @@ class PostgresManager:
         )
         tables['esports_org'] = (
             'CREATE TABLE esports_org( '
-            '    org_id integer PRIMARY KEY, '
-            '    name text NOT NULL '
+            '    org_name text PRIMARY KEY '
             ');'
         )
         tables['channel_affiliation'] = (
             'CREATE TABLE channel_affiliation( '
-            '    org_id integer REFERENCES esports_org(org_id), '
+            '    org_name text REFERENCES esports_org(org_name), '
             '    channel_id integer REFERENCES twitch_channel(channel_id), '
             '    PRIMARY KEY (channel_id) '
             ');'
@@ -140,7 +143,7 @@ class PostgresManager:
         )
 
         curs = self.conn.cursor()
-        for tname, query in tables.values():
+        for tname, query in tables.items():
             if not self.table_exists(tname):
                 curs.execute(query)
                 logging.info('Created Table:' + tname)

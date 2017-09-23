@@ -140,7 +140,7 @@ class Row(ABC):
         pass
 
     def __str__(self):
-        return self.to_row()
+        return str(self.to_row())
 
 
 class Game(Row):
@@ -357,3 +357,28 @@ class YoutubeStream(Row):
             self.language = 'd_' + classify_language(info)
         return (self.channel_id, self.epoch, self.game_id, self.viewers,
                 self.stream_title, self.language, str(self.tags))
+
+
+class EsportsOrg(Row):
+    """
+    A row in the esports_org table.
+    """
+    def __init__(self, name):
+        self.name = name
+
+    def to_row(self):
+        return self.name,
+
+
+class ChannelAffiliation(Row):
+    """
+    A row in the channel_affiliation channel.
+
+    Connects Twitch channels to esports orgs.
+    """
+    def __init__(self, org_name, channel_id):
+        self.org_name = org_name
+        self.channel_id = channel_id
+
+    def to_row(self):
+        return (self.org_name, self.channel_id)

@@ -15,6 +15,7 @@ from esportstracker.aggregator import Aggregator
 
 __DEBUG__ = False
 
+
 def config_logger(fname):
     fmt = '%(asctime)s %(levelname)s:%(message)s'
     logging.basicConfig(format=fmt, filename=fname, level=logging.WARNING)

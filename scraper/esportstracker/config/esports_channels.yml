@@ -65,6 +65,8 @@ twitch:
     name: pgl
   - id: '107953058'
     name: pgl_csgo
+  - id: '106460795'
+    name: dotamajor
   StarLadder:
   - id: '85875535'
     name: starladder_cs_en
@@ -95,9 +97,6 @@ twitch:
   DreamLeague:
   - id: '50160915'
     name: dreamleague
-  PGL:
-  - id: '106460795'
-    name: dotamajor
   The International:
   - id: '35630634'
     name: dota2ti
