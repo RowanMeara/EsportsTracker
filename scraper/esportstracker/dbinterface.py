@@ -302,6 +302,20 @@ class PostgresManager:
         cursor = self.conn.cursor()
         cursor.execute(query, (yts.game_id, yts.channel_id, yts.epoch))
 
+    def set_twitch_affiliations(self, channels):
+        """
+        Upserts the twitch channel affiliations.
+
+        :param channels: [TwitchChannel], List of channels to upsert.
+        :return:
+        """
+        self.store_rows(channels, 'twitch_channel')
+        query = ('UPDATE twitch_channel '
+                 'SET affiliation = %s '
+                 'WHERE channel_id = %s ')
+        args = [(x.affiliation, x.channel_id) for x in channels]
+        cursor = self.conn.cursor()
+        cursor.executemany(query, args)
 
 class MongoManager:
     """

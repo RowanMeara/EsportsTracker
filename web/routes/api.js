@@ -124,6 +124,24 @@ router.get('/gameviewership', cache('60 minutes'), async function (req, res) {
   }
 })
 
+router.get('/organizerviewership', cache('60 minutes'), async function (req, res) {
+  try {
+    let days = parseInt(req.query.days) || 30
+    let gameID = req.query.id
+    let epoch = Math.floor(new Date() / 1000)
+    let start = epoch - days * DAY
+    let q = await queries.orgMarketshareCum(start, epoch)
+    let l = []
+    console.log(q)
+    q.forEach((entry) => {
+      l.push([entry.org_name, parseInt(entry.viewers)])
+    })
+    res.status(200).json(l)
+  } catch (e) {
+    console.trace(e.message)
+  }
+})
+
 /**
  * Refresh the api cache.
  */
@@ -139,7 +157,8 @@ async function refreshCache () {
     })
     let daypaths = [
       host + '/api/marketshare?days=',
-      host + '/api/twitchtopgames?days='
+      host + '/api/twitchtopgames?days=',
+      host + '/api/organizerviewership?days='
     ]
     let urls = []
     esgid.forEach((gid) => {

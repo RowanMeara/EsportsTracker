@@ -60,21 +60,21 @@ def main():
 
     db = dbinterface.PostgresManager(host, port, user, password, dbname)
     orgrows = []
-    chans = []
+    tchans = []
     ychans = []
     for orgname in torgs.keys():
         orgrows.append(TournamentOrganizer(orgname))
         for channel in torgs[orgname]:
             tc = TwitchChannel(channel['id'], channel['name'], orgname)
-            chans.append(tc)
+            tchans.append(tc)
     for orgname in ytorgs.keys():
         orgrows.append(TournamentOrganizer(orgname))
         for channel in ytorgs[orgname]:
             yc = YoutubeChannel(channel['id'], channel['name'], 'en', None, orgname)
             ychans.append(yc)
 
-    db.store_rows(orgrows, 'esports_org')
-    db.store_rows(chans, 'twitch_channel')
+    db.store_rows(orgrows, 'tournament_organizer')
+    db.set_twitch_affiliations(tchans)
     db.store_rows(ychans, 'youtube_channel')
     db.commit()
     print('Channels Stored')
