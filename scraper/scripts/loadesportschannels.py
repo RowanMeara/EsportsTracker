@@ -3,7 +3,7 @@ import sys
 from ruamel import yaml
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('esportstracker/')])
+sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('scripts/')])
 
 from esportstracker.models import TournamentOrganizer
 from esportstracker.models import TwitchChannel, YoutubeChannel
