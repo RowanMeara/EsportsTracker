@@ -305,7 +305,6 @@ class PostgresManager:
     def set_twitch_affiliations(self, channels):
         """
         Upserts the twitch channel affiliations.
-
         :param channels: [TwitchChannel], List of channels to upsert.
         :return:
         """

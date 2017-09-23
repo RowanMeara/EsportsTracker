@@ -50,6 +50,49 @@ class TwitchGameViewership {
   }
 }
 
+class OrganizerMarketshare {
+  constructor (divID, days) {
+    this.divID = divID
+    this.data = null
+    let div = document.getElementById(divID)
+    this.chart = new GoogleCharts.api.visualization.PieChart(div)
+    this.options = {
+      vAxis: {format: '# years'},
+      width: '100%'
+    }
+  }
+
+  draw (days) {
+    if (this.data && days === this.days) {
+      let div = document.getElementById(this.divID)
+      let width = div.getBoundingClientRect().width
+      this.options.height = PI_CHART_HEIGHT * width
+      this.chart.draw(this.data, this.options)
+      return
+    }
+    this.days = days
+    let render = (msg) => {
+      formatTooltip(msg)
+      this.data = new GoogleCharts.api.visualization.DataTable()
+      this.data.addColumn('string', 'Organization')
+      this.data.addColumn('number', 'Viewer Years')
+      this.data.addColumn({type: 'string', role: 'tooltip'})
+      this.data.addRows(msg)
+      this.options.title = 'Organizer Marketshare Last ' + days + ' Days'
+      this.draw(days)
+    }
+    $.ajax({
+      url: '/api/organizerviewership',
+      data: {days: days},
+      dataType: 'json',
+      async: true,
+      success: function (msg) {
+        render(msg)
+      }
+    })
+  }
+}
+
 class Marketshare {
   constructor (divID, days) {
     this.days = days
@@ -207,5 +250,6 @@ function formatTooltip (apiResponse) {
 export let charts = {
   TwitchGameViewership: TwitchGameViewership,
   Marketshare: Marketshare,
-  HourlyGameViewership: HourlyGameViewership
+  HourlyGameViewership: HourlyGameViewership,
+  OrganizerMarketshare: OrganizerMarketshare
 }

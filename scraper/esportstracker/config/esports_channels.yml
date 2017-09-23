@@ -1,103 +1,103 @@
 twitch:
   2GGaming:
-  - {id: 10384419, name: 2ggaming}
+  - {id: 10384419, name: 2GGaming}
   Blizzard:
-  - {id: 42776357, name: playhearthstone}
-  - {id: 48937001, name: blizzheroes}
-  - {id: 125149756, name: cn_goldseries}
-  - {id: 139607661, name: gcwc}
-  - {id: 8822, name: blizzard}
-  - {id: 42508152, name: starcraft}
+  - {id: 42776357, name: PlayHearthstone}
+  - {id: 48937001, name: Heroes of the Storm}
+  - {id: 125149756, name: CN_Goldseries}
+  - {id: 139607661, name: GCWC}
+  - {id: 8822, name: Blizzard}
+  - {id: 42508152, name: StarCraft}
   Bluehole:
-  - {id: 127506955, name: playbattlegrounds}
+  - {id: 127506955, name: playBATTLEGROUNDS}
   DreamLeague:
-  - {id: 50160915, name: dreamleague}
+  - {id: 50160915, name: DreamLeague}
   Dreamhack:
-  - {id: 22859264, name: dreamhackcs}
-  - {id: 64291396, name: dreamhackhs}
+  - {id: 22859264, name: DreamHackCS}
+  - {id: 64291396, name: DreamHackHS}
   - {id: 134543960, name: dreamhackoverwatch}
-  - {id: 157859480, name: dreamhackrocketleague}
-  - {id: 22859340, name: dreamhacksc2}
-  - {id: 101390582, name: dreamhacksmash}
+  - {id: 157859480, name: DreamHackRocketLeague}
+  - {id: 22859340, name: DreamhackSC2}
+  - {id: 101390582, name: DreamHackSmash}
   ELEAGUE:
-  - {id: 109724636, name: eleaguetv}
+  - {id: 109724636, name: ELEAGUE TV}
   ESEA:
-  - {id: 8911047, name: esea}
-  - {id: 28206345, name: esea2}
-  - {id: 28547446, name: esea3}
+  - {id: 8911047, name: ESEA}
+  - {id: 28206345, name: ESEA2}
+  - {id: 28547446, name: ESEA3}
   ESL:
-  - {id: 31239503, name: esl_csgo}
-  - {id: 35936871, name: esl_csgob}
-  - {id: 132561587, name: proleaguecsgo}
-  - {id: 36481935, name: esl_dota2}
+  - {id: 31239503, name: ESL_CSGO}
+  - {id: 35936871, name: ESL_CSGOb}
+  - {id: 132561587, name: ProLeagueCSGO}
+  - {id: 36481935, name: ESL_DOTA2}
   - {id: 82312665, name: esl_joindotared}
-  - {id: 23660075, name: esl_overwatch}
-  - {id: 30220059, name: esl_sc2}
+  - {id: 23660075, name: ESL_Overwatch}
+  - {id: 30220059, name: ESL_SC2}
   EVO:
-  - {id: 30917811, name: srkevo1}
-  - {id: 30918314, name: srkevo2}
-  - {id: 31245897, name: srkevo3}
-  - {id: 45870383, name: srkevo4}
-  - {id: 36616300, name: capcomfighters}
+  - {id: 30917811, name: SRKEvo1}
+  - {id: 30918314, name: SRKEvo2}
+  - {id: 31245897, name: SRKEvo3}
+  - {id: 45870383, name: SRKEvo4}
+  - {id: 36616300, name: CapcomFighters}
   FACEIT:
-  - {id: 27942990, name: faceittv}
-  - {id: 55512799, name: faceittv2}
-  - {id: 99132812, name: faceitproleague}
-  - {id: 55675686, name: faceitcommunity}
-  - {id: 59448778, name: gamesacademy}
-  - {id: 44079069, name: beatesports}
+  - {id: 27942990, name: FACEIT TV}
+  - {id: 55512799, name: FACEITTV2}
+  - {id: 99132812, name: FACEITProLeague}
+  - {id: 55675686, name: FACEITCommunity}
+  - {id: 59448778, name: GamesAcademy}
+  - {id: 44079069, name: BEATesports}
   - {id: 447814, name: xgames}
   GSL:
-  - {id: 52229024, name: gsl}
+  - {id: 52229024, name: GSL}
   Gfinity:
-  - {id: 92094149, name: rocketleaguecentral}
+  - {id: 92094149, name: RocketLeagueCentral}
   Hi-Rez Studios:
   - {id: 31542318, name: smitegame}
-  - {id: 31500812, name: hireztv}
+  - {id: 31500812, name: HiRezTV}
   MLG:
-  - {id: 22212874, name: mlg}
+  - {id: 22212874, name: MLG}
   - {id: 48866350, name: mlgbravo}
   OGN:
-  - {id: 32179353, name: ognglobal}
+  - {id: 32179353, name: OGNGlobal}
   Other:
-  - {id: 93141680, name: nvidiageforcepl}
+  - {id: 93141680, name: NVIDIAGeForcePL}
   PGL:
-  - {id: 21681549, name: pgl}
+  - {id: 21681549, name: PGL}
   - {id: 107953058, name: pgl_csgo}
-  - {id: 106460795, name: dotamajor}
+  - {id: 106460795, name: DotaMajor}
   Psyonix:
-  - {id: 57781936, name: rocketleague}
+  - {id: 57781936, name: RocketLeague}
   Riot:
-  - {id: 124420521, name: nalcs1}
-  - {id: 124421740, name: nalcs2}
-  - {id: 124422593, name: eulcs1}
-  - {id: 124424929, name: eulcs2}
-  - {id: 124425627, name: lpl1}
-  - {id: 124427423, name: lpl2}
-  - {id: 124425501, name: lck1}
-  - {id: 124425092, name: lck2}
-  - {id: 36029255, name: riotgames}
-  - {id: 36794584, name: riotgames2}
-  - {id: 45982670, name: riotgameseu}
-  - {id: 49649564, name: naclesports}
+  - {id: 124420521, name: NALCS1}
+  - {id: 124421740, name: NALCS2}
+  - {id: 124422593, name: EULCS1}
+  - {id: 124424929, name: EULCS2}
+  - {id: 124425627, name: LPL1}
+  - {id: 124427423, name: LPL2}
+  - {id: 124425501, name: LCK1}
+  - {id: 124425092, name: LCK2}
+  - {id: 36029255, name: Riot Games}
+  - {id: 36794584, name: RiotGames2}
+  - {id: 45982670, name: RiotGamesEU}
+  - {id: 49649564, name: NACLeSports}
   StarLadder:
-  - {id: 85875535, name: starladder_cs_en}
-  - {id: 28633374, name: starladder5}
-  - {id: 28633636, name: starladder10}
-  - {id: 29578325, name: beyondthesummit}
-  - {id: 29769280, name: beyondthesummit2}
+  - {id: 85875535, name: Starladder_CS_en}
+  - {id: 28633374, name: Starladder5}
+  - {id: 28633636, name: Starladder10}
+  - {id: 29578325, name: BeyondTheSummit}
+  - {id: 29769280, name: BeyondTheSummit2}
   - {id: 54933969, name: dotastarladder_en}
   - {id: 54934114, name: dotastarladder_en2}
-  - {id: 28633177, name: starladder1}
-  - {id: 28633201, name: starladder2}
-  - {id: 28633266, name: starladder3}
-  - {id: 28633298, name: starladder4}
+  - {id: 28633177, name: Starladder1}
+  - {id: 28633201, name: Starladder2}
+  - {id: 28633266, name: Starladder3}
+  - {id: 28633298, name: Starladder4}
   - {id: 28633500, name: starladder7}
   - {id: 28633563, name: starladder8}
   TakeTV:
-  - {id: 52288508, name: taketv_hs}
-  - {id: 107551531, name: taketv_overwatch}
-  - {id: 30186974, name: taketv}
+  - {id: 52288508, name: TaKeTV_HS}
+  - {id: 107551531, name: TaKeTV_Overwatch}
+  - {id: 30186974, name: TaKeTV}
   The International:
   - {id: 35630634, name: dota2ti}
   - {id: 65503456, name: dota2ti_2}
@@ -107,7 +107,7 @@ twitch:
   - {id: 96408506, name: dota2ti_workshop}
   - {id: 96400126, name: dota2ti_crowd}
   Throwdown:
-  - {id: 118999468, name: throwdowntv}
+  - {id: 118999468, name: ThrowdownTV}
 youtube:
   ESL:
   - {id: UCPq2ETz4aAGo2Z-8JisDPIA, name: ESL Counter-Strike}

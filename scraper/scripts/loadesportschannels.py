@@ -10,6 +10,9 @@ from esportstracker.models import TwitchChannel, YoutubeChannel
 from esportstracker import dbinterface
 from esportstracker.youtube_scraper import YoutubeScraper
 
+"""
+Adds organizer affiliations to twitch and youtube channels in the database.
+"""
 
 def getorgs():
     """
@@ -80,5 +83,12 @@ def main():
     print('Channels Stored')
 
 
+def test():
+    parent = DIR_PATH[0:len(DIR_PATH) - len('scripts/')]
+    configpath = parent + '/esportstracker/config/config.yml'
+    secretspath = parent + '/keys.yml'
+    yts = YoutubeScraper(configpath, secretspath)
+
 if __name__ == '__main__':
-    main()
+    # main()
+    test()

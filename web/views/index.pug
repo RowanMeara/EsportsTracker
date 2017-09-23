@@ -4,12 +4,16 @@ block content
   #main.container-fluid
     include timeperiod
     .row.no-gutters
-      .col-md-6
+      .col-md-4
         .card.pi-graph
           .chart-container
             #twitchgamevh
-      .col-md-6
+      .col-md-4
         .card.pi-graph
           .chart-container
             #marketshare
+      .col-md-4
+        .card.pi-graph
+          .chart-container
+            #orgmarketshare
   script(src='/webpack/index.entry.js')

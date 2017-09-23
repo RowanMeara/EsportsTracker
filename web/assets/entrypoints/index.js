@@ -2,7 +2,7 @@ import $ from 'jquery'
 import {charts} from '../modules/loadcharts.js'
 import {GoogleCharts} from '../modules/googleCharts.js'
 import '../modules/reqs.js'
-let tgv, mks, days
+let tgv, mks, tmk, days
 GoogleCharts.load(onLoad)
 
 function onLoad () {
@@ -10,12 +10,14 @@ function onLoad () {
   days = parseInt(active.substring(0, active.length - ' Days'.length))
   tgv = new charts.TwitchGameViewership('twitchgamevh', days)
   mks = new charts.Marketshare('marketshare', days)
+  tmk = new charts.OrganizerMarketshare('orgmarketshare', days)
   drawCharts(days)
 }
 
 function drawCharts (ldays) {
   tgv.draw(ldays)
   mks.draw(ldays)
+  tmk.draw(ldays)
 }
 
 $(window).resize(() => {
