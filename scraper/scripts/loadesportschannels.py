@@ -83,12 +83,5 @@ def main():
     print('Channels Stored')
 
 
-def test():
-    parent = DIR_PATH[0:len(DIR_PATH) - len('scripts/')]
-    configpath = parent + '/esportstracker/config/config.yml'
-    secretspath = parent + '/keys.yml'
-    yts = YoutubeScraper(configpath, secretspath)
-
 if __name__ == '__main__':
-    # main()
-    test()
+    main()
