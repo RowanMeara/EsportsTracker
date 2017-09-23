@@ -365,7 +365,7 @@ class YoutubeStream(Row):
                 self.stream_title, self.language, str(self.tags))
 
 
-class EsportsOrg(Row):
+class TournamentOrganizer(Row):
     """
     A row in the esports_org table.
     """

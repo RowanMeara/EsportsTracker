@@ -5,7 +5,7 @@ from ruamel import yaml
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('esportstracker/')])
 
-from esportstracker.models import EsportsOrg, ChannelAffiliation
+from esportstracker.models import TournamentOrganizer
 from esportstracker.models import TwitchChannel, YoutubeChannel
 from esportstracker import dbinterface
 from esportstracker.youtube_scraper import YoutubeScraper
@@ -63,19 +63,19 @@ def main():
     chans = []
     ychans = []
     for orgname in torgs.keys():
-        orgrows.append(EsportsOrg(orgname))
+        orgrows.append(TournamentOrganizer(orgname))
         for channel in torgs[orgname]:
             tc = TwitchChannel(channel['id'], channel['name'], orgname)
             chans.append(tc)
     for orgname in ytorgs.keys():
-        orgrows.append(EsportsOrg(orgname))
+        orgrows.append(TournamentOrganizer(orgname))
         for channel in ytorgs[orgname]:
             yc = YoutubeChannel(channel['id'], channel['name'], 'en', None, orgname)
             ychans.append(yc)
 
     db.store_rows(orgrows, 'esports_org')
-    db.store_rows(chans, 'twitch_channel', update=True)
-    db.store_rows(ychans, 'youtube_channel', update=True)
+    db.store_rows(chans, 'twitch_channel')
+    db.store_rows(ychans, 'youtube_channel')
     db.commit()
     print('Channels Stored')
 

@@ -31,8 +31,8 @@ class PostgresManager:
         self.conn = psycopg2.connect(host=host, port=port, user=user,
                                      password=password, dbname=dbname)
         self.tablenames = {'game', 'twitch_game_vc', 'twitch_stream',
-                           'twitch_channel', 'channel_affiliation',
-                           'esports_org', 'youtube_channel', 'youtube_stream'}
+                           'twitch_channel', 'tournament_organizer',
+                           'youtube_channel', 'youtube_stream'}
         self.index_names = {'game_name_idx'}
         self.esports_games = esports_games.copy()
         self.gamename_cache = {}
@@ -94,8 +94,8 @@ class PostgresManager:
             '    PRIMARY KEY (game_id, epoch) '
             ');'
         )
-        tables['esports_org'] = (
-            'CREATE TABLE esports_org( '
+        tables['tournament_organizer'] = (
+            'CREATE TABLE tournament_organizer( '
             '    org_name text PRIMARY KEY '
             ');'
         )
@@ -103,7 +103,7 @@ class PostgresManager:
             'CREATE TABLE twitch_channel( '
             '    channel_id integer PRIMARY KEY, ' 
             '    name text NOT NULL, ' 
-            '    affiliation text REFERENCES esports_org(org_name) ' 
+            '    affiliation text REFERENCES tournament_organizer(org_name) ' 
             ');'
         )
         tables['twitch_stream'] = (
@@ -122,7 +122,7 @@ class PostgresManager:
             '    name text NOT NULL, '
             '    main_language text, '
             '    description text, '
-            '    affiliation text REFERENCES esports_org(org_name) ' 
+            '    affiliation text REFERENCES tournament_organizer(org_name) ' 
             ');'
         )
         tables['youtube_stream'] = (
@@ -215,7 +215,7 @@ class PostgresManager:
         cursor.execute(query)
         return cursor.fetchone()[0]
 
-    def store_rows(self, rows, tablename, commit=False, update=False):
+    def store_rows(self, rows, tablename, commit=False):
         """
         Stores the rows in the specified table.
 
@@ -230,14 +230,9 @@ class PostgresManager:
         """
         if not rows or tablename not in self.tablenames:
             return False
-        if update:
-            query = (f'INSERT INTO {tablename} '
-                     'VALUES %s '
-                     'ON CONFLICT DO UPDATE ')
-        else:
-            query = (f'INSERT INTO {tablename} '
-                     'VALUES %s '
-                     'ON CONFLICT DO NOTHING ')
+        query = (f'INSERT INTO {tablename} '
+                 'VALUES %s '
+                 'ON CONFLICT DO NOTHING ')
 
         rows = [x.to_row() for x in rows]
         template = '({})'.format(','.join(['%s' for _ in range(len(rows[0]))]))

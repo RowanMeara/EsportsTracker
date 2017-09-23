@@ -22,5 +22,8 @@ module.exports = {
   },
   twitch_stream: {
     gameViewershipHourly: sql('twitch_stream/gameviewershiphourly.sql')
+  },
+  tournament_organizer: {
+    cumMarketshare: sql('tournament_organizer/cummarketshare.sql')
   }
 }
