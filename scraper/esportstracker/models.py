@@ -203,11 +203,12 @@ class TwitchChannel(Row):
     """
     A mapping between a Twitch channel name and its id.
     """
-    __slots__ = ['channel_id', 'name']
+    __slots__ = ['channel_id', 'name', 'affiliation']
 
-    def __init__(self, channel_id, name):
+    def __init__(self, channel_id, name, affiliation=None):
         self.channel_id = channel_id
         self.name = name
+        self.affiliation = affiliation
 
     @staticmethod
     def from_api_resp(resps):
@@ -226,7 +227,7 @@ class TwitchChannel(Row):
         return streams
 
     def to_row(self):
-        return self.channel_id, self.name
+        return self.channel_id, self.name, self.affiliation
 
 
 class TwitchStream(Row):
@@ -272,12 +273,16 @@ class YoutubeChannel(Row):
     """
     A mapping between a Youtube channel name and its id.
     """
-    __slots__ = ['channel_id', 'name', 'main_language']
+    __slots__ = ['channel_id', 'name', 'main_language', 'description',
+                 'affiliation']
 
-    def __init__(self, channel_id, name, main_language='unknown'):
+    def __init__(self, channel_id, name, main_language='unknown',
+                 description=None, aff=None):
         self.channel_id = channel_id
         self.name = name
         self.main_language = main_language
+        self.description = description
+        self.affiliation = aff
 
     @staticmethod
     def from_api_resp(resps):
@@ -297,7 +302,8 @@ class YoutubeChannel(Row):
         return streams
 
     def to_row(self):
-        return self.channel_id, self.name, self.main_language
+        return (self.channel_id, self.name, self.main_language,
+                self.description, self.affiliation)
 
 
 LANGUAGE_DETECTION = True
@@ -369,16 +375,3 @@ class EsportsOrg(Row):
     def to_row(self):
         return self.name,
 
-
-class ChannelAffiliation(Row):
-    """
-    A row in the channel_affiliation channel.
-
-    Connects Twitch channels to esports orgs.
-    """
-    def __init__(self, org_name, channel_id):
-        self.org_name = org_name
-        self.channel_id = channel_id
-
-    def to_row(self):
-        return (self.org_name, self.channel_id)

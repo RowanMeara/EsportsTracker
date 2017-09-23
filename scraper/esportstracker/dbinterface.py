@@ -94,10 +94,16 @@ class PostgresManager:
             '    PRIMARY KEY (game_id, epoch) '
             ');'
         )
+        tables['esports_org'] = (
+            'CREATE TABLE esports_org( '
+            '    org_name text PRIMARY KEY '
+            ');'
+        )
         tables['twitch_channel'] = (
             'CREATE TABLE twitch_channel( '
             '    channel_id integer PRIMARY KEY, ' 
-            '    name text NOT NULL ' 
+            '    name text NOT NULL, ' 
+            '    affiliation text REFERENCES esports_org(org_name) ' 
             ');'
         )
         tables['twitch_stream'] = (
@@ -110,23 +116,13 @@ class PostgresManager:
             '    PRIMARY KEY (channel_id, epoch)'
             ');'
         )
-        tables['esports_org'] = (
-            'CREATE TABLE esports_org( '
-            '    org_name text PRIMARY KEY '
-            ');'
-        )
-        tables['channel_affiliation'] = (
-            'CREATE TABLE channel_affiliation( '
-            '    org_name text REFERENCES esports_org(org_name), '
-            '    channel_id integer REFERENCES twitch_channel(channel_id), '
-            '    PRIMARY KEY (channel_id) '
-            ');'
-        )
         tables['youtube_channel'] = (
             'CREATE TABLE youtube_channel( '
             '    channel_id text PRIMARY KEY, ' 
-            '    name text NOT NULL,'
-            '    main_language text ' 
+            '    name text NOT NULL, '
+            '    main_language text, '
+            '    description text, '
+            '    affiliation text REFERENCES esports_org(org_name) ' 
             ');'
         )
         tables['youtube_stream'] = (
@@ -213,30 +209,36 @@ class PostgresManager:
         if table not in self.tablenames:
             return 0
         query = ('SELECT COALESCE(MIN(epoch), 0) '
-                 'FROM {}')
+                 'FROM {} ')
         query = sql.SQL(query).format(sql.Identifier(table))
         cursor = self.conn.cursor()
         cursor.execute(query)
         return cursor.fetchone()[0]
 
-    def store_rows(self, rows, tablename, commit=False):
+    def store_rows(self, rows, tablename, commit=False, update=False):
         """
         Stores the rows in the specified table.
 
-        Conflicting rows are ignored.  If the commit variable is not
-        specified, the transaction is not committed and the commit method
-        must be called at a later point.
+        If the commit variable is not specified, the transaction is not
+        committed and the commit method must be called at a later point.
 
-        :param rows: list[Row], Rows to be stored.
-        :param tablename: str, name of the table to insert into.
+        :param rows: list[Row], the rows to be stored.
+        :param tablename: str, the name of the table to insert into.
         :param commit: bool, commits if True.
+        :param update: bool, updates conflicting rows if true.
         :return: bool
         """
         if not rows or tablename not in self.tablenames:
             return False
-        query = (f'INSERT INTO {tablename} '
-                 'VALUES %s '
-                 'ON CONFLICT DO NOTHING ')
+        if update:
+            query = (f'INSERT INTO {tablename} '
+                     'VALUES %s '
+                     'ON CONFLICT DO UPDATE ')
+        else:
+            query = (f'INSERT INTO {tablename} '
+                     'VALUES %s '
+                     'ON CONFLICT DO NOTHING ')
+
         rows = [x.to_row() for x in rows]
         template = '({})'.format(','.join(['%s' for _ in range(len(rows[0]))]))
         curs = self.conn.cursor()

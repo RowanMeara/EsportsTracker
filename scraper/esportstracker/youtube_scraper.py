@@ -13,7 +13,7 @@ DEBUG = True
 
 
 class YoutubeScraper:
-    def __init__(self, config_path, key_file_path, ytgames_path):
+    def __init__(self, config_path, key_file_path):
         with open(key_file_path) as f:
             keys = yaml.load(f)
             self.client_id = keys['youtubeclientid']
@@ -32,8 +32,6 @@ class YoutubeScraper:
             # Max number is 50
             self.res_per_request = config['api']['num_results_per_request']
             self.gaming_category_id = 20
-        with open(ytgames_path) as f:
-            self.esports_games = yaml.load(f)['esports']
 
         self.base_params = {'Client-ID': self.client_id, 'key': self.secret}
         self.session = requests.session()
@@ -61,11 +59,13 @@ class YoutubeScraper:
         """
         Gets Youtube IDs from usernames.
 
-        :param usernames: list, list of youtube usernames.
+        :param usernames: list or str, list of youtube usernames.
         :return: dictionary, usernames are the keys and youtube IDs are values.
         """
         url = self.base_url + '/channels'
         results = {}
+        if type(usernames == str):
+            usernames = [usernames]
         for username in usernames:
             params = {'part': 'id', 'forUsername': username}
             api_result = self.make_api_request(url, params=self._bundle(params))
@@ -151,68 +151,6 @@ class YoutubeScraper:
                                               self.mongo_pwd,
                                               source='admin')
         return client[self.db_name]
-
-    def get_esports_game(self, game):
-        """
-        Retrieves channels broadcasting the given game.
-
-        The game parameter must match one of the games in the ytgames config
-        file.
-
-        :param game: str, name of the game.
-        :return: dict
-        """
-        channel = self.esports_games[game]['ytid']
-        gameurl = self.base_url + '/search'
-        params = {
-            'part': 'snippet',
-            'maxResults': 50,
-            #'order': 'viewCount',
-            'type': 'video',
-            'eventType': 'live',
-            # 'safeSearch': 'none',
-            'channelId': channel
-        }
-        api_result = self.make_api_request(gameurl, params)
-        json_result = json.loads(api_result.text)
-        print(json_result)
-        if DEBUG:
-            print(f"API result: {api_result}")
-        return json_result
-
-    def store_esports_game(self, game, api_result):
-        broadcasts = {}
-        video_ids = [k['id']['videoId'] for k in raw_broadcasts]
-        dets = self.get_livestream_details(video_ids)
-        for broadcast in raw_broadcasts:
-            det = dets[broadcast['id']['videoId']]
-            broadcasts[broadcast['snippet']['channelId']] = {
-                'title': broadcast['snippet']['title'],
-                'broadcaster_name': broadcast['snippet']['channelTitle'],
-                'broadcast_id': broadcast['id']['videoId'],
-                'concurrent_viewers': det['viewers'],
-                'language': det['language'],
-                'tags': det['tags']
-            }
-        return {'timestamp': int(time.time()), 'broadcasts': broadcasts}
-
-    def scrape_esports_game(self, game):
-        """
-        Retrieves channel data for one game.
-
-        Scrapes viewership data from all of the twitch channels that are
-        designated as esports channels for that game. If a channel is not
-        live or playing a different game, api results are not stored for that
-        channel. Requests are issued synchronously due to twitch's rate limit.
-        Assume that if an esports channel is live, it is among the current 100
-        most popular channels for its respective game.
-
-        :param game: str: Name of the desired game, must match config file.
-        :return:
-        """
-        api_result = self.get_esports_game(game)
-        #exit()
-        #self.store_esports_game(game, api_result)
 
     def get_livestream_details(self, broadcast_ids):
         """
