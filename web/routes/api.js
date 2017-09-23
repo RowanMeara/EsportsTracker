@@ -28,11 +28,12 @@ router.get('/twitchtopgames', cache('60 minutes'), async function (req, res) {
     // Games beyond numGames will be lumped into 'Other' so the limit is 1000, not 10.
     let resp = await queries.twitchGamesCumVH(start, now, 1000)
     let data = []
-    for (let i = 0; i < numGames - 1; i++) {
+    let len = Math.min(numGames - 1, resp.length)
+    for (let i = 0; i < len; i++) {
       data.push([resp[i]['name'], parseInt(resp[i]['viewers'])])
     }
     let other = 0
-    for (let i = numGames - 1; i < resp.length; i++) {
+    for (let i = len; i < resp.length; i++) {
       other += parseInt(resp[i]['viewers'])
     }
     data.push(['Other', other])
@@ -127,16 +128,21 @@ router.get('/gameviewership', cache('60 minutes'), async function (req, res) {
 router.get('/organizerviewership', cache('60 minutes'), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
-    let gameID = req.query.id
+    let numOrgs = req.query.num || 10
     let epoch = Math.floor(new Date() / 1000)
     let start = epoch - days * DAY
     let q = await queries.orgMarketshareCum(start, epoch)
-    let l = []
-    console.log(q)
-    q.forEach((entry) => {
-      l.push([entry.org_name, parseInt(entry.viewers)])
-    })
-    res.status(200).json(l)
+    let data = []
+    let len = Math.min(numOrgs - 1, q.length)
+    for (let i = 0; i < len; i++) {
+      data.push([q[i]['org_name'], parseInt(q[i]['viewers'])])
+    }
+    let other = 0
+    for (let i = len; i < q.length; i++) {
+      other += parseInt(q[i]['viewers'])
+    }
+    data.push(['Other', other])
+    res.status(200).json(data)
   } catch (e) {
     console.trace(e.message)
   }
