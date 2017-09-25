@@ -67,7 +67,7 @@ twitch:
   - {id: 106460795, name: DotaMajor}
   Psyonix:
   - {id: 57781936, name: RocketLeague}
-  Riot:
+  Riot Games:
   - {id: 124420521, name: NALCS1}
   - {id: 124421740, name: NALCS2}
   - {id: 124422593, name: EULCS1}
@@ -113,7 +113,7 @@ youtube:
   - {id: UCPq2ETz4aAGo2Z-8JisDPIA, name: ESL Counter-Strike}
   PGL:
   - {id: UC5jpxDZx4yoBo324pMQ91Ww, name: PGLeSport}
-  Riot:
+  Riot Games:
   - {id: UCvqRdlKsE5Q8mf8YXbdIJLw, name: LolChampSeries}
   The International:
   - {id: UCTQKT5QqO3h7y32G8VzuySQ, name: dota2}

@@ -78,7 +78,7 @@ def main():
 
     db.store_rows(orgrows, 'tournament_organizer')
     db.set_twitch_affiliations(tchans)
-    db.store_rows(ychans, 'youtube_channel')
+    db.set_youtube_affiliations(ychans)
     db.commit()
     print('Channels Stored')
 

@@ -304,12 +304,28 @@ class PostgresManager:
 
     def set_twitch_affiliations(self, channels):
         """
-        Upserts the twitch channel affiliations.
+        Upserts the twitch_channel affiliations.
+
         :param channels: [TwitchChannel], List of channels to upsert.
         :return:
         """
         self.store_rows(channels, 'twitch_channel')
         query = ('UPDATE twitch_channel '
+                 'SET affiliation = %s '
+                 'WHERE channel_id = %s ')
+        args = [(x.affiliation, x.channel_id) for x in channels]
+        cursor = self.conn.cursor()
+        cursor.executemany(query, args)
+
+    def set_youtube_affiliations(self, channels):
+        """
+        Upserts the youtube_channel affiliations.
+
+        :param channels: [TwitchChannel], List of channels to upsert.
+        :return:
+        """
+        self.store_rows(channels, 'youtube_channel')
+        query = ('UPDATE youtube_channel '
                  'SET affiliation = %s '
                  'WHERE channel_id = %s ')
         args = [(x.affiliation, x.channel_id) for x in channels]
