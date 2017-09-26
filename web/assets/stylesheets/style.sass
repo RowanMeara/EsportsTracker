@@ -72,8 +72,8 @@ i
   background-color: $brand-color
   border-radius: 0
   height: 60px
-  top: 0px
-  border: 0px
+  top: 0
+  border: 0
   a.navbar-brand
     height: 100%
     color: $white
@@ -88,13 +88,19 @@ i
   a.navbar-brand:focus
     color: $white
 
+#topnav
+  color: $menu-color
+  a
+    color: $white
+    margin-right: 10px
+
 .nav-side-menu
   overflow: auto
   font-size: 12px
   font-weight: 200
   background-color: $menu-color
   position: fixed
-  top: 0px
+  top: 0
   width: $sidebar-width
   height: 100%
   color: $white
@@ -109,7 +115,7 @@ i
     display: none
   ul, li
     list-style: none
-    padding: 0px
+    padding: 0
     font-size: 16px
     opacity: 1
     font-weight: 200

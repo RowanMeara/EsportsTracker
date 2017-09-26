@@ -11,7 +11,7 @@ from esportstracker import dbinterface
 from esportstracker.youtube_scraper import YoutubeScraper
 
 """
-Adds organizer affiliations to twitch and youtube channels in the database.
+Upserts organizer affiliations for twitch and youtube channels.
 """
 
 def getorgs():

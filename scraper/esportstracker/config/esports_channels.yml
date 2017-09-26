@@ -98,7 +98,9 @@ twitch:
   - {id: 52288508, name: TaKeTV_HS}
   - {id: 107551531, name: TaKeTV_Overwatch}
   - {id: 30186974, name: TaKeTV}
-  The International:
+  Throwdown:
+  - {id: 118999468, name: ThrowdownTV}
+  Valve Corporation:
   - {id: 35630634, name: dota2ti}
   - {id: 65503456, name: dota2ti_2}
   - {id: 65503845, name: dota2ti_3}
@@ -106,8 +108,6 @@ twitch:
   - {id: 96399910, name: dota2ti_newcomer}
   - {id: 96408506, name: dota2ti_workshop}
   - {id: 96400126, name: dota2ti_crowd}
-  Throwdown:
-  - {id: 118999468, name: ThrowdownTV}
 youtube:
   ESL:
   - {id: UCPq2ETz4aAGo2Z-8JisDPIA, name: ESL Counter-Strike}
@@ -115,5 +115,5 @@ youtube:
   - {id: UC5jpxDZx4yoBo324pMQ91Ww, name: PGLeSport}
   Riot Games:
   - {id: UCvqRdlKsE5Q8mf8YXbdIJLw, name: LolChampSeries}
-  The International:
+  Valve Corporation:
   - {id: UCTQKT5QqO3h7y32G8VzuySQ, name: dota2}
