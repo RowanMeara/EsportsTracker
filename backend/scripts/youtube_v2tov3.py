@@ -78,13 +78,10 @@ def v2tov3(keypath):
     count = 0
     for v2doc in v2docs:
         count += 1
-        if count % 100 == 0:
+        if count % 1000 == 0:
             print("Progress: ", count)
         v3doc = onev2tov3(v2doc)
         filter = {'_id': ObjectId(v2doc['_id'])}
-        print(v3doc)
-        print(v2doc)
-        exit()
         res = coll.replace_one(filter, v3doc)
     end = time.time()
     print("Total Time: ", end-start)
