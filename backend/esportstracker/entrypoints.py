@@ -9,6 +9,7 @@ from setproctitle import setproctitle
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('esportstracker/')])
 
+
 from esportstracker.twitch_scraper import TwitchScraper
 from esportstracker.scrapers import YouTubeScraper
 from esportstracker.aggregator import Aggregator

@@ -5,10 +5,10 @@ from ruamel import yaml
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('scripts/')])
 
-from esportstracker.models import TournamentOrganizer
-from esportstracker.models import TwitchChannel, YoutubeChannel
+from esportstracker.models.postgresmodels import TournamentOrganizer
+from esportstracker.models.postgresmodels import TwitchChannel, YoutubeChannel
 from esportstracker import dbinterface
-from esportstracker.youtube_scraper import YoutubeScraper
+from esportstracker.scrapers import YouTubeScraper
 
 """
 Upserts organizer affiliations for twitch and youtube channels.
@@ -31,11 +31,11 @@ def getorgs():
         cfg = yaml.safe_load(f)
         torgs = cfg['twitch']
         ytorgs = cfg['youtube']
-    yts = YoutubeScraper(configpath, secretspath)
+    yts = YouTubeScraper(configpath, secretspath)
     for orgn in ytorgs.keys():
         for chan in ytorgs[orgn]:
             if 'id' not in chan:
-                chan['id'] = yts.get_channel_ids(chan['name'])[chan['name']]
+                chan['id'] = yts.get(chan['name'])[chan['name']]
     for orgn in torgs.keys():
         for chan in torgs[orgn]:
             if type(chan['id']) == str:

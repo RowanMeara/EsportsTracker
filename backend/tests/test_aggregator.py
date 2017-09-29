@@ -2,7 +2,7 @@ import pytest
 import os
 
 from esportstracker.aggregator import Aggregator
-from esportstracker.models import TwitchGamesAPIResponse
+from esportstracker.models.mongomodels import TwitchGamesAPIResponse
 
 config_path = 'res/test_scraper_config.yml'
 key_path = 'res/test_keys.yml'

@@ -113,6 +113,8 @@ class YTLivestreams(Aggregatable, MongoDoc):
     Model representing document in youtube_top_streams Mongo collection.
     """
     def __init__(self, streams, timestamp):
+        if not type(timestamp) == int:
+            raise TypeError
         self.timestamp = timestamp
         self.streams = streams
 
@@ -126,7 +128,7 @@ class YTLivestreams(Aggregatable, MongoDoc):
         }
 
     def viewercounts(self):
-        return {s.broadcaster_id: s.viewers for s in self.streams.values()}
+        return {s.vidid: s.viewers for s in self.streams.values()}
 
     def gettimestamp(self):
         return int(self.ts)
