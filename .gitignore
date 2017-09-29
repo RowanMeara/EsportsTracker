@@ -12,8 +12,7 @@ secrets.*
 admin/
 *.css
 esportstracker.egg-info
-scraper/build/
-scraper/dist/
+backend/build/
+backend/dist/
 *.map
-web/public/stylesheets/
-web/public/javascripts/
+web/public/webpack
