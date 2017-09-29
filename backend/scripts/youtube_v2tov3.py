@@ -52,7 +52,7 @@ def onev2tov3(v2doc):
         title = broadcast['title']
         channame = broadcast['broadcaster_name']
         chanid = broadcast['broadcast_id']
-        vidid = ''
+        vidid = 'c' + str(hash(title))
         viewers = broadcast['concurrent_viewers'],
         language = broadcast['language']
         tags = broadcast['tags']
