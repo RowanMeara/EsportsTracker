@@ -49,7 +49,8 @@ class YoutubeIdentifier:
         # so it is used as the 'game' for all of YouTube Gaming's illegal
         # restreams.
         tv = ['Family Guy', 'South Park', 'Rick and Morty', 'Full Episodes',
-              'Futurama', 'SpongeBob SquarePants', 'The Simpsons', ]
+              'Futurama', 'SpongeBob SquarePants', 'The Simpsons', '24/7 Music',
+              'Dance Music']
         self.keywords = {
             493057: pubg,
             21779: lol,

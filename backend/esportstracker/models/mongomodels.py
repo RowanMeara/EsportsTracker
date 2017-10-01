@@ -113,13 +113,29 @@ class YTLivestreams(Aggregatable, MongoDoc):
     Model representing document in youtube_top_streams Mongo collection.
     """
     def __init__(self, streams, timestamp):
+        """
+        YTLivestreams constructor.
+
+        :param streams: list(YTLivestream), list of individual streams.
+        :param timestamp: int, epoch timestamp of snapshot.
+        """
         if not type(timestamp) == int:
             raise TypeError
         self.timestamp = timestamp
         self.streams = streams
 
-    def fromdoc(self, doc):
-        pass
+    @staticmethod
+    def fromdoc(doc):
+        """
+        Constructor for MongoDB document.
+
+        :param doc: dict, MongoDB document.
+        :return: YTLivestreams
+        """
+        streams = []
+        for stream in doc['streams']:
+            streams.append(YTLivestream(**stream))
+        return YTLivestreams(streams, doc['timestamp'])
 
     def to_dict(self):
         return {
@@ -128,10 +144,10 @@ class YTLivestreams(Aggregatable, MongoDoc):
         }
 
     def viewercounts(self):
-        return {s.vidid: s.viewers for s in self.streams.values()}
+        return {s.vidid: s.viewers for s in self.streams}
 
     def gettimestamp(self):
-        return int(self.ts)
+        return int(self.timestamp)
 
 
 class YTLivestream:
@@ -154,7 +170,7 @@ class YTLivestream:
         self.channame = channame
         self.chanid = chanid
         self.vidid = vidid
-        self.viewers = viewers
+        self.viewers = int(viewers)
         self.language = language
         self.tags = tags
 

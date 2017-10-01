@@ -2,9 +2,10 @@ import time
 from ruamel import yaml
 from datetime import datetime
 import pytz
-from esportstracker.dbinterface import PostgresManager, MongoManager
-from esportstracker.models import *
-from esportstracker.classifiers import YoutubeIdentifier
+from .dbinterface import PostgresManager, MongoManager
+from .models.postgresmodels import *
+from .models.mongomodels import *
+from .classifiers import YoutubeIdentifier
 
 
 class Aggregator:
@@ -24,6 +25,7 @@ class Aggregator:
         mongo_cfg = config['aggregator']['mongodb']
         self.mongo_host = mongo_cfg['host']
         self.mongo_port = mongo_cfg['port']
+        self.mongo_name = mongo_cfg['db_name']
         self.mongo_ssl = mongo_cfg['ssl']
         self.yti = YoutubeIdentifier()
         self.mongo_user = None
@@ -88,7 +90,7 @@ class Aggregator:
         man = PostgresManager.from_config(self.postgres, self.esportsgames)
         mongo = MongoManager(self.mongo_host,
                              self.mongo_port,
-                             self.twitch_db['db_name'],
+                             self.mongo_name,
                              self.mongo_user,
                              self.mongo_pwd,
                              self.mongo_ssl)
@@ -180,19 +182,18 @@ class Aggregator:
                              self.mongo_ssl)
         hrstart, hrend, last = self._agg_ts(man, mongo,
                                             'youtube_stream',
-                                            self.youtube_db['top_streams'])
+                                            'youtube_streams')
         while hrend <= last:
             docs = mongo.docsbetween(hrstart, hrend,
-                                     self.youtube_db['top_streams'])
-            apiresp = [YoutubeStreamsAPIResponse(doc) for doc in docs]
-
+                                     'youtube_streams')
+            ls = [YTLivestreams.fromdoc(doc) for doc in docs]
             # Some hours empty due to server failure
-            if apiresp:
-                channels = YoutubeChannel.from_api_resp(apiresp).values()
+            if ls:
+                allstreams = [s for streams in ls for s in streams.streams]
+                channels = YoutubeChannel.fromstreams(allstreams).values()
                 man.store_rows(channels, 'youtube_channel')
-
-                vcs = self.average_viewers(apiresp, hrstart, hrend)
-                streams = YoutubeStream.from_vcs(apiresp, vcs, hrstart)
+                vcs = self.average_viewers(ls, hrstart, hrend)
+                streams = YoutubeStream.from_vcs(ls, vcs, hrstart)
                 for stream in streams:
                     self.yti.classify(stream)
                 man.store_rows(streams, 'youtube_stream')
@@ -239,3 +240,25 @@ class Aggregator:
         """
         seconds_in_hour = 3600
         return int(epoch) // seconds_in_hour * seconds_in_hour
+
+    def run(self):
+        """
+        Aggregates viewer count data.
+
+        Runs forever aggregating viewer data that has been retrieved from the
+        MongoDB instance and stores the aggregated data in the Postgres
+        instance.  Runs on the 2nd minute of every hour because the data is
+        aggregated in complete hours.
+
+        :return:
+        """
+        start = time.time()
+        self.agg_twitch_games()
+        self.agg_twitch_broadcasts()
+        self.agg_youtube_streams()
+        end = time.time()
+        print("Total Time: {:.2f}".format(end - start))
+
+        x = (int(end) % 1800)
+        timesleep = 1860 - x if x > 0 else 60 - x
+        time.sleep(timesleep)

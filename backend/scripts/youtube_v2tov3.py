@@ -11,20 +11,35 @@ sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('scripts/')])
 
 from esportstracker.models.mongomodels import YTLivestreams, YTLivestream
 
-# V2 entries will have one timestamp for every entry organized as follows:
+# V2 entries are organized as follows:
 #
 #  {'timestamp': epoch int, 'broadcasts': broadcasts}
 #
 #    broadcasts[broadcast['snippet']['channelId']] = {
 #      'title':                 Title of broadcast,
 #      'broadcaster_name':      channel name,
-#      'broadcast_id':          Youtube videoId,
+#      'broadcast_id':          YouTube videoId,
 #      'concurrent_viewers':    int,
 #      'language':              defaultAudioLanguage or 'unknown',
 #      'tags':                  Youtube tags or []
 #  }
 #
-
+# V3 entries are organized as follows:
+#
+#  {'timestamp': epoch int, 'streams': streams}
+#
+#    streams = [
+#       {
+#          'title':                 Title of broadcast,
+#          'channame':              channel name,
+#          'chanid':                channel id,
+#          'vidid':                 YouTube videoId,
+#          'viewers':               int,
+#          'language':              defaultAudioLanguage or 'unknown',
+#          'tags':                  YouTube tags or []
+#       }, ...
+#  ]
+#
 
 def retrieve_v2(coll, num):
     cursor = coll.find({"streams": {"$exists": False}})
@@ -51,9 +66,9 @@ def onev2tov3(v2doc):
     for channel_id, broadcast in v2doc['broadcasts'].items():
         title = broadcast['title']
         channame = broadcast['broadcaster_name']
-        chanid = broadcast['broadcast_id']
-        vidid = 'c' + str(hash(title))
-        viewers = broadcast['concurrent_viewers'],
+        chanid = channel_id
+        vidid = broadcast['broadcast_id']
+        viewers = int(broadcast['concurrent_viewers'])
         language = broadcast['language']
         tags = broadcast['tags']
         streams.append(YTLivestream(title, channame, chanid, vidid, viewers, language, tags))
@@ -61,7 +76,7 @@ def onev2tov3(v2doc):
 
 
 def v2tov3(keypath):
-    """ Pulls timestamps out of V1 entries. """
+    """ Converts V2 to V3 entries. """
     print("Starting...")
     start = time.time()
     with open(keypath, 'r') as f:

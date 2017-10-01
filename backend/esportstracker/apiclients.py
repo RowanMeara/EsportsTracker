@@ -175,7 +175,8 @@ class YouTubeAPIClient:
         vidids = [k['id']['videoId'] for k in raw_broadcasts]
         lsdets = self._livestream_details(vidids)
         for broadcast in raw_broadcasts:
-            # Sometimes the broadcaster chooses to hide the viewer count.
+            # Sometimes the broadcaster chooses to hide the viewer count,
+            # the API fails, or the broadcast is no longer live.
             if broadcast['id']['videoId'] not in lsdets:
                 continue
             det = lsdets[broadcast['id']['videoId']]

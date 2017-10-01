@@ -74,18 +74,8 @@ def run_aggregator():
     while True:
         try:
             a = Aggregator(cfgpath, keypath)
-            start = time.time()
-            a.agg_twitch_games()
-            a.agg_twitch_broadcasts()
-            a.agg_youtube_streams()
-            end = time.time()
-            print("Total Time: {:.2f}".format(end - start))
-
-            # Refresh on the 1st and 31st minute of each hour
-            x = (int(end) % 1800)
-            timesleep = 1860 - x if x > 0 else 60 - x
-            time.sleep(timesleep)
-        except:
+            a.run()
+        except ConnectionError:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             err = "{}. File: {}, line {}. Full: {}"

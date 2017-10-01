@@ -1,8 +1,11 @@
 aggregator:
   mongodb:
-    host: mongo.esportstracker.net
+    host: 'localhost'
+    ssl: False
+    #host: mongo.esportstracker.net
+    db_name: esports_stats
     port: 27017
-    ssl: True
+    #ssl: True
 postgres:
   db_name: esports_stats
   host: localhost

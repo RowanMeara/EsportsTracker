@@ -127,14 +127,15 @@ class PostgresManager:
         )
         tables['youtube_stream'] = (
             'CREATE TABLE youtube_stream( ' 
-            '    channel_id text REFERENCES youtube_channel(channel_id), '
+            '    video_id text NOT NULL, '
             '    epoch integer NOT NULL, '
+            '    channel_id text REFERENCES youtube_channel(channel_id), '
             '    game_id integer, '
             '    viewers integer NOT NULL, '
             '    stream_title text, '
             '    language text, '
             '    tags text, '
-            '    PRIMARY KEY (channel_id, epoch)'
+            '    PRIMARY KEY (video_id, epoch)'
             ');'
         )
 
@@ -393,8 +394,7 @@ class MongoManager:
         :param end: int, Timestamp of the last entry
         :return: pymongo.cursor.Cursor
         """
-        conn = self.client[self.db_name]
-        coll = conn[collname]
+        coll = self.conn[collname]
         cursor = coll.find(
             {'timestamp': {'$gte': start, '$lt': end}}
         ).sort('timestamp', pymongo.ASCENDING)

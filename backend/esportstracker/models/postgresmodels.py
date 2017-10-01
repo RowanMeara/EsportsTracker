@@ -156,21 +156,20 @@ class YoutubeChannel(Row):
         self.affiliation = aff
 
     @staticmethod
-    def from_api_resp(resps):
+    def fromstreams(streams):
         """
-        Creates YoutubeChannel objects for each unique game.
+        Creates YoutubeChannel objects for each unique channel.
 
-        :param resps: list[TwitchStreamsAPIResponse],
+        :param resps: list[YTLivestream], list of livestream objects
         :return: list[Game]
         """
-        streams = {}
-        for resp in resps:
-            for snp in resp.streams.values():
-                if snp.broadcaster_id not in streams:
-                    channel = YoutubeChannel(snp.broadcaster_id, snp.name,
-                                             snp.language)
-                    streams[snp.broadcaster_id] = channel
-        return streams
+        channels = {}
+        for stream in streams:
+                if stream.chanid not in channels:
+                    channel = YoutubeChannel(stream.chanid, stream.channame,
+                                             stream.language)
+                    channels[channel.channel_id] = channel
+        return channels
 
     def to_row(self):
         return (self.channel_id, self.name, self.main_language,
@@ -186,13 +185,14 @@ class YoutubeStream(Row):
 
     The title and number of viewers of a stream for a given hour.
     """
-    __slots__ = ['channel_id', 'epoch', 'game_id', 'viewers', 'stream_title',
+    __slots__ = ['video_id', 'epoch', 'channel_id', 'game_id', 'viewers', 'stream_title',
                  'language', 'tags']
 
-    def __init__(self, channel_id, epoch, game_id, viewers, stream_title,
-                 language, tags):
-        self.channel_id = channel_id
+    def __init__(self, video_id, channel_id, epoch, game_id, viewers,
+                 stream_title, language, tags):
+        self.video_id = video_id
         self.epoch = epoch
+        self.channel_id = channel_id
         self.game_id = game_id
         self.viewers = viewers
         self.stream_title = stream_title
@@ -201,23 +201,35 @@ class YoutubeStream(Row):
 
     @staticmethod
     def from_vcs(api_resp, vcs, timestamp):
+        """
+        Creates rows from mongodocs.
+
+        :param api_resp: list(YTLivestreams), livestream objects.
+        :param vcs: int, aggregated viewercounts.
+        :param timestamp: int, epoch.
+        :return:
+        """
         # Combine api_resp so that we can look across all api responses
         comb = {}
         for resp in api_resp:
-            for snp in resp.streams.values():
-                if snp.broadcaster_id not in comb:
-                    comb[snp.broadcaster_id] = snp
+            for snp in resp.streams:
+                if snp.vidid not in comb:
+                    comb[snp.vidid] = snp
 
         ys = []
-        for sid, viewers in vcs.items():
-            chid = sid
-            ep = timestamp
-            gid = None
-            vc = viewers
-            tit = comb[sid].stream_title
-            l = comb[sid].language
-            tags = comb[sid].tags
-            ys.append(YoutubeStream(chid, ep, gid, vc, tit, l, tags))
+        for videoid, viewers in vcs.items():
+            stream = comb[videoid]
+            l = {
+                'video_id': videoid,
+                'epoch': timestamp,
+                'channel_id': stream.chanid,
+                'game_id': None,
+                'viewers': viewers,
+                'stream_title': stream.title,
+                'language': stream.language,
+                'tags': stream.tags
+            }
+            ys.append(YoutubeStream(**l))
         return ys
 
     @staticmethod
@@ -232,8 +244,8 @@ class YoutubeStream(Row):
             else:
                 info = self.stream_title + self.tags
             self.language = 'd_' + classify_language(info)
-        return (self.channel_id, self.epoch, self.game_id, self.viewers,
-                self.stream_title, self.language, str(self.tags))
+        return (self.video_id, self.epoch, self.channel_id, self.game_id,
+                self.viewers, self.stream_title, self.language, str(self.tags))
 
 
 class TournamentOrganizer(Row):
