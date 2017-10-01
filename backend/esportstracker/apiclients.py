@@ -177,7 +177,7 @@ class YouTubeAPIClient:
         for broadcast in raw_broadcasts:
             # Sometimes the broadcaster chooses to hide the viewer count.
             if broadcast['id']['videoId'] not in lsdets:
-                pass
+                continue
             det = lsdets[broadcast['id']['videoId']]
 
             params = {
