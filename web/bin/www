@@ -6,7 +6,7 @@
 
 const debug = require('debug')('web:server')
 const http = require('http')
-const cron = require('node-cron')
+const cron = require('cron')
 
 const app = require('../app')
 const queries = require('../server/queries')
@@ -18,11 +18,13 @@ app.set('port', port)
 
 // Update api cache so queries are responsive
 let env = process.env.NODE_ENV || 'development'
-cron.schedule('0 5 * * * *', queries.cache.refreshESG, true)
+let esgCron = new cron.CronJob('0 5 2 * * *', queries.cache.refreshESG, false)
+esgCron.start()
 queries.cache.refreshESG()
 if (env === 'production') {
-  cron.schedule('0 5 * * * *', api.refreshCache, true)
+  let task = new cron.CronJob('0 5 * * * *', api.refreshCache, false)
   api.refreshCache()
+  task.start()
 }
 
 /**
