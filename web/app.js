@@ -19,8 +19,8 @@ app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
 if (env === 'development') {
   app.use(logger('dev'))
 } else {
-  let format = ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]'
-  app.use(logger(format + ' - :response-time ms :user-agent'))
+  let format = '[:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]'
+  app.use(logger(format + ' - :response-time ms'))
 }
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
