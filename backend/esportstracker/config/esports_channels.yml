@@ -10,6 +10,8 @@ twitch:
   - {id: 42508152, name: StarCraft}
   Bluehole:
   - {id: 127506955, name: playBATTLEGROUNDS}
+  CyberPower:
+  - {id: 49946840, name: CyberPowerGaming}
   DreamLeague:
   - {id: 50160915, name: DreamLeague}
   Dreamhack:
@@ -39,6 +41,10 @@ twitch:
   - {id: 31245897, name: SRKEvo3}
   - {id: 45870383, name: SRKEvo4}
   - {id: 36616300, name: CapcomFighters}
+  Epic Esports Events:
+  - {id: 118170488, name: epicenter_en1}
+  - {id: 118170598, name: epicenter_en2}
+  - {id: 126779203, name: d2cl_en}
   FACEIT:
   - {id: 27942990, name: FACEIT TV}
   - {id: 55512799, name: FACEITTV2}
@@ -100,6 +106,8 @@ twitch:
   - {id: 30186974, name: TaKeTV}
   Throwdown:
   - {id: 118999468, name: ThrowdownTV}
+  VGBootCamp:
+  - {id: 9846758, name: VGBootCamp}
   Valve Corporation:
   - {id: 35630634, name: dota2ti}
   - {id: 65503456, name: dota2ti_2}
