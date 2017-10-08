@@ -19,7 +19,7 @@ app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
 if (env === 'development') {
   app.use(logger('dev'))
 } else {
-  app.use(logger('tiny'))
+  app.use(logger('combined'))
 }
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))

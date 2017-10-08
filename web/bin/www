@@ -39,7 +39,7 @@ let server = http.createServer(app)
 server.listen(util.getPort(), 'localhost')
 server.on('error', onError)
 server.on('listening', onListening)
-console.log('Server Listening')
+console.log('Server Listening On ' + util.getPort())
 
 /**
  * Event listener for HTTP server "error" event.

@@ -40,6 +40,7 @@ router.get('/twitchtopgames', cache('60 minutes'), async function (req, res) {
     res.status(200).json(data)
   } catch (e) {
     console.trace(e.message)
+    res.status(500)
   }
 })
 
@@ -59,6 +60,7 @@ router.get('/marketshare', cache('60 minutes'), async function (req, res) {
     res.status(200).json(q)
   } catch (e) {
     console.trace(e.message)
+    res.status(500)
   }
 })
 
@@ -78,6 +80,7 @@ router.get('/twitchgameviewership', cache('60 minutes'), async function (req, re
     res.status(200).json(r)
   } catch (e) {
     console.trace(e.message)
+    res.status(500)
   }
 })
 
@@ -103,6 +106,7 @@ router.get('/youtubegameviewership', cache('60 minutes'), async function (req, r
     }
   } catch (e) {
     console.trace(e.message)
+    res.status(500)
   }
 })
 
@@ -122,6 +126,7 @@ router.get('/gameviewership', cache('60 minutes'), async function (req, res) {
     res.status(200).json(r)
   } catch (e) {
     console.trace(e.message)
+    res.status(500)
   }
 })
 
@@ -145,6 +150,7 @@ router.get('/organizerviewership', cache('60 minutes'), async function (req, res
     res.status(200).json(data)
   } catch (e) {
     console.trace(e.message)
+    res.status(500)
   }
 })
 
