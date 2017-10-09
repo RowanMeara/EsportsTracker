@@ -264,19 +264,19 @@ class Aggregator:
 
         Runs forever aggregating viewer data that has been retrieved from the
         MongoDB instance and stores the aggregated data in the Postgres
-        instance.  Runs on the 2nd minute of every hour because the data is
+        instance.  Runs on the 1st minute of every hour because the data is
         aggregated in complete hours.  Calls the refresh cache route on the
         Node.js server once complete.
 
         :return:
         """
-        start = time.time()
-        self.agg_twitch_games()
-        self.agg_twitch_broadcasts()
-        self.agg_youtube_streams()
-        end = time.time()
-        print("Total Time: {:.2f}".format(end - start))
-        self.refreshwebcache()
-        x = (int(end) % 1800)
-        timesleep = 1860 - x if x > 0 else 60 - x
-        time.sleep(timesleep)
+        while True:
+            start = time.time()
+            self.agg_twitch_games()
+            self.agg_twitch_broadcasts()
+            self.agg_youtube_streams()
+            end = time.time()
+            print("Total Time: {:.2f}".format(end - start))
+            self.refreshwebcache()
+            timesleep = 3660 - (int(end) % 3600)
+            time.sleep(timesleep)
