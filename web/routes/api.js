@@ -166,6 +166,7 @@ router.get('/refreshcache', async function (req, res) {
     if (user === secrets.pg_user && pwd === secrets.pg_passwd) {
       refreshCache()
       res.status(200)
+      res.send()
     } else {
       res.status(403)
     }

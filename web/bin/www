@@ -6,7 +6,6 @@
 
 const debug = require('debug')('web:server')
 const http = require('http')
-const cron = require('cron')
 
 const app = require('../app')
 const queries = require('../server/queries')

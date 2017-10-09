@@ -2,6 +2,7 @@ import time
 from ruamel import yaml
 from datetime import datetime
 import pytz
+import logging
 from .dbinterface import PostgresManager, MongoManager
 from .models.postgresmodels import *
 from .models.mongomodels import *
@@ -251,7 +252,11 @@ class Aggregator:
         user = self.postgres['user']
         pwd = self.postgres['password']
         url = f'http://localhost:3000/api/refreshcache?user={user}&pwd={pwd}'
-        requests.get(url)
+        try:
+            requests.get(url)
+        except requests.exceptions.ConnectionError:
+            logging.warning('Cache refresh error.')
+            return
 
     def run(self):
         """
