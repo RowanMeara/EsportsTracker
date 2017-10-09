@@ -18,13 +18,9 @@ app.set('port', port)
 
 // Update api cache so queries are responsive
 let env = process.env.NODE_ENV || 'development'
-let esgCron = new cron.CronJob('0 5 2 * * *', queries.cache.refreshESG, false)
-esgCron.start()
 queries.cache.refreshESG()
 if (env === 'production') {
-  let task = new cron.CronJob('0 5 * * * *', api.refreshCache, false)
   api.refreshCache()
-  task.start()
 }
 
 /**

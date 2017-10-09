@@ -8,7 +8,7 @@ sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('scripts/')])
 from esportstracker.models.postgresmodels import TournamentOrganizer
 from esportstracker.models.postgresmodels import TwitchChannel, YoutubeChannel
 from esportstracker import dbinterface
-from esportstracker.scrapers import YouTubeScraper
+from esportstracker.apiclients import YouTubeAPIClient
 
 """
 Upserts organizer affiliations for twitch and youtube channels.
@@ -31,11 +31,15 @@ def getorgs():
         cfg = yaml.safe_load(f)
         torgs = cfg['twitch']
         ytorgs = cfg['youtube']
-    yts = YouTubeScraper(configpath, secretspath)
+    with open(secretspath) as f:
+        s = yaml.safe_load(f)
+        id = s['youtubeclientid']
+        secret = s['youtubesecret']
+    yts = YouTubeAPIClient('https://www.googleapis.com/youtube/v3', id, secret)
     for orgn in ytorgs.keys():
         for chan in ytorgs[orgn]:
             if 'id' not in chan:
-                chan['id'] = yts.get(chan['name'])[chan['name']]
+                chan['id'] = yts.getid(chan['name'])
     for orgn in torgs.keys():
         for chan in torgs[orgn]:
             if type(chan['id']) == str:

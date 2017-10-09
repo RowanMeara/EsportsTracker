@@ -119,6 +119,8 @@ twitch:
 youtube:
   ESL:
   - {id: UCPq2ETz4aAGo2Z-8JisDPIA, name: ESL Counter-Strike}
+  FACEIT:
+  - {id: UCajcK9vEBDLmcLSSYf4WXVA, name: FACEITcom}
   PGL:
   - {id: UC5jpxDZx4yoBo324pMQ91Ww, name: PGLeSport}
   Riot Games:

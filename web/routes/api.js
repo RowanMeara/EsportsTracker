@@ -6,6 +6,7 @@ const apicache = require('apicache')
 const config = require('../config')
 const queries = require('../server/queries')
 const util = require('../server/et-util')
+const secrets = require('../secrets')
 
 let app = express()
 const router = express.Router()
@@ -150,6 +151,25 @@ router.get('/organizerviewership', cache('60 minutes'), async function (req, res
     res.status(200).json(data)
   } catch (e) {
     console.trace(e.message)
+    res.status(500)
+  }
+})
+
+/**
+ * Called by the aggregator service to refresh the cache.  Requires the database
+ * username and password specified in the secrets file to be sent as query strings.
+ */
+router.get('/refreshcache', async function (req, res) {
+  try {
+    let user = req.query.user || ''
+    let pwd = req.query.pwd || ''
+    if (user === secrets.pg_user && pwd === secrets.pg_passwd) {
+      refreshCache()
+      res.status(200)
+    } else {
+      res.status(403)
+    }
+  } catch (e) {
     res.status(500)
   }
 })

@@ -6,7 +6,7 @@ from .dbinterface import PostgresManager, MongoManager
 from .models.postgresmodels import *
 from .models.mongomodels import *
 from .classifiers import YoutubeIdentifier
-
+import requests
 
 class Aggregator:
     def __init__(self, configpath, keypath):
@@ -241,6 +241,18 @@ class Aggregator:
         seconds_in_hour = 3600
         return int(epoch) // seconds_in_hour * seconds_in_hour
 
+    def refreshwebcache(self):
+        """
+        Calls the route which refreshes the Node.js cache.
+
+        :return:
+        """
+        # TODO: Figure out a better way to do this.
+        user = self.postgres['user']
+        pwd = self.postgres['password']
+        url = f'http://localhost:3000/api/refreshcache?user={user}&pwd={pwd}'
+        requests.get(url)
+
     def run(self):
         """
         Aggregates viewer count data.
@@ -248,7 +260,8 @@ class Aggregator:
         Runs forever aggregating viewer data that has been retrieved from the
         MongoDB instance and stores the aggregated data in the Postgres
         instance.  Runs on the 2nd minute of every hour because the data is
-        aggregated in complete hours.
+        aggregated in complete hours.  Calls the refresh cache route on the
+        Node.js server once complete.
 
         :return:
         """
@@ -258,7 +271,7 @@ class Aggregator:
         self.agg_youtube_streams()
         end = time.time()
         print("Total Time: {:.2f}".format(end - start))
-
+        self.refreshwebcache()
         x = (int(end) % 1800)
         timesleep = 1860 - x if x > 0 else 60 - x
         time.sleep(timesleep)
