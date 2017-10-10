@@ -100,9 +100,9 @@ def v1tov2(keypath):
     coll = conn.twitch_streams
     print("Num V1 Documents: {}".format(numv1(coll)))
     print("Num V2 Documents: {}".format(numv2(coll)))
-    v1docs = retrieve_v1(coll, 5000)
     count = 0
-    while v1docs:
+    while numv1(coll) > 0:
+        v1docs = retrieve_v1(coll, 10000)
         for v1doc in v1docs:
             count += 1
             if count % 1000 == 0:
@@ -110,14 +110,12 @@ def v1tov2(keypath):
             v2doc = onev1tov2(v1doc, apiclient)
             filter = {'_id': ObjectId(v1doc['_id'])}
             res = coll.replace_one(filter, v2doc)
-        v1docs = retrieve_v1(coll, 5000)
 
     end = time.time()
     print("Total Time: ", end-start)
     print("Total V1 entries updated: ", count)
     print("Num V1 Documents: {}".format(numv1(coll)))
     print("Num V2 Documents: {}".format(numv2(coll)))
-
 
 
 if __name__ == '__main__':
