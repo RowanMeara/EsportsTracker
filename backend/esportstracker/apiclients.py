@@ -13,6 +13,8 @@ class TwitchAPIClient:
     """
     Makes Twitch API requests.
     """
+    API_WINDOW_LENGTH = 60
+    DEFAULT_REQUEST_LIMIT = 30
     def __init__(self, host, id, secret):
         """
         TwitchAPIClient Constructor.
@@ -37,9 +39,8 @@ class TwitchAPIClient:
         """
         Makes an API request.
 
-        Tries the request three times before giving with a ten second wait
-        between attempts.  Sleeps until more api requests are available if they
-        are not.
+        Manages Twitch API rate limits and sleeps until more requests are
+        available if they are not.
 
         :param url: str, the request url.
         :param params: dict, query strings to add to the request.
@@ -49,14 +50,18 @@ class TwitchAPIClient:
             time.sleep(self.rate_reset - time.time())
         for i in range(3):
             api_result = self.session.get(url, params=params)
-            # requests does not default to utf-8 encoding.
+            # Requests does not default to utf-8 encoding and a small percentag
+            # of the time the utf-8 header is missing.
             api_result.encoding = 'utf8'
             if api_result.status_code == requests.codes.okay:
+                # Twitch API capitalization is inconsistent.
                 headers = {**api_result.headers}
                 headers = {str(k).lower(): v for k, v in headers.items()}
-                # Twitch API capitalization is inconsistent
+
+                # Despite their documentation, Twitch does not always send the
+                # rate limit headers.
                 if 'ratelimit-remaining' not in headers:
-                    self.req_remaining = 30
+                    self.req_remaining = self.DEFAULT_REQUEST_LIMIT
                 else:
                     self.req_remaining = int(headers['ratelimit-remaining'])
                     self.rate_reset = int(headers['ratelimit-reset'])
@@ -65,7 +70,7 @@ class TwitchAPIClient:
                 logging.WARNING("Twitch API request failed: {}".format(
                     api_result.status_code))
                 raise ConnectionError
-            time.sleep(10)
+            time.sleep(self.API_WINDOW_LENGTH)
 
     def getgameid(self, gamename):
         """

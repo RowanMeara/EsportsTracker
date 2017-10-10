@@ -35,7 +35,7 @@ def run_twitchscraper():
             a = TwitchScraper(cfgpath, keypath)
             a.scrape()
         # TODO: Change
-        except ConnectionError:
+        except:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             err = "{}. File: {}, line {}. Full: {}"
