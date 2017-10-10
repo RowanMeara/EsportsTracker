@@ -4,16 +4,137 @@ import logging
 import json
 import math
 from .models.mongomodels import YTLivestream
+from .models.mongomodels import TwitchGamesAPIResponse, TwitchStreamsAPIResponse
 
 DEBUG = True
+
+
+class TwitchAPIClient:
+    """
+    Makes Twitch API requests.
+    """
+    def __init__(self, host, id, secret):
+        """
+        TwitchAPIClient Constructor.
+
+        :param host: str, host url of the api.
+        :param id: str, Twitch API client id.
+        :param secret: str, Twitch API secret.
+        """
+        self.apiv5host = host + '/kraken'
+        self.apiv6host = host + '/helix'
+        self.secret = secret
+
+        self.session = requests.session()
+        headers = {'Accept': 'application/vnd.twitchtv.v5+json',
+                   'Client-ID': id}
+        self.session.headers.update(headers)
+
+        self.req_remaining = 1
+        self.rate_reset = None
+
+    def _request(self, url, params):
+        """
+        Makes an API request.
+
+        Tries the request three times before giving with a ten second wait
+        between attempts.  Sleeps until more api requests are available if they
+        are not.
+
+        :param url: str, the request url.
+        :param params: dict, query strings to add to the request.
+        :return: requests.Response
+        """
+        if self.req_remaining == 0:
+            time.sleep(self.rate_reset - time.time())
+        for i in range(3):
+            api_result = self.session.get(url, params=params)
+            # requests does not default to utf-8 encoding.
+            api_result.encoding = 'utf8'
+            if api_result.status_code == requests.codes.okay:
+                headers = {**api_result.headers}
+                headers = {str(k).lower(): v for k, v in headers.items()}
+                # Twitch API capitalization is inconsistent
+                if 'ratelimit-remaining' not in headers:
+                    self.req_remaining = 30
+                else:
+                    self.req_remaining = int(headers['ratelimit-remaining'])
+                    self.rate_reset = int(headers['ratelimit-reset'])
+                return api_result
+            elif i == 2:
+                logging.WARNING("Twitch API request failed: {}".format(
+                    api_result.status_code))
+                raise ConnectionError
+            time.sleep(10)
+
+    def getgameid(self, gamename):
+        """
+        Returns the Twitch id corresponding to a game.
+
+        Uses the Twitch API to return the game id for the game with the given
+        name.
+
+        :param gamename: str, The name of the game
+        :return:
+        """
+        url = self.apiv5host + '/search/games'
+        res = self._request(url, {'query': gamename})
+        games = json.loads(res.text)['games']
+        for game in games:
+            if game['name'] == gamename:
+                return int(game['_id'])
+
+        # TODO: Raise a better exception
+        raise Exception
+
+    def gettopgames(self, limit=100):
+        """
+        Gets the current top games.
+
+        :param limit: int, number of games to return (max 100).
+        :return: models.mongomodels.TwitchGamesAPIResponse
+        """
+        url = self.apiv5host + '/games/top/'
+        res = self._request(url, {'limit': limit})
+        return TwitchGamesAPIResponse.fromapiresponse(res)
+
+    def topstreams(self, gameid=None):
+        """
+        Gets the 100 most popular livestreams.
+
+        Gets streams streaming the specified game, or all if gameid is not
+        specified.
+
+        :param gameid: int, specifies which games to get.
+        :return: models.mongomodels.TwitchStreamsAPIResponse
+        """
+        url = self.apiv6host + '/streams/'
+        params = {}
+        if gameid:
+            params['game_id'] = gameid
+        # Each response includes 20 streams.
+        responses = [self._request(url, params)]
+
+        for i in range(4):
+            res = json.loads(responses[i].text)
+            if 'cursor' not in res['pagination']:
+                break
+            params['after'] = res['pagination']['cursor']
+            responses.append(self._request(url, params))
+        rawstreams = []
+        for response in responses:
+            res = json.loads(response.text)
+            rawstreams += res['data']
+        return TwitchStreamsAPIResponse.fromapiresponse(rawstreams)
+
 
 class YouTubeAPIClient:
     """
     Makes Youtube API requests.
     """
-    def __init__(self, host, id, secret):
+    def __init__(self, host, clientid, secret):
         self.host = host
-        self.id = id
+        self.id = clientid
         self.secret = secret
         self.base_params = {'Client-ID': self.id, 'key': self.secret}
         self.session = requests.session()

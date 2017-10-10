@@ -362,6 +362,7 @@ class MongoManager:
                 logging.info('Creating index on collection' + collname)
                 coll.create_index('timestamp')
 
+
     def first_entry_after(self, start, collname):
         """
         Returns the timestamp of the first document after start.
@@ -411,4 +412,4 @@ class MongoManager:
         if collection not in self.cols:
             raise pymongo.errors.CollectionInvalid
         collection = self.conn[collection]
-        return collection.insert_one(doc.to_dict())
+        return collection.insert_one(doc.todoc())

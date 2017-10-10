@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import time
-
+import json
 
 
 class Aggregatable(ABC):
@@ -26,86 +26,176 @@ class Aggregatable(ABC):
         return self.gettimestamp() < other.gettimestamp()
 
 
-class TwitchGamesAPIResponse(Aggregatable):
+class MongoDoc(ABC):
+    """
+    Abstract base clase for MongoDB Documents.
+    """
+    def todoc(self):
+        """
+        Method for creating the dict to insert into MongoDB.
+        """
+        pass
+
+    def __str__(self):
+        return str(self.todoc())
+
+    @staticmethod
+    @abstractmethod
+    def fromdoc(doc):
+        """ Constructor that takes a MongoDB document."""
+
+
+class TwitchGamesAPIResponse(Aggregatable, MongoDoc):
     """
     Model representing Twitch top games API response.
     """
-    __slots__ = ['ts', 'games']
+    def __init__(self, timestamp, games):
+        """
+        Constructor.
 
-    def __init__(self, mongodoc):
-        self.ts = mongodoc['timestamp']
-        self.games = {}
-        for gid, game in mongodoc['games'].items():
-            self.games[gid] = TwitchGameSnapshot(game)
+        :param timestamp: int, epoch.
+        :param games: list(TwitchGameSnapshot)
+        """
+        self.timestamp = timestamp
+        self.games = games
+
+    @staticmethod
+    def fromdoc(doc):
+        games = {}
+        for gid, game in doc['games'].items():
+            games[int(gid)] = TwitchGameSnapshot(**game)
+        return TwitchGamesAPIResponse(doc['timestamp'], games)
+
+    @staticmethod
+    def fromapiresponse(response):
+        """
+        Constructor for api response
+        :param response: requests.Response, the api response.
+        :return: TwitchGamesAPIResponse
+        """
+        res = json.loads(response.text)
+        timestamp = int(time.time())
+        games = {}
+        for game in res['top']:
+            params = {
+                'name': game['game']['name'],
+                'viewers': game['viewers'],
+                'channels': game['channels'],
+                'id': game['game']['_id'],
+                'giantbomb_id': game['game']['giantbomb_id']
+            }
+            games[game['game']['_id']] = TwitchGameSnapshot(**params)
+        return TwitchGamesAPIResponse(timestamp, games)
+
+    def todoc(self):
+        return {
+            'timestamp': self.timestamp,
+            'games': {str(gid): vars(snap) for gid, snap in self.games.items()}
+        }
 
     def viewercounts(self):
-        return {game.id: game.viewers for k, game in self.games.items()}
+        return {game.id: game.viewers for game in self.games.values()}
 
     def gettimestamp(self):
-        return self.ts
+        return self.timestamp
 
 
 class TwitchGameSnapshot:
     """
     One game from a TwitchGamesAPIResponse
     """
-    __slots__ = ['name', 'id', 'viewers', 'channels', 'giantbomb_id']
+    def __init__(self, name, id, viewers, channels, giantbomb_id):
+        self.name = name
+        self.viewers = int(viewers)
+        self.id = int(id)
+        self.channels = int(channels)
+        self.giantbomb_id = int(giantbomb_id)
 
-    def __init__(self, game):
-        self.name = game['name']
-        self.viewers = game['viewers']
-        self.id = game['id']
-        self.channels = game['channels']
-        self.giantbomb_id = game['giantbomb_id']
+    def __str__(self):
+        return str(vars(self))
+
+    def __repr__(self):
+        return self.__str__()
 
 
-class TwitchStreamsAPIResponse(Aggregatable):
+class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
     """
-    Model representing Twitch streams API response.
+    Model representing Twitch Streams API response.
     """
-    __slots__ = ['ts', 'streams', 'game']
+    def __init__(self, timestamp, streams, game):
+        self.timestamp = int(timestamp)
+        self.streams = streams
+        self.game = game
 
-    def __init__(self, mongodoc):
-        self.ts = mongodoc['timestamp']
-        self.streams = {}
-        self.game = mongodoc['game']
-        for gid, stream in mongodoc['streams'].items():
-            self.streams[gid] = TwitchStreamSnapshot(stream)
+    @staticmethod
+    def fromdoc(doc):
+        streams = {}
+        for cid, stream in doc['streams'].items():
+            streams[int(cid)] = TwitchStreamSnapshot(**stream)
+        return TwitchStreamsAPIResponse(doc['timestamp'], streams, doc['game'])
+
+    def todoc(self):
+        return {
+            'timestamp': self.timestamp,
+            'game': self.game,
+            'streams':
+                {str(cid): vars(snap) for cid, snap in self.streams.items()}
+        }
+
+    @staticmethod
+    def fromapiresponse(rawstreams, minviewers=10):
+        """
+        Constructor for api response
+
+        :param response: requests.Response, the api response.
+        :param minviewers: int, does not include streams with fewer viewers.
+        :return: TwitchStreamsAPIResponse
+        """
+        timestamp = int(time.time())
+        streams = {}
+        gameid = None
+        for stream in rawstreams:
+            if stream['viewer_count'] < minviewers:
+                continue
+            gameid = int(stream['game_id'])
+            params = {
+                'viewers':          stream['viewer_count'],
+                'game_id':          gameid,
+                'language':         stream['language'],
+                'bctype':           stream['type'],
+                'title':            stream['title'],
+                'stream_id':        stream['id'],
+                'broadcaster_id':   stream['user_id'],
+            }
+            streams[stream['user_id']] = TwitchStreamSnapshot(**params)
+        return TwitchStreamsAPIResponse(timestamp, streams, gameid)
 
     def viewercounts(self):
         return {s.broadcaster_id: s.viewers for s in self.streams.values()}
 
     def gettimestamp(self):
-        return self.ts
+        return self.timestamp
 
 
 class TwitchStreamSnapshot:
     """
-    One game from a TwitchGamesAPIResponse
+    One stream from a TwitchStreamsAPIResponse
     """
-    __slots__ = ['name', 'viewers', 'game', 'stream_title', 'broadcaster_id']
-
-    def __init__(self, stream):
-        self.name = stream['display_name']
-        self.viewers = stream['viewers']
-        self.game = stream['game']
-        self.stream_title = stream['status']
-        self.broadcaster_id = stream['broadcaster_id']
-
-
-class MongoDoc(ABC):
-    """
-    Abstract base clase for MongoDB Documents.
-    """
-    def to_dict(self):
-        pass
+    def __init__(self, viewers, game_id, language, bctype, title, stream_id,
+                 broadcaster_id):
+        self.viewers = int(viewers)
+        self.game_id = game_id
+        self.language = language
+        self.type = bctype
+        self.title = title
+        self.stream_id = stream_id
+        self.broadcaster_id = broadcaster_id
 
     def __str__(self):
-        return str(self.to_dict())
+        return str(vars(self))
 
-    @abstractmethod
-    def fromdoc(self, doc):
-        """ Constructor that takes a MongoDB document."""
+    def __repr__(self):
+        return self.__str__()
 
 
 class YTLivestreams(Aggregatable, MongoDoc):
@@ -137,7 +227,7 @@ class YTLivestreams(Aggregatable, MongoDoc):
             streams.append(YTLivestream(**stream))
         return YTLivestreams(streams, doc['timestamp'])
 
-    def to_dict(self):
+    def todoc(self):
         return {
             'timestamp': self.timestamp,
             'streams': [vars(x) for x in self.streams]

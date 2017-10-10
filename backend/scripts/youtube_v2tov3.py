@@ -72,7 +72,7 @@ def onev2tov3(v2doc):
         language = broadcast['language']
         tags = broadcast['tags']
         streams.append(YTLivestream(title, channame, chanid, vidid, viewers, language, tags))
-    return YTLivestreams(streams, timestamp).to_dict()
+    return YTLivestreams(streams, timestamp).todoc()
 
 
 def v2tov3(keypath):

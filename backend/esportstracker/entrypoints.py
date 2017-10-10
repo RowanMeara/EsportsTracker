@@ -10,7 +10,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('esportstracker/')])
 
 
-from esportstracker.twitch_scraper import TwitchScraper
+from esportstracker.scrapers import TwitchScraper
 from esportstracker.scrapers import YouTubeScraper
 from esportstracker.aggregator import Aggregator
 
@@ -35,7 +35,7 @@ def run_twitchscraper():
             a = TwitchScraper(cfgpath, keypath)
             a.scrape()
         # TODO: Change
-        except:
+        except ConnectionError:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             err = "{}. File: {}, line {}. Full: {}"

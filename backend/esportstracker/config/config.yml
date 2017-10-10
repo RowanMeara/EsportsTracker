@@ -10,18 +10,12 @@ postgres:
   port: 5432
 twitch:
   api:
-    game_ids: https://api.twitch.tv/kraken/search/games
-    live_streams: https://api.twitch.tv/kraken/streams/?language=en&stream_type=live&limit=100&game={}
-    top_games: https://api.twitch.tv/kraken/games/top/?limit=100
-    user_ids: https://api.twitch.tv/kraken/users?login={}
-    version: application/vnd.twitchtv.v5+json
+    host: https://api.twitch.tv/
   db:
     db_name: esports_stats
     host: 'localhost'
     port: 27017
-    top_games: twitch_top_games
-    top_streams: twitch_streams
-  update_interval: 300
+  update_interval: 600
 youtube:
   api:
     base_url: https://www.googleapis.com/youtube/v3
@@ -31,18 +25,18 @@ youtube:
     db_name: esports_stats
     host: 'localhost'
     port: 27017
-  update_interval: 300
+  update_interval: 600
 esportsgames:
-  - 'Call of Duty: Infinite Warfare'
-  - 'Counter-Strike: Global Offensive'
-  - Dota 2
-  - Hearthstone
-  - Heroes of the Storm
-  - League of Legends
-  - Overwatch
-  - PLAYERUNKNOWN'S BATTLEGROUNDS
-  - Rocket League
-  - Smite
-  - StarCraft II
-  - Street Fighter V
-  - Super Smash Bros. Melee
+  - {id: 491437, name: 'Call of Duty: Infinite Warfare'}
+  - {id: 32399, name: 'Counter-Strike: Global Offensive'}
+  - {id: 29595, name: Dota 2}
+  - {id: 138585, name: Hearthstone}
+  - {id: 32959, name: Heroes of the Storm}
+  - {id: 21779, name: League of Legends}
+  - {id: 488552, name: Overwatch}
+  - {id: 493057, name: PLAYERUNKNOWN'S BATTLEGROUNDS}
+  - {id: 30921, name: Rocket League}
+  - {id: 32507, name: Smite}
+  - {id: 490422, name: StarCraft II}
+  - {id: 488615, name: Street Fighter V}
+  - {id: 16282, name: Super Smash Bros. Melee}
