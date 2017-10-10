@@ -15,6 +15,7 @@ class TwitchAPIClient:
     """
     API_WINDOW_LENGTH = 60
     DEFAULT_REQUEST_LIMIT = 30
+    
     def __init__(self, host, id, secret):
         """
         TwitchAPIClient Constructor.
@@ -47,10 +48,12 @@ class TwitchAPIClient:
         :return: requests.Response
         """
         if self.req_remaining == 0:
-            time.sleep(self.rate_reset - time.time())
+            sleeptime = self.rate_reset - time.time()
+            if sleeptime > 0:
+                time.sleep(sleeptime)
         for i in range(3):
             api_result = self.session.get(url, params=params)
-            # Requests does not default to utf-8 encoding and a small percentag
+            # Requests does not default to utf-8 encoding and a small percentage
             # of the time the utf-8 header is missing.
             api_result.encoding = 'utf8'
             if api_result.status_code == requests.codes.okay:
