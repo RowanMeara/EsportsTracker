@@ -20,7 +20,7 @@ class Aggregator:
         self.twitch_db = config['twitch']['db']
         self.youtube_db = config['youtube']['db']
         self.postgres = config['postgres']
-        self.esportsgames = set(config['esportsgames'])
+        self.esportsgames = set([g['name'] for g in config['esportsgames']])
         self.postgres['user'] = keys['postgres']['user']
         self.postgres['password'] = keys['postgres']['passwd']
         mongo_cfg = config['aggregator']['mongodb']
@@ -28,6 +28,9 @@ class Aggregator:
         self.mongo_port = mongo_cfg['port']
         self.mongo_name = mongo_cfg['db_name']
         self.mongo_ssl = mongo_cfg['ssl']
+        self.twitchgamescol = 'twitch_top_games'
+        self.twitchstreamscol = 'twitch_streams'
+        self.ytstreamscol = 'youtube_streams'
         self.yti = YoutubeIdentifier()
         self.mongo_user = None
         self.mongo_pwd = None
@@ -97,11 +100,11 @@ class Aggregator:
                              self.mongo_ssl)
         curhrstart, curhrend, last = self._agg_ts(man, mongo,
                                                   'twitch_game_vc',
-                                                  self.twitch_db['top_games'])
+                                                  self.twitchgamescol)
         while curhrend <= last:
             docs = mongo.docsbetween(curhrstart, curhrend,
-                                       self.twitch_db['top_games'])
-            apiresp = [TwitchGamesAPIResponse(doc) for doc in docs]
+                                     self.twitchgamescol)
+            apiresp = [TwitchGamesAPIResponse.fromdoc(doc) for doc in docs]
             vcs = self.average_viewers(apiresp, curhrstart, curhrend)
             vcs = TwitchGameVC.from_vcs(vcs, curhrstart)
             # Some hours empty due to server failure
@@ -134,17 +137,17 @@ class Aggregator:
                              self.mongo_ssl)
         hrstart, hrend, last = self._agg_ts(man, mongo,
                                             'twitch_stream',
-                                            self.twitch_db['top_streams'])
+                                            self.twitchstreamscol)
         while hrend <= last:
             docs = mongo.docsbetween(hrstart, hrend,
-                                     self.twitch_db['top_streams'])
-            apiresp = [TwitchStreamsAPIResponse(doc) for doc in docs]
+                                     self.twitchstreamscol)
+            apiresp = [TwitchStreamsAPIResponse.fromdoc(doc) for doc in docs]
             # Need to sort responses by game
             sortedbygame = {}
             for resp in apiresp:
-                if resp.game not in sortedbygame:
-                    sortedbygame[resp.game] = []
-                sortedbygame[resp.game].append(resp)
+                if resp.gameid not in sortedbygame:
+                    sortedbygame[resp.gameid] = []
+                sortedbygame[resp.gameid].append(resp)
 
             # Some hours empty due to server failure
             if apiresp:
@@ -183,7 +186,7 @@ class Aggregator:
                              self.mongo_ssl)
         hrstart, hrend, last = self._agg_ts(man, mongo,
                                             'youtube_stream',
-                                            'youtube_streams')
+                                            self.ytstreamscol)
         while hrend <= last:
             docs = mongo.docsbetween(hrstart, hrend,
                                      'youtube_streams')

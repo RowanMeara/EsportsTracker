@@ -118,6 +118,7 @@ def v1tov2(keypath):
     print("Num V2 Documents: {}".format(numv2(coll)))
 
 
+
 if __name__ == '__main__':
     keypath = DIR_PATH[0:len(DIR_PATH)-len('scripts/')] + '/keys.yml'
     v1tov2(keypath)

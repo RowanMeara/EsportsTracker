@@ -131,6 +131,7 @@ class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
     def fromdoc(doc):
         streams = {}
         for cid, stream in doc['streams'].items():
+            print(stream)
             streams[int(cid)] = TwitchStreamSnapshot(**stream)
         return TwitchStreamsAPIResponse(doc['timestamp'], streams, doc['game'])
 
@@ -186,7 +187,7 @@ class TwitchStreamSnapshot:
         self.viewers = int(viewers)
         self.game_id = game_id
         self.language = language
-        self.type = bctype
+        self.bctype = bctype
         self.title = title
         self.stream_id = stream_id
         self.broadcaster_id = broadcaster_id

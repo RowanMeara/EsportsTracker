@@ -76,7 +76,7 @@ class TwitchChannel(Row):
     """
     __slots__ = ['channel_id', 'name', 'affiliation']
 
-    def __init__(self, channel_id, name, affiliation=None):
+    def __init__(self, channel_id, name=None, affiliation=None):
         self.channel_id = channel_id
         self.name = name
         self.affiliation = affiliation
@@ -93,7 +93,7 @@ class TwitchChannel(Row):
         for resp in resps:
             for snp in resp.streams.values():
                 if snp.broadcaster_id not in streams:
-                    channel = TwitchChannel(snp.broadcaster_id, snp.name)
+                    channel = TwitchChannel(snp.broadcaster_id)
                     streams[snp.broadcaster_id] = channel
         return streams
 
@@ -107,14 +107,19 @@ class TwitchStream(Row):
 
     The title and number of viewers of a stream for a given hour.
     """
-    __slots__ = ['channel_id', 'epoch', 'game_id', 'viewers', 'stream_title']
+    __slots__ = ['channel_id', 'epoch', 'game_id', 'viewers', 'title',
+                 'language', 'stream_id', 'stream_type']
 
-    def __init__(self, channel_id, epoch, game_id, viewers, stream_title):
+    def __init__(self, channel_id, epoch, game_id, viewers, title, language,
+                 stream_id, stream_type):
         self.channel_id = channel_id
         self.epoch = epoch
         self.game_id = game_id
         self.viewers = viewers
-        self.stream_title = stream_title
+        self.title = title
+        self.language = language
+        self.stream_id = stream_id
+        self.stream_type = stream_type
 
     @staticmethod
     def from_vcs(api_resp, vcs, timestamp, man):
@@ -137,7 +142,7 @@ class TwitchStream(Row):
 
     def to_row(self):
         return (self.channel_id, self.epoch, self.game_id, self.viewers,
-                self.stream_title)
+                self.title, self.language, self.stream_id, self.stream_type)
 
 
 class YoutubeChannel(Row):

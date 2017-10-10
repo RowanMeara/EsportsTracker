@@ -102,7 +102,7 @@ class PostgresManager:
         tables['twitch_channel'] = (
             'CREATE TABLE twitch_channel( '
             '    channel_id integer PRIMARY KEY, ' 
-            '    name text NOT NULL, ' 
+            '    name text UNIQUE, ' 
             '    affiliation text REFERENCES tournament_organizer(org_name) ' 
             ');'
         )
@@ -112,7 +112,10 @@ class PostgresManager:
             '    epoch integer NOT NULL, '
             '    game_id integer REFERENCES game(game_id), '
             '    viewers integer NOT NULL, '
-            '    stream_title text, '
+            '    title text, '
+            '    language text, '
+            '    stream_id bigint, '
+            '    stream_type text, '
             '    PRIMARY KEY (channel_id, epoch)'
             ');'
         )
