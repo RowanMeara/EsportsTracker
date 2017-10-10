@@ -34,14 +34,12 @@ def run_twitchscraper():
         try:
             a = TwitchScraper(cfgpath, keypath)
             a.scrape()
-        # TODO: Change
         except:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             err = "{}. File: {}, line {}. Full: {}"
             logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
                                        traceback.format_exc()))
-            # TODO: Remove magic number
             time.sleep(60)
 
 
@@ -60,7 +58,6 @@ def run_youtubescraper():
             err = "{}. File: {}, line {}. Full: {}"
             logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
                                        traceback.format_exc()))
-            # TODO: Make more informative than line 209
             time.sleep(60)
 
 
@@ -81,7 +78,6 @@ def run_aggregator():
             err = "{}. File: {}, line {}. Full: {}"
             logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
                                        traceback.format_exc()))
-            # TODO: Remove magic number
             time.sleep(60)
 
 

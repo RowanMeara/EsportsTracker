@@ -79,10 +79,10 @@ class TwitchGamesAPIResponse(Aggregatable, MongoDoc):
         for game in res['top']:
             params = {
                 'name': game['game']['name'],
-                'viewers': game['viewers'],
-                'channels': game['channels'],
-                'id': game['game']['_id'],
-                'giantbomb_id': game['game']['giantbomb_id']
+                'viewers': int(game['viewers']),
+                'channels': int(game['channels']),
+                'id': int(game['game']['_id']),
+                'giantbomb_id': int(game['game']['giantbomb_id'])
             }
             games[game['game']['_id']] = TwitchGameSnapshot(**params)
         return TwitchGamesAPIResponse(timestamp, games)
@@ -122,10 +122,10 @@ class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
     """
     Model representing Twitch Streams API response.
     """
-    def __init__(self, timestamp, streams, game):
+    def __init__(self, timestamp, streams, gameid):
         self.timestamp = int(timestamp)
         self.streams = streams
-        self.game = game
+        self.gameid = gameid
 
     @staticmethod
     def fromdoc(doc):
@@ -137,7 +137,7 @@ class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
     def todoc(self):
         return {
             'timestamp': self.timestamp,
-            'game': self.game,
+            'game_id': self.gameid,
             'streams':
                 {str(cid): vars(snap) for cid, snap in self.streams.items()}
         }
@@ -159,13 +159,13 @@ class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
                 continue
             gameid = int(stream['game_id'])
             params = {
-                'viewers':          stream['viewer_count'],
+                'viewers':          int(stream['viewer_count']),
                 'game_id':          gameid,
                 'language':         stream['language'],
                 'bctype':           stream['type'],
                 'title':            stream['title'],
-                'stream_id':        stream['id'],
-                'broadcaster_id':   stream['user_id'],
+                'stream_id':        int(stream['id']),
+                'broadcaster_id':   int(stream['user_id']),
             }
             streams[stream['user_id']] = TwitchStreamSnapshot(**params)
         return TwitchStreamsAPIResponse(timestamp, streams, gameid)

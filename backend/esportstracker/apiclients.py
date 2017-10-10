@@ -15,13 +15,16 @@ class TwitchAPIClient:
     """
     API_WINDOW_LENGTH = 60
     DEFAULT_REQUEST_LIMIT = 30
-    
-    def __init__(self, host, id, secret):
+
+    def __init__(self, host, clientid, secret):
         """
         TwitchAPIClient Constructor.
 
+        The Twitch API has a rate limit of 30 requests per 60 second period per
+        clientID per IP address.
+
         :param host: str, host url of the api.
-        :param id: str, Twitch API client id.
+        :param clientid: str, Twitch API client id.
         :param secret: str, Twitch API secret.
         """
         self.apiv5host = host + '/kraken'
@@ -30,18 +33,21 @@ class TwitchAPIClient:
 
         self.session = requests.session()
         headers = {'Accept': 'application/vnd.twitchtv.v5+json',
-                   'Client-ID': id}
+                   'Client-ID': clientid}
         self.session.headers.update(headers)
 
-        self.req_remaining = 1
+        self.req_remaining = self.DEFAULT_REQUEST_LIMIT
         self.rate_reset = None
+
+        self.gameidcache = {}
 
     def _request(self, url, params):
         """
         Makes an API request.
 
         Manages Twitch API rate limits and sleeps until more requests are
-        available if they are not.
+        available if they are not.  Rather than rate limiting API requests by
+        the clientID, Twitch limits them by clientID and IP address combination.
 
         :param url: str, the request url.
         :param params: dict, query strings to add to the request.
@@ -57,15 +63,12 @@ class TwitchAPIClient:
             # of the time the utf-8 header is missing.
             api_result.encoding = 'utf8'
             if api_result.status_code == requests.codes.okay:
-                # Twitch API capitalization is inconsistent.
+                # The Twitch API capitalization is inconsistent.
                 headers = {**api_result.headers}
                 headers = {str(k).lower(): v for k, v in headers.items()}
 
-                # Despite their documentation, Twitch does not always send the
-                # rate limit headers.
-                if 'ratelimit-remaining' not in headers:
-                    self.req_remaining = self.DEFAULT_REQUEST_LIMIT
-                else:
+                # The rate limit headers are not sent for v5 API requests.
+                if 'ratelimit-remaining' in headers:
                     self.req_remaining = int(headers['ratelimit-remaining'])
                     self.rate_reset = int(headers['ratelimit-reset'])
                 return api_result
@@ -85,14 +88,18 @@ class TwitchAPIClient:
         :param gamename: str, The name of the game
         :return:
         """
+        if gamename.lower() in self.gameidcache:
+            return self.gameidcache[gamename.lower()]
         url = self.apiv5host + '/search/games'
         res = self._request(url, {'query': gamename})
         games = json.loads(res.text)['games']
         for game in games:
             if game['name'] == gamename:
+                self.gameidcache[gamename.lower()] = int(game['_id'])
                 return int(game['_id'])
 
         # TODO: Raise a better exception
+        print(gamename)
         raise Exception
 
     def gettopgames(self, limit=100):
@@ -138,7 +145,7 @@ class TwitchAPIClient:
 
 class YouTubeAPIClient:
     """
-    Makes Youtube API requests.
+    Makes YouTube API requests.
     """
     def __init__(self, host, clientid, secret):
         self.host = host
@@ -167,7 +174,7 @@ class YouTubeAPIClient:
             if api_result.status_code == requests.codes.okay:
                 return api_result
             elif i == 2:
-                logging.WARNING("Youtube API request failed: {}".format(
+                logging.WARNING("YouTube API request failed: {}".format(
                     api_result.status_code))
                 raise ConnectionError
             time.sleep(10)
@@ -216,12 +223,13 @@ class YouTubeAPIClient:
         """
         params = []
         numcalls = math.ceil(len(vidids) / self.maxres)
+        part = 'liveStreamingDetails,topicDetails,snippet,contentDetails'
         for i in range(numcalls):
             start = i * self.maxres
             end = min((i + 1) * self.maxres, len(vidids))
             request_ids = vidids[start:end]
             request_params = {
-                'part': 'liveStreamingDetails,topicDetails,snippet,contentDetails',
+                'part': part,
                 'id': ','.join(request_ids)
             }
             params.append(request_params)
@@ -267,7 +275,7 @@ class YouTubeAPIClient:
         live playlists only contain 100 channels and the search returns empty
         results rather than getting rid of the page token parameter as
         specified in the api documentation.
-        Youtube allows you to search by game and order by view count but
+        YouTube allows you to search by game and order by view count but
         retrieving the exact view count requires a separate api call.
 
         :param num: int, The total number of livestreams to return.
@@ -292,7 +300,7 @@ class YouTubeAPIClient:
             json_result = json.loads(api_result.text)
             params['pageToken'] = json_result['nextPageToken']
             raw_broadcasts += json_result['items']
-            # The Youtube API seems to limit results to 100 while still
+            # The YouTube API seems to limit results to 100 while still
             # providing the pageToken.  Check if the result is empty to avoid
             # unnecessary api calls.
             if len(json_result['items']) < self.maxres:
