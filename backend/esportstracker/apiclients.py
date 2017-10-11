@@ -113,6 +113,19 @@ class TwitchAPIClient:
         res = self._request(url, {'limit': limit})
         return TwitchGamesAPIResponse.fromapiresponse(res)
 
+    def getdisplaynames(self, userids):
+        """
+        Gets the display name of the given user.
+
+        :param userids:
+        :return: dict, keys are user_ids and values are display names.
+        """
+        res = {}
+        curbatch = []
+        for userid in userids:
+            pass
+        return res
+
     def topstreams(self, gameid=None):
         """
         Gets the 100 most popular livestreams.
@@ -124,13 +137,15 @@ class TwitchAPIClient:
         :return: models.mongomodels.TwitchStreamsAPIResponse
         """
         url = self.apiv6host + '/streams/'
-        params = {}
+        params = {
+            'first': 100
+        }
         if gameid:
             params['game_id'] = gameid
         # Each response includes 20 streams.
         responses = [self._request(url, params)]
-
-        for i in range(4):
+        # TODO: Decide whether to support variable numbers of results.
+        for i in range(0):
             res = json.loads(responses[i].text)
             if 'cursor' not in res['pagination']:
                 break
