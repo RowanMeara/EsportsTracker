@@ -145,9 +145,9 @@ class Aggregator:
             # Need to sort responses by game
             sortedbygame = {}
             for resp in apiresp:
-                if resp.gameid not in sortedbygame:
-                    sortedbygame[resp.gameid] = []
-                sortedbygame[resp.gameid].append(resp)
+                if resp.game_id not in sortedbygame:
+                    sortedbygame[resp.game_id] = []
+                sortedbygame[resp.game_id].append(resp)
 
             # Some hours empty due to server failure
             if apiresp:
@@ -159,7 +159,7 @@ class Aggregator:
                     vcs.update(vc)
                 channels = TwitchChannel.from_api_resp(apiresp).values()
                 man.store_rows(channels, 'twitch_channel')
-                streams = TwitchStream.from_vcs(apiresp, vcs, hrstart, man)
+                streams = TwitchStream.from_vcs(apiresp, vcs, hrstart)
                 man.store_rows(streams, 'twitch_stream')
             hrstart += 3600
             hrend += 3600
@@ -247,11 +247,10 @@ class Aggregator:
 
     def refreshwebcache(self):
         """
-        Calls the route which refreshes the Node.js cache.
+        Calls the webserver's API route which refreshes the Node.js cache.
 
         :return:
         """
-        # TODO: Figure out a better way to do this.
         user = self.postgres['user']
         pwd = self.postgres['password']
         url = f'http://localhost:3000/api/refreshcache?user={user}&pwd={pwd}'

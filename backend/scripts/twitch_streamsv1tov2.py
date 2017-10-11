@@ -36,7 +36,7 @@ from esportstracker.apiclients import TwitchAPIClient
 #               'viewers':          stream['viewer_count'],
 #               'game_id':          gameid,
 #               'language':         stream['language'],
-#               'bctype':           stream['type'],
+#               'stream_type':      stream['type'],
 #               'title':            stream['title'],
 #               'stream_id':        stream['id'],
 #               'broadcaster_id':   stream['user_id'],
@@ -45,7 +45,7 @@ from esportstracker.apiclients import TwitchAPIClient
 #
 
 def retrieve_v1(coll, num):
-    cursor = coll.find({'game_id': {'$exists': False}})
+    cursor = coll.find({'game_id': {'$exists': False}}).sort('timestamp', pymongo.ASCENDING)
     doc = cursor[0:num]
     return doc
 
@@ -73,7 +73,7 @@ def onev1tov2(v1doc, client):
             'viewers': int(stream['viewers']),
             'game_id': client.getgameid(stream['game']),
             'language': 'en',
-            'bctype': 'live',
+            'stream_type': 'live',
             'title': stream['status'],
             'stream_id': None,
             'broadcaster_id': int(stream['broadcaster_id']),

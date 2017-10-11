@@ -122,22 +122,38 @@ class TwitchStream(Row):
         self.stream_type = stream_type
 
     @staticmethod
-    def from_vcs(api_resp, vcs, timestamp, man):
-        # Combine api_resp so that we can look across all api responses
+    def from_vcs(api_resp, vcs, timestamp):
+        """
+        Creates TwitchStream objects from viewercounts and API resp objects.
+
+        Used in aggregation.
+
+        :param api_resp: list(mongomodels.TwitchStreamsAPIResponse), the
+            responses.
+        :param vcs:   {channel_id, viewercount}, the viewercounts of the api
+            responses.
+        :param timestamp: int, unix epoch of the row.
+        :return: list(TwitchStream), list of rows to insert.
+        """
         comb = {}
         for resp in api_resp:
-            for snp in resp.streams.values():
-                if snp.broadcaster_id not in comb:
-                    comb[snp.broadcaster_id] = snp
+            for snapshot in resp.streams.values():
+                if snapshot.broadcaster_id not in comb:
+                    comb[snapshot.broadcaster_id] = snapshot
 
         ts = []
-        for sid, viewers in vcs.items():
-            chid = sid
-            ep = timestamp
-            gid = man.game_name_to_id(comb[sid].game)
-            vc = viewers
-            tit = comb[sid].stream_title
-            ts.append(TwitchStream(chid, ep, gid, vc, tit))
+        for chanid, viewers in vcs.items():
+            params = {
+                'channel_id':chanid,
+                'epoch': timestamp,
+                'game_id': comb[chanid].game_id,
+                'viewers': viewers,
+                'title': comb[chanid].title,
+                'language': comb[chanid].language,
+                'stream_id': comb[chanid].stream_id,
+                'stream_type': comb[chanid].stream_type
+            }
+            ts.append(TwitchStream(**params))
         return ts
 
     def to_row(self):

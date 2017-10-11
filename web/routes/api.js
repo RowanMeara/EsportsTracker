@@ -8,18 +8,19 @@ const queries = require('../server/queries')
 const util = require('../server/et-util')
 const secrets = require('../secrets')
 
-let app = express()
 const router = express.Router()
-
-let cache
-if (app.get('env') === 'development') {
-  cache = apicache.options({headers: {'cache-control': 'no-cache'}}).middleware
-} else {
-  cache = apicache.middleware
+// TODO: Consider changing cache control back.
+let options = {
+  defaultDuration: '1 day',
+  headers: {
+    'cache-control': 'no-cache'
+  }
 }
+let cache = apicache.options(options).middleware
+
 let DAY = 60 * 60 * 24
 
-router.get('/twitchtopgames', cache('60 minutes'), async function (req, res) {
+router.get('/twitchtopgames', cache(), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let numGames = req.query.numgames || 10
@@ -45,7 +46,7 @@ router.get('/twitchtopgames', cache('60 minutes'), async function (req, res) {
   }
 })
 
-router.get('/marketshare', cache('60 minutes'), async function (req, res) {
+router.get('/marketshare', cache(), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let now = Math.floor(new Date() / 1000)
@@ -65,7 +66,7 @@ router.get('/marketshare', cache('60 minutes'), async function (req, res) {
   }
 })
 
-router.get('/twitchgameviewership', cache('60 minutes'), async function (req, res) {
+router.get('/twitchgameviewership', cache(), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let gameID = req.query.id
@@ -85,7 +86,7 @@ router.get('/twitchgameviewership', cache('60 minutes'), async function (req, re
   }
 })
 
-router.get('/youtubegameviewership', cache('60 minutes'), async function (req, res) {
+router.get('/youtubegameviewership', cache(), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let gameID = req.query.id
@@ -111,7 +112,7 @@ router.get('/youtubegameviewership', cache('60 minutes'), async function (req, r
   }
 })
 
-router.get('/gameviewership', cache('60 minutes'), async function (req, res) {
+router.get('/gameviewership', cache(), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let gameID = req.query.id
@@ -131,7 +132,7 @@ router.get('/gameviewership', cache('60 minutes'), async function (req, res) {
   }
 })
 
-router.get('/organizerviewership', cache('60 minutes'), async function (req, res) {
+router.get('/organizerviewership', cache(), async function (req, res) {
   try {
     let days = parseInt(req.query.days) || 30
     let numOrgs = req.query.num || 10

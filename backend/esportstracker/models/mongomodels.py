@@ -106,8 +106,8 @@ class TwitchGameSnapshot:
     """
     def __init__(self, name, id, viewers, channels, giantbomb_id):
         self.name = name
-        self.viewers = int(viewers)
         self.id = int(id)
+        self.viewers = int(viewers)
         self.channels = int(channels)
         self.giantbomb_id = int(giantbomb_id)
 
@@ -122,23 +122,22 @@ class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
     """
     Model representing Twitch Streams API response.
     """
-    def __init__(self, timestamp, streams, gameid):
+    def __init__(self, timestamp, streams, game_id):
         self.timestamp = int(timestamp)
         self.streams = streams
-        self.gameid = gameid
+        self.game_id =int(game_id)
 
     @staticmethod
     def fromdoc(doc):
         streams = {}
         for cid, stream in doc['streams'].items():
-            print(stream)
             streams[int(cid)] = TwitchStreamSnapshot(**stream)
-        return TwitchStreamsAPIResponse(doc['timestamp'], streams, doc['game'])
+        return TwitchStreamsAPIResponse(doc['timestamp'], streams, doc['game_id'])
 
     def todoc(self):
         return {
             'timestamp': self.timestamp,
-            'game_id': self.gameid,
+            'game_id': self.game_id,
             'streams':
                 {str(cid): vars(snap) for cid, snap in self.streams.items()}
         }
@@ -163,7 +162,7 @@ class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
                 'viewers':          int(stream['viewer_count']),
                 'game_id':          gameid,
                 'language':         stream['language'],
-                'bctype':           stream['type'],
+                'stream_type':           stream['type'],
                 'title':            stream['title'],
                 'stream_id':        int(stream['id']),
                 'broadcaster_id':   int(stream['user_id']),
@@ -182,12 +181,12 @@ class TwitchStreamSnapshot:
     """
     One stream from a TwitchStreamsAPIResponse
     """
-    def __init__(self, viewers, game_id, language, bctype, title, stream_id,
+    def __init__(self, viewers, game_id, language, stream_type, title, stream_id,
                  broadcaster_id):
         self.viewers = int(viewers)
         self.game_id = game_id
         self.language = language
-        self.bctype = bctype
+        self.stream_type = stream_type
         self.title = title
         self.stream_id = stream_id
         self.broadcaster_id = broadcaster_id
