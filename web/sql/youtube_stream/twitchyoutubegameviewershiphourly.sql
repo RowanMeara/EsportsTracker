@@ -21,6 +21,7 @@ FROM   game,
                                 WHERE  game_id = $1
                                        AND epoch >= $2
                                        AND epoch < $3
+                                       AND language = 'en'
                                 GROUP  BY epoch) AS ts
                             ON ys.epoch = ts.epoch) AS t
 WHERE  game.game_id = $1
