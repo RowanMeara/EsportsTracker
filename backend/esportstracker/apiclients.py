@@ -298,13 +298,15 @@ class YouTubeAPIClient:
         for i in range(numpages):
             api_result = self._request(url, params)
             json_result = json.loads(api_result.text)
-            params['pageToken'] = json_result['nextPageToken']
             raw_broadcasts += json_result['items']
             # The YouTube API seems to limit results to 100 while still
             # providing the pageToken.  Check if the result is empty to avoid
             # unnecessary api calls.
-            if len(json_result['items']) < self.maxres:
+            if (len(json_result['items']) < self.maxres or
+                'nextPageToken' not in json_result):
                 break
+            params['pageToken'] = json_result['nextPageToken']
+
         if DEBUG:
             print(f"API result: {api_result}")
 
