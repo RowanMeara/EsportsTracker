@@ -12,7 +12,7 @@ FROM   game,
                 WHERE  game_id = $1
                        AND epoch >= $2
                        AND epoch < $3
-                       AND ( language = 'en'
+                       AND (LEFT(language, 2) = 'en'
                               OR language = 'd_en' )
                 GROUP  BY epoch) AS ys
                FULL OUTER JOIN (SELECT epoch,
@@ -21,7 +21,7 @@ FROM   game,
                                 WHERE  game_id = $1
                                        AND epoch >= $2
                                        AND epoch < $3
-                                       AND language = 'en'
+                                       AND LEFT(language, 2) = 'en'
                                 GROUP  BY epoch) AS ts
                             ON ys.epoch = ts.epoch) AS t
 WHERE  game.game_id = $1
