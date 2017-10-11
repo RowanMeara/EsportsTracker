@@ -15,7 +15,7 @@ class TwitchAPIClient:
     """
     API_WINDOW_LENGTH = 60
     DEFAULT_REQUEST_LIMIT = 30
-
+    API_MAX_RESULTS = 100
     def __init__(self, host, clientid, secret):
         """
         TwitchAPIClient Constructor.
@@ -115,15 +115,28 @@ class TwitchAPIClient:
 
     def getdisplaynames(self, userids):
         """
-        Gets the display name of the given user.
+        Gets the display name of the given user(s).
 
-        :param userids:
+        If the number of user ids is greater than 100, it will take multiple api
+        calls to retrieve the necessary data.
+
+        :param userids: list(int), the twitch user ids.
         :return: dict, keys are user_ids and values are display names.
         """
         res = {}
         curbatch = []
+        url = self.apiv6host + '/users/'
+        params = {}
         for userid in userids:
-            pass
+            curbatch.append(userid)
+            if len(curbatch) < self.API_MAX_RESULTS:
+                continue
+            params['id'] = ','.join(curbatch)
+            res = self._request(url, params).text
+            users = json.loads(res)['data']
+            for user in users:
+                res[int(user['id'])] = user['display_name']
+            curbatch = []
         return res
 
     def topstreams(self, gameid=None):
@@ -138,7 +151,7 @@ class TwitchAPIClient:
         """
         url = self.apiv6host + '/streams/'
         params = {
-            'first': 100
+            'first': self.API_MAX_RESULTS
         }
         if gameid:
             params['game_id'] = gameid
