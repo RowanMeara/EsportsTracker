@@ -43,6 +43,8 @@ class YoutubeIdentifier:
         nba17 = ['NBA 2K17', 'NBA 17']
         nba18 = ['NBA 2K18', 'NBA 18']
         gtav = ['GTA V', 'GTA 5']
+        shadowofmordor = ['Shadow of Mordor']
+        shadowofwar = ['Shadow of War']
         # Youtube is infested with TV restreams pretending to be games
         # because YouTube Gaming appears to lack any kind of manual moderation.
         # Twitch has traditionally broadcast TV shows in the 'Creative' category
@@ -73,7 +75,9 @@ class YoutubeIdentifier:
             493112: nba17,
             495056: nba18,
             32982: gtav,
-            488191: tv
+            488191: tv,
+            458619: shadowofmordor,
+            496000: shadowofwar
         }
 
     def classify(self, yts):
