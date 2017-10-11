@@ -102,7 +102,7 @@ def v1tov2(keypath):
     print("Num V2 Documents: {}".format(numv2(coll)))
     count = 0
     while numv1(coll) > 0:
-        v1docs = retrieve_v1(coll, 10000)
+        v1docs = retrieve_v1(coll, 1000)
         for v1doc in v1docs:
             count += 1
             if count % 1000 == 0:
