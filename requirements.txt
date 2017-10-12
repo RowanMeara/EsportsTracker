@@ -10,3 +10,4 @@ langid
 langdetect
 setproctitle
 pycld2
+SQLAlchemy

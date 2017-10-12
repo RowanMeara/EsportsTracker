@@ -1,13 +1,17 @@
 import time
+import logging
 from ruamel import yaml
 from datetime import datetime
 import pytz
-import logging
+import requests
+import abc
+
 from .dbinterface import PostgresManager, MongoManager
 from .models.postgresmodels import *
 from .models.mongomodels import *
 from .classifiers import YoutubeIdentifier
-import requests
+from .apiclients import TwitchAPIClient
+
 
 class Aggregator:
     def __init__(self, configpath, keypath):
@@ -260,6 +264,14 @@ class Aggregator:
             logging.warning('Cache refresh error.')
             return
 
+    def twitchdisplaynames(self):
+        """
+        Gets missing Twitch display names and adds them to the database.
+
+        :return:
+        """
+        apiclient = TwitchAPIClient(self.clientid, self.secret)
+
     def run(self):
         """
         Aggregates viewer count data.
@@ -274,6 +286,7 @@ class Aggregator:
         """
         while True:
             start = time.time()
+            self.twitchdisplaynames()
             self.agg_twitch_games()
             self.agg_twitch_broadcasts()
             self.agg_youtube_streams()
@@ -282,3 +295,9 @@ class Aggregator:
             self.refreshwebcache()
             timesleep = 3660 - (int(end) % 3600)
             time.sleep(timesleep)
+
+class RowFactory(abc.ABC):
+    """Generates database rows from MongoDB docs."""
+    @abstractmethod
+    def aggregate_rows(self):
+

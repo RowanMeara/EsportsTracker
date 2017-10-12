@@ -32,7 +32,7 @@ twitch:
   - {id: 35936871, name: ESL_CSGOb}
   - {id: 132561587, name: ProLeagueCSGO}
   - {id: 36481935, name: ESL_DOTA2}
-  - {id: 82312665, name: esl_joindotared}
+  - {id: 82312665, name: joinDOTARed}
   - {id: 23660075, name: ESL_Overwatch}
   - {id: 30220059, name: ESL_SC2}
   EVO:
