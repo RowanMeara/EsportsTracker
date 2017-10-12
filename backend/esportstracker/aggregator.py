@@ -6,7 +6,6 @@ import pytz
 import requests
 
 from .dbinterface import PostgresManager, MongoManager
-from .models.postgresschema import *
 from .models.mongomodels import *
 from .models.postgresmodels import *
 from .classifiers import YoutubeIdentifier
