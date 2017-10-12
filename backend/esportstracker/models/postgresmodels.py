@@ -13,6 +13,9 @@ class Row(ABC):
     def __str__(self):
         return str(self.to_row())
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class Game(Row):
     """
@@ -20,6 +23,7 @@ class Game(Row):
 
     See schema.png.
     """
+    TABLE_NAME = 'game'
     __slots__ = ['game_id', 'name', 'giantbomb_id']
 
     def __init__(self, game_id, name, giantbomb_id):
@@ -28,7 +32,7 @@ class Game(Row):
         self.giantbomb_id = int(giantbomb_id)
 
     @staticmethod
-    def api_responses_to_games(resps):
+    def from_docs(resps):
         """
         Creates Game objects for each unique game.
 
@@ -40,7 +44,7 @@ class Game(Row):
             for snp in resp.games.values():
                 if snp.id not in games:
                     games[snp.id] = Game(snp.id, snp.name, snp.giantbomb_id)
-        return games
+        return list(games.values())
 
     def to_row(self):
         return self.game_id, self.name, self.giantbomb_id
@@ -52,6 +56,7 @@ class TwitchGameVC(Row):
 
     The average viewer count of a game in a given hour.
     """
+    TABLE_NAME = 'twitch_game_vc'
     __slots__ = ['game_id', 'epoch', 'viewers']
 
     def __init__(self, game_id, epoch, viewers):
@@ -74,6 +79,7 @@ class TwitchChannel(Row):
     """
     A mapping between a Twitch channel name and its id.
     """
+    TABLE_NAME = 'twitch_channel'
     __slots__ = ['channel_id', 'name', 'affiliation']
 
     def __init__(self, channel_id, name=None, affiliation=None):
@@ -95,7 +101,7 @@ class TwitchChannel(Row):
                 if snp.broadcaster_id not in streams:
                     channel = TwitchChannel(snp.broadcaster_id)
                     streams[snp.broadcaster_id] = channel
-        return streams
+        return list(streams.values())
 
     def to_row(self):
         return self.channel_id, self.name, self.affiliation
@@ -107,6 +113,7 @@ class TwitchStream(Row):
 
     The title and number of viewers of a stream for a given hour.
     """
+    TABLE_NAME = 'twitch_stream'
     __slots__ = ['channel_id', 'epoch', 'game_id', 'viewers', 'title',
                  'language', 'stream_id', 'stream_type']
 
@@ -165,6 +172,7 @@ class YoutubeChannel(Row):
     """
     A mapping between a Youtube channel name and its id.
     """
+    TABLE_NAME = 'youtube_channel'
     __slots__ = ['channel_id', 'name', 'main_language', 'description',
                  'affiliation']
 
@@ -181,8 +189,8 @@ class YoutubeChannel(Row):
         """
         Creates YoutubeChannel objects for each unique channel.
 
-        :param resps: list[YTLivestream], list of livestream objects
-        :return: list[Game]
+        :param streams: list[YTLivestream], list of livestream objects
+        :return: list[YouTubeChannel]
         """
         channels = {}
         for stream in streams:
@@ -190,7 +198,7 @@ class YoutubeChannel(Row):
                     channel = YoutubeChannel(stream.chanid, stream.channame,
                                              stream.language)
                     channels[channel.channel_id] = channel
-        return channels
+        return list(channels.values())
 
     def to_row(self):
         return (self.channel_id, self.name, self.main_language,
@@ -206,17 +214,18 @@ class YoutubeStream(Row):
 
     The title and number of viewers of a stream for a given hour.
     """
-    __slots__ = ['video_id', 'epoch', 'channel_id', 'game_id', 'viewers', 'stream_title',
+    TABLE_NAME = 'youtube_stream'
+    __slots__ = ['video_id', 'epoch', 'channel_id', 'game_id', 'viewers', 'title',
                  'language', 'tags']
 
-    def __init__(self, video_id, channel_id, epoch, game_id, viewers,
-                 stream_title, language, tags):
+    def __init__(self, video_id, channel_id, epoch, game_id, viewers, title,
+                 language, tags):
         self.video_id = video_id
         self.epoch = epoch
         self.channel_id = channel_id
         self.game_id = game_id
         self.viewers = viewers
-        self.stream_title = stream_title
+        self.title = title
         self.language = language
         self.tags = tags
 
@@ -240,39 +249,40 @@ class YoutubeStream(Row):
         ys = []
         for videoid, viewers in vcs.items():
             stream = comb[videoid]
-            l = {
+            params = {
                 'video_id': videoid,
                 'epoch': timestamp,
                 'channel_id': stream.chanid,
                 'game_id': None,
                 'viewers': viewers,
-                'stream_title': stream.title,
+                'title': stream.title,
                 'language': stream.language,
                 'tags': stream.tags
             }
-            ys.append(YoutubeStream(**l))
+            ys.append(YoutubeStream(**params))
         return ys
 
     @staticmethod
     def from_row(row):
         return YoutubeStream(row[0], row[1], row[2], row[3], row[4], row[5],
-                             row[6])
+                             row[6], row[7])
 
     def to_row(self):
         if LANGUAGE_DETECTION and self.language == 'unknown':
             if type(self.tags) == list:
-                info = self.stream_title + ' '.join(self.tags)
+                info = self.title + ' '.join(self.tags)
             else:
-                info = self.stream_title + self.tags
+                info = self.title + self.tags
             self.language = 'd_' + classify_language(info)
         return (self.video_id, self.epoch, self.channel_id, self.game_id,
-                self.viewers, self.stream_title, self.language, str(self.tags))
+                self.viewers, self.title, self.language, str(self.tags))
 
 
 class TournamentOrganizer(Row):
     """
     A row in the esports_org table.
     """
+    TABLE_NAME = 'tournament_organizer'
     def __init__(self, name):
         self.name = name
 

@@ -4,16 +4,16 @@ from ruamel import yaml
 from datetime import datetime
 import pytz
 import requests
-import abc
 
 from .dbinterface import PostgresManager, MongoManager
-from .models.postgresmodels import *
+from .models.postgresschema import *
 from .models.mongomodels import *
+from .models.postgresmodels import *
 from .classifiers import YoutubeIdentifier
-from .apiclients import TwitchAPIClient
 
 
 class Aggregator:
+    """ Aggregates data from MongoDB instance and stores the results."""
     def __init__(self, configpath, keypath):
         self.aggregation_interval = 3600
         self.config_path = configpath
@@ -35,7 +35,6 @@ class Aggregator:
         self.twitchgamescol = 'twitch_top_games'
         self.twitchstreamscol = 'twitch_streams'
         self.ytstreamscol = 'youtube_streams'
-        self.yti = YoutubeIdentifier()
         self.mongo_user = None
         self.mongo_pwd = None
         if 'mongodb' in keys:
@@ -43,197 +42,10 @@ class Aggregator:
             self.mongo_pwd = keys['mongodb']['read']['pwd']
 
     @staticmethod
-    def average_viewers(entries, start, end):
-        """
-        Returns the average viewer count over the specified period.
-
-        If one Aggregatabale, is missing from an entry that appeared in an
-        earlier entry, its viewcount is treated as zero for that entry.
-
-        :param entries: list[Aggregatable], Entries to be aggregated
-        :param start: int, Start of aggregation period
-        :param end: int, End of aggregation period
-        :return: dict, {id: average_viewers}, Average viewer of each item.
-        """
-        # Need entries in ascending order
-        entries.sort()
-
-        last_timestamp = start
-        entry, res = None, {}
-        for entry in entries:
-            for name, viewers in entry.viewercounts().items():
-                if name not in res:
-                    res[name] = 0
-                res[name] += viewers * (entry.gettimestamp() - last_timestamp)
-            last_timestamp = entry.gettimestamp()
-        if not entry:
-            return res
-
-        # Need to count the time from the last entry to the end of the period
-        for name, viewers in entry.viewercounts().items():
-            res[name] += viewers * (end - last_timestamp)
-
-        for name in res:
-            res[name] //= (end-start)
-        return res
-
-    @staticmethod
     def strtime(timestamp):
         tz = pytz.timezone('US/Pacific')
         dt = datetime.fromtimestamp(timestamp, tz)
         return dt.strftime("%Z - %Y/%m/%d, %H:%M:%S")
-
-    def agg_twitch_games(self):
-        """
-        Aggregates and stores twitch game info.
-
-        Checks the MongoDB specified in the config file for new top games
-        entries, aggregates them, and stores them in Postgres.  initdb Must
-        be called before calling this function.
-
-        :return: None
-        """
-        # start is the first second of the next hour that we need to aggregate
-        # end is the last second of the most recent full hour
-        man = PostgresManager.from_config(self.postgres, self.esportsgames)
-        mongo = MongoManager(self.mongo_host,
-                             self.mongo_port,
-                             self.mongo_name,
-                             self.mongo_user,
-                             self.mongo_pwd,
-                             self.mongo_ssl)
-        curhrstart, curhrend, last = self._agg_ts(man, mongo,
-                                                  'twitch_game_vc',
-                                                  self.twitchgamescol)
-        while curhrend <= last:
-            docs = mongo.docsbetween(curhrstart, curhrend,
-                                     self.twitchgamescol)
-            apiresp = [TwitchGamesAPIResponse.fromdoc(doc) for doc in docs]
-            vcs = self.average_viewers(apiresp, curhrstart, curhrend)
-            vcs = TwitchGameVC.from_vcs(vcs, curhrstart)
-            # Some hours empty due to server failure
-            if apiresp:
-                games = Game.api_responses_to_games(apiresp).values()
-                man.store_rows(games, 'game')
-                man.store_rows(vcs, 'twitch_game_vc')
-            curhrstart += 3600
-            curhrend += 3600
-            if curhrstart % 36000 == 0:
-                man.commit()
-        man.commit()
-        mongo.client.close()
-
-    def agg_twitch_broadcasts(self):
-        """
-        Retrieves, aggregates, and stores twitch broadcasts.
-
-        Checks the MongoDB specified in the config file for new twitch
-        broadcasts, aggregates them, and stores them in Postgres.
-
-        :return:
-        """
-        man = PostgresManager.from_config(self.postgres, self.esportsgames)
-        mongo = MongoManager(self.mongo_host,
-                             self.mongo_port,
-                             self.twitch_db['db_name'],
-                             self.mongo_user,
-                             self.mongo_pwd,
-                             self.mongo_ssl)
-        hrstart, hrend, last = self._agg_ts(man, mongo,
-                                            'twitch_stream',
-                                            self.twitchstreamscol)
-        while hrend <= last:
-            docs = mongo.docsbetween(hrstart, hrend,
-                                     self.twitchstreamscol)
-            apiresp = [TwitchStreamsAPIResponse.fromdoc(doc) for doc in docs]
-            # Need to sort responses by game
-            sortedbygame = {}
-            for resp in apiresp:
-                if resp.game_id not in sortedbygame:
-                    sortedbygame[resp.game_id] = []
-                sortedbygame[resp.game_id].append(resp)
-
-            # Some hours empty due to server failure
-            if apiresp:
-                vcbygame = []
-                for game, resp in sortedbygame.items():
-                    vcbygame.append(self.average_viewers(resp, hrstart, hrend))
-                vcs = {}
-                for vc in vcbygame:
-                    vcs.update(vc)
-                channels = TwitchChannel.from_api_resp(apiresp).values()
-                man.store_rows(channels, 'twitch_channel')
-                streams = TwitchStream.from_vcs(apiresp, vcs, hrstart)
-                man.store_rows(streams, 'twitch_stream')
-            hrstart += 3600
-            hrend += 3600
-            if hrstart % 36000 == 0:
-                man.commit()
-        man.commit()
-        mongo.client.close()
-
-    def agg_youtube_streams(self):
-        """
-        Retrieves, aggregates, and stores youtube broadcasts.
-
-        Checks the MongoDB specified in the config file for new youtube
-        broadcasts, aggregates them, and stores them in Postgres.
-
-        :return:
-        """
-        man = PostgresManager.from_config(self.postgres, self.esportsgames)
-        mongo = MongoManager(self.mongo_host,
-                             self.mongo_port,
-                             self.youtube_db['db_name'],
-                             self.mongo_user,
-                             self.mongo_pwd,
-                             self.mongo_ssl)
-        hrstart, hrend, last = self._agg_ts(man, mongo,
-                                            'youtube_stream',
-                                            self.ytstreamscol)
-        while hrend <= last:
-            docs = mongo.docsbetween(hrstart, hrend,
-                                     'youtube_streams')
-            ls = [YTLivestreams.fromdoc(doc) for doc in docs]
-            # Some hours empty due to server failure
-            if ls:
-                allstreams = [s for streams in ls for s in streams.streams]
-                channels = YoutubeChannel.fromstreams(allstreams).values()
-                man.store_rows(channels, 'youtube_channel')
-                vcs = self.average_viewers(ls, hrstart, hrend)
-                streams = YoutubeStream.from_vcs(ls, vcs, hrstart)
-                for stream in streams:
-                    self.yti.classify(stream)
-                man.store_rows(streams, 'youtube_stream')
-            hrstart += 3600
-            hrend += 3600
-            if hrstart % 36000 == 0:
-                man.commit()
-        man.commit()
-        mongo.client.close()
-
-    def _agg_ts(self, man, mongo, table_name, collname):
-        """
-        Helper function for aggregation timestamps.
-
-        Calculates the timestamps for curhrstart (the first second of the first
-        hour that should aggregated), curhrend (one hour later than
-        curhrstart), and last (the first second in the current hour).
-
-        :param man: PostgresManager
-        :param mongo: MongoManager
-        :param table_name: str, Name of Postgres table
-        :param collname: str, Name of Mongo collection
-        :return: tuple, (curhrstart, curhrend, last)
-        """
-        # TODO: Rename function
-        sechr = 3600
-        start = man.most_recent_epoch(table_name) + sechr
-        last = self.epoch_to_hour(time.time())
-        earliest_entry = mongo.first_entry_after(start, collname)
-        curhrstart = earliest_entry // sechr*sechr
-        curhrend = curhrstart + sechr
-        return curhrstart, curhrend, last
 
     @staticmethod
     def epoch_to_hour(epoch):
@@ -264,13 +76,72 @@ class Aggregator:
             logging.warning('Cache refresh error.')
             return
 
-    def twitchdisplaynames(self):
+    def _agg_ts(self, man, mongo, table_name, collname):
         """
-        Gets missing Twitch display names and adds them to the database.
+        Helper function for aggregation timestamps.
 
+        Calculates the timestamps for curhrstart (the first second of the first
+        hour that should aggregated), curhrend (one hour later than
+        curhrstart), and last (the first second in the current hour).
+
+        :param man: PostgresManager
+        :param mongo: MongoManager
+        :param table_name: str, Name of Postgres table
+        :param collname: str, Name of Mongo collection
+        :return: tuple, (curhrstart, curhrend, last)
+        """
+        # TODO: Rename function
+        sechr = 3600
+        start = man.most_recent_epoch(table_name) + sechr
+        last = self.epoch_to_hour(time.time())
+        earliest_entry = mongo.first_entry_after(start, collname)
+        curhrstart = earliest_entry // sechr*sechr
+        curhrend = curhrstart + sechr
+        return curhrstart, curhrend, last
+
+    def process(self, collection, table, fun):
+        """
+        Feeds a RowFactory MongoDB docs in 60 minute chunks.
+
+        The documents in the MongoDB collection must have a field named
+        timestamp which contains a unix epoch.  Documents are retrieved in
+        chunks corresponding to one hour each and then fed to the RowFactory.
+        Only documents that have a timestamp greater than the most recent entry
+        in the Postgres database are retrieved.
+        The resulting rows are stored in the Postgres database.
+
+        :param collection: str, name of the MongoDB collection.
+        :param table: str, name of the table to check for the most recent update
+            in.
+        :param fun: function, a function which takes in MongoDB documents and
+            retrieves
         :return:
         """
-        apiclient = TwitchAPIClient(self.clientid, self.secret)
+        # start is the first second of the next hour that we need to aggregate
+        # end is the last second of the most recent full hour
+        man = PostgresManager.from_config(self.postgres, self.esportsgames)
+        mongo = MongoManager(self.mongo_host,
+                             self.mongo_port,
+                             self.mongo_name,
+                             self.mongo_user,
+                             self.mongo_pwd,
+                             self.mongo_ssl)
+        # TODO: Convert the Manager.
+        curhrstart, curhrend, last = self._agg_ts(man, mongo,
+                                                  table,
+                                                  collection)
+        while curhrend <= last:
+            docs = mongo.docsbetween(curhrstart, curhrend,
+                                     collection)
+            rows = fun(docs, curhrstart, curhrend)
+            for onetype in rows:
+                man.store_rows(onetype, True)
+            curhrstart += 3600
+            curhrend += 3600
+            if curhrstart % 36000 == 0:
+                man.commit()
+        man.commit()
+        mongo.client.close()
 
     def run(self):
         """
@@ -286,18 +157,135 @@ class Aggregator:
         """
         while True:
             start = time.time()
-            self.twitchdisplaynames()
-            self.agg_twitch_games()
-            self.agg_twitch_broadcasts()
-            self.agg_youtube_streams()
+            self.process(self.twitchgamescol, 'twitch_game_vc',
+                         RowFactory.twitch_game_viewer_counts)
+            self.process(self.twitchstreamscol, 'twitch_stream',
+                         RowFactory.twitch_streams)
+            self.process(self.ytstreamscol, 'youtube_stream',
+                         RowFactory.youtube_streams)
             end = time.time()
             print("Total Time: {:.2f}".format(end - start))
             self.refreshwebcache()
             timesleep = 3660 - (int(end) % 3600)
             time.sleep(timesleep)
 
-class RowFactory(abc.ABC):
-    """Generates database rows from MongoDB docs."""
-    @abstractmethod
-    def aggregate_rows(self):
 
+class RowFactory:
+    """Generates Postgres objects from Mongo docs."""
+    @staticmethod
+    def average_viewers(entries, start, end):
+        """
+        Returns the average viewer count over the specified period.
+
+        If one Aggregatabale, is missing from an entry that appeared in an
+        earlier entry, its viewcount is treated as zero for that entry.
+
+        :param entries: list[Aggregatable], Entries to be aggregated
+        :param start: int, Start of aggregation period
+        :param end: int, End of aggregation period
+        :return: dict, {id: average_viewers}, Average viewer of each item.
+        """
+        # Need entries in ascending order.
+        entries.sort()
+
+        last_timestamp = start
+        entry, res = None, {}
+        for entry in entries:
+            for name, viewers in entry.viewercounts().items():
+                if name not in res:
+                    res[name] = 0
+                res[name] += viewers * (entry.gettimestamp() - last_timestamp)
+            last_timestamp = entry.gettimestamp()
+        if not entry:
+            return res
+
+        # Need to count the time from the last entry to the end of the period.
+        for name, viewers in entry.viewercounts().items():
+            res[name] += viewers * (end - last_timestamp)
+
+        for name in res:
+            res[name] //= (end-start)
+        return res
+
+    @staticmethod
+    def twitch_game_viewer_counts(docs, start, end):
+        """
+        Creates database rows from API responses.
+
+        All documents must have a timestamp value between start and end.  The
+        start parameter is start of the aggregation period and end
+        is the first second in the next period.
+
+        :param docs: cursor, raw mongodb docs.
+        :param start: int, unix epoch.
+        :param end: int, unix epoch.
+        :return: list(list(Row)), the rows to insert grouped by type.
+        """
+        if not docs:
+            return []
+        apiresp = [TwitchGamesAPIResponse.fromdoc(doc) for doc in docs]
+        games = Game.from_docs(apiresp)
+        vcs = RowFactory.average_viewers(apiresp, start, end)
+        vcs = TwitchGameVC.from_vcs(vcs, start)
+        return [games, vcs]
+
+    @staticmethod
+    def twitch_streams(docs, start, end):
+        """
+        Creates database rows from API responses.
+
+        All documents must have a timestamp value between start and end.  The
+        start parameter is start of the aggregation period and end
+        is the first second in the next period.
+
+        :param docs: cursor, raw mongodb docs.
+        :param start: int, unix epoch.
+        :param end: int, unix epoch.
+        :return: list(list), the rows to insert grouped by type.
+        """
+        apiresp = [TwitchStreamsAPIResponse.fromdoc(doc) for doc in docs]
+        # Need to sort responses by game
+        sortedbygame = {}
+        for resp in apiresp:
+            if resp.game_id not in sortedbygame:
+                sortedbygame[resp.game_id] = []
+            sortedbygame[resp.game_id].append(resp)
+        if not sortedbygame:
+            return []
+
+        vcbygame = []
+        for game, resp in sortedbygame.items():
+            vcbygame.append(RowFactory.average_viewers(resp, start, end))
+        vcs = {}
+        for vc in vcbygame:
+            vcs.update(vc)
+        channels = TwitchChannel.from_api_resp(apiresp)
+        streams = TwitchStream.from_vcs(apiresp, vcs, start)
+        return [channels, streams]
+
+    @staticmethod
+    def youtube_streams(docs, start, end):
+        """
+        Creates database rows from API responses.
+
+        All documents must have a timestamp value between start and end.  The
+        start parameter is start of the aggregation period and end
+        is the first second in the next period.
+
+        :param docs: cursor, raw mongodb docs.
+        :param start: int, unix epoch.
+        :param end: int, unix epoch.
+        :return: list(list), the rows to insert grouped by type.
+        """
+        yti = YoutubeIdentifier()
+        ls = [YTLivestreams.fromdoc(doc) for doc in docs]
+        # Some hours empty due to server failure
+        if not ls:
+            return []
+        allstreams = [s for streams in ls for s in streams.streams]
+        channels = YoutubeChannel.fromstreams(allstreams)
+        vcs = RowFactory.average_viewers(ls, start, end)
+        streams = YoutubeStream.from_vcs(ls, vcs, start)
+        for stream in streams:
+            yti.classify(stream)
+        return [channels, streams]

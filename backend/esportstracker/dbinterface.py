@@ -135,7 +135,7 @@ class PostgresManager:
             '    channel_id text REFERENCES youtube_channel(channel_id), '
             '    game_id integer, '
             '    viewers integer NOT NULL, '
-            '    stream_title text, '
+            '    title text, '
             '    language text, '
             '    tags text, '
             '    PRIMARY KEY (video_id, epoch)'
@@ -199,6 +199,7 @@ class PostgresManager:
         query = sql.SQL(query).format(sql.Identifier(table))
         cursor = self.conn.cursor()
         cursor.execute(query)
+        self.conn.commit()
         return cursor.fetchone()[0]
 
     def earliest_epoch(self, table):
@@ -219,12 +220,13 @@ class PostgresManager:
         cursor.execute(query)
         return cursor.fetchone()[0]
 
-    def store_rows(self, rows, tablename, commit=False):
+    def store_rows(self, rows, commit=False):
         """
         Stores the rows in the specified table.
 
         If the commit variable is not specified, the transaction is not
-        committed and the commit method must be called at a later point.
+        committed and the commit method must be called at a later point.  The
+        rows must all be of the same type.
 
         :param rows: list[Row], the rows to be stored.
         :param tablename: str, the name of the table to insert into.
@@ -232,8 +234,9 @@ class PostgresManager:
         :param update: bool, updates conflicting rows if true.
         :return: bool
         """
-        if not rows or tablename not in self.tablenames:
+        if not rows or rows[0].TABLE_NAME not in self.tablenames:
             return False
+        tablename = rows[0].TABLE_NAME
         query = (f'INSERT INTO {tablename} '
                  'VALUES %s '
                  'ON CONFLICT DO NOTHING ')

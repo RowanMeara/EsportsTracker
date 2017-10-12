@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from esportstracker.aggregator import Aggregator
+from esportstracker.aggregator import Aggregator, RowFactory
 from esportstracker.models.mongomodels import TwitchGamesAPIResponse
 
 config_path = 'res/test_scraper_config.yml'
@@ -45,7 +45,7 @@ def test_average_viewers():
     }
     entries = [entry1, entry2]
     entries = [TwitchGamesAPIResponse.fromdoc(entry) for entry in entries]
-    games = Aggregator.average_viewers(entries, 0, 2000)
+    games = RowFactory.average_viewers(entries, 0, 2000)
     assert games[1] == 400
     assert games[2] == 1
 
@@ -60,11 +60,11 @@ def test_average_viewers():
         }
     }
     entries.append(TwitchGamesAPIResponse.fromdoc(entry3))
-    games = Aggregator.average_viewers(entries, 1500, 2000)
+    games = RowFactory.average_viewers(entries, 1500, 2000)
     assert games[1] == 320
     assert games[2] == 0
     assert games[3] == 40
-    games = Aggregator.average_viewers(entries, 1800, 2200)
+    games = RowFactory.average_viewers(entries, 1800, 2200)
     assert games[1] == 100
     assert games[2] == 0
     assert games[3] == 150
