@@ -42,6 +42,12 @@ class Aggregator:
 
     @staticmethod
     def strtime(timestamp):
+        """
+        Timestamp to US/Pacific string.
+
+        :param timestamp: int, unix epoch
+        :return: str,
+        """
         tz = pytz.timezone('US/Pacific')
         dt = datetime.fromtimestamp(timestamp, tz)
         return dt.strftime("%Z - %Y/%m/%d, %H:%M:%S")
@@ -162,6 +168,7 @@ class Aggregator:
                          RowFactory.twitch_streams)
             self.process(self.ytstreamscol, 'youtube_stream',
                          RowFactory.youtube_streams)
+            self.refreshwebcache()
             end = time.time()
             print("Total Time: {:.2f}".format(end - start))
             self.refreshwebcache()
@@ -240,7 +247,7 @@ class RowFactory:
         :param docs: cursor, raw mongodb docs.
         :param start: int, unix epoch.
         :param end: int, unix epoch.
-        :return: list(list), the rows to insert grouped by type.
+        :return: list(list(Row)), the rows to insert grouped by type.
         """
         apiresp = [TwitchStreamsAPIResponse.fromdoc(doc) for doc in docs]
         # Need to sort responses by game
@@ -274,7 +281,7 @@ class RowFactory:
         :param docs: cursor, raw mongodb docs.
         :param start: int, unix epoch.
         :param end: int, unix epoch.
-        :return: list(list), the rows to insert grouped by type.
+        :return: list(list(Row)), the rows to insert grouped by type.
         """
         yti = YoutubeIdentifier()
         ls = [YTLivestreams.fromdoc(doc) for doc in docs]
