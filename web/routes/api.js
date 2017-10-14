@@ -187,7 +187,7 @@ router.get('/esportshoursbygame', cache(), async function (req, res) {
  * Called by the aggregator service to refresh the cache.  Requires the database
  * username and password specified in the secrets file to be sent as query strings.
  */
-router.get('/refreshcache', async function (req, res) {
+router.get('/refreshcache', cache(), async function (req, res) {
   try {
     let user = req.query.user || ''
     let pwd = req.query.pwd || ''
