@@ -1,5 +1,9 @@
 import {GoogleCharts} from './googleCharts.js'
 import $ from 'jquery'
+import 'datatables.net'
+import 'datatables.net-bs4'
+
+const fmt = require('./format')
 
 const LINE_CHART_HEIGHT = 0.55
 const LINE_CHART_HEIGHT_MOBILE = 0.7
@@ -23,6 +27,7 @@ class TwitchGameViewership {
     if (this.data && days === this.days) {
       let div = document.getElementById(this.divID)
       let width = div.getBoundingClientRect().width
+      this.options.width = width - 1
       this.options.height = PI_CHART_HEIGHT * width
       this.chart.draw(this.data, this.options)
       return
@@ -67,6 +72,7 @@ class OrganizerMarketshare {
       let div = document.getElementById(this.divID)
       let width = div.getBoundingClientRect().width
       this.options.height = PI_CHART_HEIGHT * width
+      this.options.width = width - 1
       this.chart.draw(this.data, this.options)
       return
     }
@@ -110,6 +116,7 @@ class Marketshare {
     if (this.data && days === this.days) {
       let div = document.getElementById(this.divID)
       let width = div.getBoundingClientRect().width
+      this.options.width = width - 1
       this.options.height = PI_CHART_HEIGHT * width
       this.chart.draw(this.data, this.options)
       return
@@ -216,20 +223,6 @@ class HourlyGameViewership {
   }
 }
 
-function splitMille (n, separator = ',') {
-  let num = (n + '')
-  let decimals = ''
-  if (/\./.test(num)) {
-    decimals = num.replace(/^.*(\..*)$/, '$1')
-  }
-  num = num.replace(decimals, '')
-    .split('').reverse().join('')
-    .match(/[0-9]{1,3}-?/g)
-    .join(separator).split('').reverse().join('')
-
-  return `${num}${decimals}`
-}
-
 function formatTooltip (apiResponse) {
   let sum = 0
   apiResponse.forEach((resp) => {
@@ -240,16 +233,87 @@ function formatTooltip (apiResponse) {
     resp[1] = resp[1] / (365 * 24)
     let years = resp[1].toFixed(2)
     let gamename = resp[0] + '\n '
-    let time = splitMille(years) + ' years '
+    let time = fmt.splitMille(years) + ' years '
     let percent = '(' + (years / sum * 100).toFixed(0) + '%)'
     let tooltip = gamename + time + percent
     resp.push(tooltip)
   })
 }
 
+class EsportsGamesList {
+  constructor (divID, days) {
+    this.divID = divID
+    this.data = null
+  }
+
+  draw (days) {
+    if (this.table && days === this.days) {
+      console.log('redrawn')
+      return
+    }
+    this.days = days
+    let render = (msg) => {
+      this.data = []
+      msg.forEach((m) => {
+        let game = m[0]
+        let esh = ((m[2] + m[3])/1000000).toFixed(1)
+        let allh = ((m[4] + m[5])/1000000).toFixed(1)
+        let per = fmt.formatPercent((m[2] + m[3]) / (m[4] + m[5]))
+        this.data.push([game, esh, allh, per])
+      })
+      if (this.table) {
+        this.table.clear()
+        this.data.forEach((d) => {
+          this.table.row.add(d)
+        })
+        this.table.draw()
+      } else {
+        this.table = new $('#' + this.divID).DataTable(
+          {
+            data: this.data,
+            searching: false,
+            paging: false,
+            bInfo: false,
+            bAutoWidth: false,
+            order: [[1, 'desc']],
+            columns: [
+              {
+                width: '30%',
+                title: 'Game'
+              },
+              {
+                width: '20%',
+                title: 'Esports Hours\n (in millions)'
+              },
+              {
+                width: '20%',
+                title: 'Total Hours\n (in millions)'
+              },
+              {
+                width: '20%',
+                title: 'Percent Esports'
+              }
+            ]
+          }
+        )
+      }
+    }
+    $.ajax({
+      url: '/api/esportshoursbygame?',
+      data: {days: days},
+      dataType: 'json',
+      async: true,
+      success: function (msg) {
+        render(msg)
+      }
+    })
+  }
+}
+
 export let charts = {
   TwitchGameViewership: TwitchGameViewership,
   Marketshare: Marketshare,
   HourlyGameViewership: HourlyGameViewership,
-  OrganizerMarketshare: OrganizerMarketshare
+  OrganizerMarketshare: OrganizerMarketshare,
+  EsportsGamesList: EsportsGamesList
 }

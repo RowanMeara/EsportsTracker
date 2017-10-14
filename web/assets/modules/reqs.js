@@ -1,8 +1,9 @@
 import 'jquery'
-import '../modules/loadcharts.js'
-import '../modules/googleCharts.js'
+import './loadcharts.js'
+import './googleCharts.js'
 import 'bootstrap/dist/js/bootstrap.js'
 import '../stylesheets/style.sass'
+import './format.js'
 
 /**
  * Webpack will not bundle files together unless they are required by every entrypoint

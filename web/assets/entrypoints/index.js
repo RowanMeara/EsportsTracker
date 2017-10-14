@@ -2,8 +2,8 @@ import $ from 'jquery'
 import {charts} from '../modules/loadcharts.js'
 import {GoogleCharts} from '../modules/googleCharts.js'
 import '../modules/reqs.js'
-let tgv, mks, tmk, days
-GoogleCharts.load(onLoad)
+
+let tgv, mks, tmk, days, dt
 
 function onLoad () {
   let active = $('div.btn.period-btn.active').text()
@@ -11,10 +11,12 @@ function onLoad () {
   tgv = new charts.TwitchGameViewership('twitchgamevh', days)
   mks = new charts.Marketshare('marketshare', days)
   tmk = new charts.OrganizerMarketshare('orgmarketshare', days)
+  dt = new charts.EsportsGamesList('datatable', days)
   drawCharts(days)
 }
 
 function drawCharts (ldays) {
+  dt.draw(ldays)
   tgv.draw(ldays)
   mks.draw(ldays)
   tmk.draw(ldays)
@@ -34,3 +36,7 @@ $('#time_period_btn').change(async () => {
 function sleep (ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+$(document).ready(() => {
+  GoogleCharts.load(onLoad)
+})

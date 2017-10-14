@@ -10,7 +10,7 @@ const extractSass = new ExtractTextPlugin({
 module.exports = {
   entry: {
     index: './assets/entrypoints/index.js',
-    game: './assets/entrypoints/game.js',
+    game: './assets/entrypoints/game.js'
   },
   output: {
     path: path.join(__dirname, 'public', 'webpack'),
@@ -39,7 +39,7 @@ module.exports = {
       jQuery: 'jquery',
       $: 'jquery',
       'window.jQuery': 'jquery',
-      Tether: 'tether'
+      Popper: ['popper.js', 'default']
     }),
     // Sass
     extractSass,
@@ -48,6 +48,6 @@ module.exports = {
       filename: 'commons.js',
       name: 'commons'
     }),
-   // new Uglify()
+    //new Uglify()
   ]
 }

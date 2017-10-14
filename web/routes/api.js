@@ -164,7 +164,8 @@ router.get('/esportshoursbygame', cache(), async function (req, res) {
     let start = epoch - days * DAY
     let q = await queries.esportsHoursByGame(start, epoch, numGames)
     let data = []
-    data.push(['gameName', 'gameID', 'ytEsports', 'twEsports', 'ytAll', 'twAll'])
+    // TODO: Standardize headers.
+    // data.push(['gameName', 'gameID', 'ytEsports', 'twEsports', 'ytAll', 'twAll'])
     q.forEach((q) => {
       data.push([
         q.name,
@@ -218,7 +219,8 @@ async function refreshCache () {
     let daypaths = [
       host + '/api/marketshare?days=',
       host + '/api/twitchtopgames?days=',
-      host + '/api/organizerviewership?days='
+      host + '/api/organizerviewership?days=',
+      host + '/api/esportshoursbygame?days='
     ]
     let urls = []
     esgid.forEach((gid) => {
