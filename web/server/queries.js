@@ -27,6 +27,7 @@ const qYoutubeEsportsGameHourly = new PQ(sql.youtube_stream.gameViewershipHourly
 const qCombinedGameHourly = new PQ(sql.youtube_stream.combinedGameViewershipHourly)
 const qGameidToName = new PQ(sql.game.gameidToName)
 const qOrgCumMarketshare = new PQ(sql.tournament_organizer.cumMarketshare)
+const qEsportsHoursByGame = new PQ(sql.youtube_stream.esportsHoursByGame)
 const timeout = cfg.pg_timeout
 var cacheEsportsGames = {}
 
@@ -117,6 +118,10 @@ async function gameidToName (gid) {
   return res
 }
 
+async function esportsHoursByGame(start, end, numGames) {
+  const res = await db.any(qEsportsHoursByGame, [start, end, numGames])
+  return res
+}
 /*
  * Returns the total number of viewer hours watched between start and end
  * for each tournament organizer.
@@ -140,6 +145,7 @@ module.exports = {
   combinedGameVHHourly: combinedGameVHHourly,
   gameidToName: gameidToName,
   orgMarketshareCum: orgMarketshareCum,
+  esportsHoursByGame: esportsHoursByGame,
   cache: {
     esportsGames: getEsportsGames,
     refreshESG: refreshESG

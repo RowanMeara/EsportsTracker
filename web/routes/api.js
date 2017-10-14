@@ -156,6 +156,32 @@ router.get('/organizerviewership', cache(), async function (req, res) {
   }
 })
 
+router.get('/esportshoursbygame', cache(), async function (req, res) {
+  try {
+    let days = parseInt(req.query.days) || 30
+    let numGames = req.query.num || 10
+    let epoch = Math.floor(new Date() / 1000)
+    let start = epoch - days * DAY
+    let q = await queries.esportsHoursByGame(start, epoch, numGames)
+    let data = []
+    data.push(['gameName', 'gameID', 'ytEsports', 'twEsports', 'ytAll', 'twAll'])
+    q.forEach((q) => {
+      data.push([
+        q.name,
+        parseInt(q.game_id),
+        parseInt(q.ythours),
+        parseInt(q.twhours),
+        parseInt(q.ytallhours),
+        parseInt(q.twallhours)
+      ])
+    })
+    res.status(200).json(data)
+  } catch (e) {
+    console.trace(e.message)
+    res.status(500)
+  }
+})
+
 /**
  * Called by the aggregator service to refresh the cache.  Requires the database
  * username and password specified in the secrets file to be sent as query strings.
