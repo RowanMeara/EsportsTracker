@@ -299,7 +299,7 @@ class EsportsGamesList {
       }
     }
     $.ajax({
-      url: '/api/esportshoursbygame?',
+      url: '/api/esportshoursbygame',
       data: {days: days},
       dataType: 'json',
       async: true,
