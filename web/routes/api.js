@@ -11,7 +11,7 @@ const secrets = require('../secrets')
 const router = express.Router()
 // TODO: Consider changing cache control back.
 let options = {
-  defaultDuration: '1 day',
+  defaultDuration: '70 minutes',
   headers: {
     'cache-control': 'no-cache'
   }

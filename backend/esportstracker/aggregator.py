@@ -168,7 +168,6 @@ class Aggregator:
                          RowFactory.twitch_streams)
             self.process(self.ytstreamscol, 'youtube_stream',
                          RowFactory.youtube_streams)
-            self.refreshwebcache()
             end = time.time()
             print("Total Time: {:.2f}".format(end - start))
             self.refreshwebcache()
