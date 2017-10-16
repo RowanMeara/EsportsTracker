@@ -2,8 +2,8 @@ SELECT          t.game_id,
                 game.name,
                 COALESCE(t.ythours, 0) AS ythours,
                 COALESCE(t.twhours, 0) AS twhours,
-                COALESCE(ts.tshours, 0) AS twallhours,
-                COALESCE(ys.yshours, 0) AS ytallhours
+                COALESCE(ys.yshours, 0) AS ytallhours,
+                COALESCE(ts.tshours, 0) AS twallhours
 FROM            (
                                 SELECT          COALESCE(game.game_id, g1.game_id) AS game_id,
                                                 COALESCE(ytesports.hours, 0) AS ythours,
