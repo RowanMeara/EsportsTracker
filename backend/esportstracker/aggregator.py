@@ -119,7 +119,7 @@ class Aggregator:
         :param table: str, name of the table to check for the most recent update
             in.
         :param fun: function, a function which takes in MongoDB documents and
-            retrieves
+            produces Row objects.
         :return:
         """
         # start is the first second of the next hour that we need to aggregate

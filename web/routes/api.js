@@ -11,9 +11,10 @@ const secrets = require('../secrets')
 const router = express.Router()
 // TODO: Consider changing cache control back.
 let options = {
-  defaultDuration: '70 minutes',
+  defaultDuration: 2147483647,
   headers: {
-    'cache-control': 'no-cache'
+    // There is a bug with 304 responses in apicache.
+    'cache-control': 'no-cache, no-store, must-revalidate'
   }
 }
 let cache = apicache.options(options).middleware
@@ -254,7 +255,7 @@ async function refreshCache () {
   }
 }
 
-async function httpPromise(url) {
+async function httpPromise (url) {
   return new Promise((resolve, reject) => {
     let req = http.get(url)
     req.on('response', res => {
