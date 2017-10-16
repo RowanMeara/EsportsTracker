@@ -10,6 +10,7 @@ FROM   tournament_organizer AS org
                                  ON ts.channel_id = tc.channel_id
                   WHERE  ts.epoch >= $1
                          AND ts.epoch <= $2
+                         AND LEFT(ts.language, 2) = 'en'
                   GROUP  BY eo.org_name) AS twitch
               ON org.org_name = twitch.org_name
        LEFT JOIN (SELECT eo.org_name,
@@ -21,6 +22,7 @@ FROM   tournament_organizer AS org
                                  ON ys.channel_id = yc.channel_id
                   WHERE  ys.epoch >= $1
                          AND ys.epoch <= $2
+                         AND LEFT(ys.language, 2) = 'en'
                   GROUP  BY eo.org_name) AS youtube
               ON org.org_name = youtube.org_name
 ORDER  BY viewers DESC;

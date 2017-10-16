@@ -18,8 +18,9 @@ FROM            (
                                                            INNER JOIN youtube_stream                         AS y
                                                            ON         y.channel_id = c.channel_id
                                                            WHERE      game_id IS NOT NULL
-                                                           AND        epoch >= $1
-                                                           AND        epoch < $2
+                                                           AND        LEFT(y.language, 2) = 'en'
+                                                           AND        y.epoch >= $1
+                                                           AND        y.epoch < $2
                                                            GROUP BY   game_id) AS ytesports
                                 FULL OUTER JOIN
                                                 (
@@ -32,8 +33,9 @@ FROM            (
                                                            INNER JOIN twitch_stream                          AS t
                                                            ON         t.channel_id = c.channel_id
                                                            WHERE      game_id IS NOT NULL
-                                                           AND        epoch >= $1
-                                                           AND        epoch < $2
+                                                           AND        LEFT(t.language, 2) = 'en'
+                                                           AND        t.epoch >= $1
+                                                           AND        t.epoch < $2
                                                            GROUP BY   game_id) AS twesports
                                 ON              ytesports.game_id = twesports.game_id
                                 LEFT JOIN       game
