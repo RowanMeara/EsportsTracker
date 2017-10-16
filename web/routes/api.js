@@ -187,7 +187,7 @@ router.get('/esportshoursbygame', cache(), async function (req, res) {
  * Called by the aggregator service to refresh the cache.  Requires the database
  * username and password specified in the secrets file to be sent as query strings.
  */
-router.get('/refreshcache', cache(), async function (req, res) {
+router.get('/refreshcache', async function (req, res) {
   try {
     let user = req.query.user || ''
     let pwd = req.query.pwd || ''
@@ -235,22 +235,9 @@ async function refreshCache () {
       })
     })
 
-    let httpPromise = async (url) => {
-      return new Promise((resolve, reject) => {
-        let req = http.get(url)
-        req.on('response', res => {
-          resolve(res)
-        })
-        req.on('error', err => {
-          console.log('API request failed: ' + url)
-          resolve(err)
-        })
-      })
-    }
-
     let reqs = []
     for (let i = 0; i < urls.length; i++) {
-      if (i % 10 === 0) {
+      if (i % 6 === 0) {
         await Promise.all(reqs)
         reqs = []
       }
@@ -265,6 +252,19 @@ async function refreshCache () {
     console.log('Refresh Partially Failed')
     console.trace(e.message)
   }
+}
+
+async function httpPromise(url) {
+  return new Promise((resolve, reject) => {
+    let req = http.get(url)
+    req.on('response', res => {
+      resolve(res)
+    })
+    req.on('error', err => {
+      console.log('API request failed: ' + url)
+      resolve(err)
+    })
+  })
 }
 
 module.exports = {
