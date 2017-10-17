@@ -48,6 +48,6 @@ module.exports = {
       filename: 'commons.js',
       name: 'commons'
     }),
-    new Uglify()
+    //new Uglify()
   ]
 }
