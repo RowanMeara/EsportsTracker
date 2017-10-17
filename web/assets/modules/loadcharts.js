@@ -228,13 +228,13 @@ function formatTooltip (apiResponse) {
   apiResponse.forEach((resp) => {
     sum += resp[1]
   })
-  sum /= 365 * 24
+  sum /= 1000000
   apiResponse.forEach((resp) => {
-    resp[1] = resp[1] / (365 * 24)
-    let years = resp[1].toFixed(2)
+    resp[1] = resp[1] / 1000000
+    let millions = resp[1].toFixed(1)
     let gamename = resp[0] + '\n '
-    let time = fmt.splitMille(years) + ' years '
-    let percent = '(' + (years / sum * 100).toFixed(0) + '%)'
+    let time = fmt.splitMille(millions) + ' million hours'
+    let percent = '(' + (millions / sum * 100).toFixed(1) + '%)'
     let tooltip = gamename + time + percent
     resp.push(tooltip)
   })
