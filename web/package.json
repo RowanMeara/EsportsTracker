@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "ajax": "0.0.4",
-    "apicache": "^1.1.0",
+    "apicache": "git+https://github.com/RowanMeara/apicache.git",
     "base64-inline-loader": "^1.1.0",
     "bluebird": "^3.5.1",
     "body-parser": "~1.17.1",
