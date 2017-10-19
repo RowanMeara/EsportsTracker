@@ -198,6 +198,13 @@ class TwitchStreamSnapshot:
         return self.__str__()
 
 
+class TwitchChannelDoc(MongoDoc):
+    """
+    Twitch User API response
+    """
+    def __init__(self, channel_id, login, display_name, ):
+        pass
+
 class YTLivestreams(Aggregatable, MongoDoc):
     """
     Model representing document in youtube_top_streams Mongo collection.

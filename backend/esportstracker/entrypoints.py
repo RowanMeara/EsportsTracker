@@ -9,7 +9,7 @@ from setproctitle import setproctitle
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('esportstracker/')])
 
-from esportstracker.scrapers import TwitchScraper
+from esportstracker.scrapers import TwitchScraper, TwitchChannelScraper
 from esportstracker.scrapers import YouTubeScraper
 from esportstracker.aggregator import Aggregator
 
@@ -57,23 +57,29 @@ def run(fun, logname, production=True):
 
 
 def run_twitchscraper(cfgpath, keypath):
-    a = TwitchScraper(cfgpath, keypath)
-    a.scrape()
+    scraper = TwitchScraper(cfgpath, keypath)
+    scraper.scrape()
+
+
+def run_twitch_channel_scraper(cfgpath, keypath):
+    scraper = TwitchChannelScraper(cfgpath, keypath)
+    scraper.scrape()
 
 
 def run_youtubescraper(cfgpath, keypath):
-    a = YouTubeScraper(cfgpath, keypath)
-    a.scrape()
+    scraper = YouTubeScraper(cfgpath, keypath)
+    scraper.scrape()
 
 
 def run_aggregator(cfgpath, keypath):
-    a = Aggregator(cfgpath, keypath)
-    a.run()
+    aggregator = Aggregator(cfgpath, keypath)
+    aggregator.run()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--twitch', action='store_true', default=False)
+    parser.add_argument('--twitchchannel', action='store_true', default=False)
     parser.add_argument('--youtube', action='store_true', default=False)
     parser.add_argument('--aggregator', action='store_true', default=False)
     parser.add_argument('--debug', action='store_true', default=False)
@@ -83,6 +89,9 @@ if __name__ == '__main__':
     if args.twitch:
         setproctitle('TwitchScraper')
         run(run_twitchscraper, 'twitch.log', production)
+    if args.twitchchannel:
+        setproctitle('TwitchChannelScraper')
+        run(run_twitch_channel_scraper, 'twitch_channel.log', production)
     elif args.aggregator:
         setproctitle('AggregatorScraper')
         run(run_aggregator, 'aggregator.log', production)

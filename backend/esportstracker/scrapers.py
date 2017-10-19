@@ -103,10 +103,10 @@ class TwitchScraper:
                 tot_time = time.time() - start_time
                 logging.debug('Elapsed time: {:.2f}s'.format(tot_time))
             except requests.exceptions.ConnectionError:
-                logging.warning("Twitch API Failed")
+                logging.warning('Twitch API Failed')
             except pymongo.errors.ServerSelectionTimeoutError:
                 logging.warning(
-                    "Database Error: {}".format(sys.exc_info()[0]))
+                    'Database Error: {}'.format(sys.exc_info()[0]))
             time_to_sleep = self.update_interval - (time.time() - start_time)
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
@@ -117,6 +117,8 @@ class TwitchChannelScraper(TwitchScraper):
     def __init__(self, config_path, key_path):
         super().__init__(config_path, key_path)
         self.latest_checked = 0
+
+
 
     def retrieve_channels(self):
         """
@@ -138,6 +140,20 @@ class TwitchChannelScraper(TwitchScraper):
 
         :return:
         """
+        while True:
+            start_time = time.time()
+            try:
+                self.retrieve_channels()
+                tot_time = time.time() - start_time
+                logging.debug('Elapsed time: {:.2f}s'.format(tot_time))
+            except requests.exceptions.ConnectionError:
+                logging.warning('Twitch API Failed')
+            except pymongo.errors.ServerSelectionTimeoutError:
+                logging.warning(
+                    'Database Error: {}'.format(sys.exc_info()[0]))
+            time_to_sleep = self.update_interval - (time.time() - start_time)
+            if time_to_sleep > 0:
+                time.sleep(time_to_sleep)
 
 
 class YouTubeScraper:
@@ -194,9 +210,9 @@ class YouTubeScraper:
             try:
                 self.scrapelivestreams()
             except requests.exceptions.ConnectionError:
-                logging.warning("Youtube API Failed")
+                logging.warning('Youtube API Failed')
             except pymongo.errors.ServerSelectionTimeoutError:
-                logging.warning("Database Error: {}. Time: {}".format(
+                logging.warning('Database Error: {}. Time: {}'.format(
                     sys.exc_info()[0], time.time()))
             total_time = time.time() - start_time
             logging.debug('Elapsed time: {:.2f}s'.format(total_time))
