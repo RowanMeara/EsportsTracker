@@ -160,6 +160,22 @@ class PostgresManager:
             'ON game '
             'USING HASH (name);'
         )
+        indexes['youtube_stream_epoch_idx'] = (
+            'CREATE INDEX IF NOT EXISTS youtube_stream_epoch_idx '
+            'ON youtube_stream(epoch, game_id) '
+        )
+        indexes['twitch_stream_epoch_idx'] = (
+            'CREATE INDEX IF NOT EXISTS twitch_stream_epoch_idx '
+            'ON twitch_stream(epoch, game_id) '
+        )
+        indexes['twitch_channel_affiliation_idx'] = (
+            'CREATE INDEX IF NOT EXISTS twitch_channel_affiliation_idx '
+            'ON twitch_channel(affiliation)'
+        )
+        indexes['youtube_channel_affiliation_idx'] = (
+            'CREATE INDEX IF NOT EXISTS youtube_channel_affiliation_idx '
+            'ON youtube_channel(affiliation)'
+        )
         curs = self.conn.cursor()
         for query in indexes.values():
             curs.execute(query)
