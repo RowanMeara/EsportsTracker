@@ -213,53 +213,60 @@ async function refreshCache () {
   try {
     let start = Date.now()
     let days = config.api.days
-    let host = 'http://localhost:' + util.getPort()
+    const host = 'localhost'
+    const port = util.getPort()
+    const fifteenMins = 1000 * 60 * 15
     let esg = await queries.esportsGames()
     let esgid = []
     esg.forEach((g) => {
       esgid.push(g.game_id)
     })
     let daypaths = [
-      host + '/api/marketshare?days=',
-      host + '/api/twitchtopgames?days=',
-      host + '/api/organizerviewership?days=',
-      host + '/api/esportshoursbygame?days='
+      '/api/marketshare?days=',
+      '/api/twitchtopgames?days=',
+      '/api/organizerviewership?days=',
+      '/api/esportshoursbygame?days='
     ]
-    let urls = []
+    let paths = []
     esgid.forEach((gid) => {
-      daypaths.push(host + '/api/twitchgameviewership?id=' + gid.toString() + '&days=')
-      daypaths.push(host + '/api/youtubegameviewership?id=' + gid.toString() + '&days=')
-      daypaths.push(host + '/api/gameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push('/api/twitchgameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push('/api/youtubegameviewership?id=' + gid.toString() + '&days=')
+      daypaths.push('/api/gameviewership?id=' + gid.toString() + '&days=')
     })
 
     daypaths.forEach((path) => {
       days.forEach((day) => {
-        urls.push(path + day)
+        paths.push(path + day)
       })
     })
 
     let reqs = []
-    for (let i = 0; i < urls.length; i++) {
+    for (let i = 0; i < paths.length; i++) {
       if (i % 200 === 0) {
         await Promise.all(reqs)
         reqs = []
       }
-      let target = urls[i].substring(host.length, urls[i].length)
-      apicache.clear(target)
-      reqs.push(httpPromise(urls[i]))
+      apicache.clear(paths[i])
+      let options = {
+        hostname: host,
+        port: port,
+        path: paths[i],
+        timeout: fifteenMins
+      }
+      reqs.push(httpPromise(options))
     }
     await Promise.all(reqs)
     let total = (Date.now() - start) / 1000
-    console.log('Refresh Complete: ' + urls.length + ' requests in ' + total + 's')
+    console.log('Refresh Complete: ' + paths.length + ' requests in ' + total + 's')
   } catch (e) {
     console.log('Refresh Partially Failed')
     console.trace(e.message)
   }
 }
 
-async function httpPromise (url) {
+async function httpPromise (options) {
   return new Promise((resolve, reject) => {
-    let req = http.get(url)
+    let req = http.get(options)
     req.on('response', res => {
       resolve(res)
     })
