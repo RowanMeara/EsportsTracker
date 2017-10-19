@@ -9,76 +9,66 @@ from setproctitle import setproctitle
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('esportstracker/')])
 
-
 from esportstracker.scrapers import TwitchScraper
 from esportstracker.scrapers import YouTubeScraper
 from esportstracker.aggregator import Aggregator
 
-__DEBUG__ = False
 
-
-def config_logger(fname):
+def config_logger(fname=None, level=logging.WARNING):
     fmt = '%(asctime)s %(levelname)s:%(message)s'
-    logging.basicConfig(format=fmt, filename=fname, level=logging.WARNING)
+    if fname:
+        logging.basicConfig(format=fmt, filename=fname, level=level)
+    else:
+        logging.basicConfig(format=fmt, level=level)
     logging.getLogger('requests').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 
-def run_twitchscraper():
-    config_logger('twitch.log')
+def run(fun, logname, production=True):
+    """
+    Wrapper for entrypoint functions.
+
+    :param f: function, a function that takes a config path and a key path
+        argument.
+    :param logname: str, filename of the log to output in the current directory.
+    :param production: bool, indicates if the environment is production.
+    :return:
+    """
+    if production:
+        config_logger(logname, logging.WARNING)
+    else:
+        config_logger(None, logging.DEBUG)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     cfgpath = dir_path + '/config/config.yml'
     keypath = dir_path + '/../keys.yml'
-
-    while True:
-        try:
-            a = TwitchScraper(cfgpath, keypath)
-            a.scrape()
-        except:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            err = "{}. File: {}, line {}. Full: {}"
-            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
-                                       traceback.format_exc()))
-            time.sleep(60)
-
-
-def run_youtubescraper():
-    config_logger('youtube.log')
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    cfgpath = dir_path + '/config/config.yml'
-    keypath = dir_path + '/../keys.yml'
-    while True:
-        try:
-            a = YouTubeScraper(cfgpath, keypath)
-            a.scrape()
-        except:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            err = "{}. File: {}, line {}. Full: {}"
-            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
-                                       traceback.format_exc()))
-            time.sleep(60)
+    if production:
+        while True:
+            try:
+                fun(cfgpath, keypath)
+            except:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                err = "{}. File: {}, line {}. Full: {}"
+                logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
+                                           traceback.format_exc()))
+                time.sleep(60)
+    else:
+        fun(cfgpath, keypath)
 
 
-def run_aggregator():
-    config_logger('aggregator.log')
-    logging.debug("Aggregator Starting.")
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    cfgpath = dir_path + '/config/config.yml'
-    keypath = dir_path + '/../keys.yml'
-    print('Starting Aggregator')
-    while True:
-        try:
-            a = Aggregator(cfgpath, keypath)
-            a.run()
-        except:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fn = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            err = "{}. File: {}, line {}. Full: {}"
-            logging.warning(err.format(exc_type, fn, exc_tb.tb_lineno,
-                                       traceback.format_exc()))
-            time.sleep(60)
+def run_twitchscraper(cfgpath, keypath):
+    a = TwitchScraper(cfgpath, keypath)
+    a.scrape()
+
+
+def run_youtubescraper(cfgpath, keypath):
+    a = YouTubeScraper(cfgpath, keypath)
+    a.scrape()
+
+
+def run_aggregator(cfgpath, keypath):
+    a = Aggregator(cfgpath, keypath)
+    a.run()
 
 
 if __name__ == '__main__':
@@ -88,15 +78,15 @@ if __name__ == '__main__':
     parser.add_argument('--aggregator', action='store_true', default=False)
     parser.add_argument('--debug', action='store_true', default=False)
     args = parser.parse_args()
-    if args.debug:
-        __DEBUG__ = True
+
+    production = False if args.debug else True
     if args.twitch:
         setproctitle('TwitchScraper')
-        run_twitchscraper()
+        run(run_twitchscraper, 'twitch.log', production)
     elif args.aggregator:
         setproctitle('AggregatorScraper')
-        run_aggregator()
+        run(run_aggregator, 'aggregator.log', production)
     elif args.youtube:
         setproctitle('YoutubeScraper')
-        run_youtubescraper()
+        run(run_youtubescraper, 'youtube.log', production)
     print("No arguments provided.")

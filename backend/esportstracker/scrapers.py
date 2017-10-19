@@ -29,6 +29,7 @@ class TwitchScraper:
         self.config_path = config_path
         self.gamescol = 'twitch_top_games'
         self.streamscol = 'twitch_streams'
+        self.channelscol = 'twitch_channels'
         with open(config_path) as f:
             config = yaml.safe_load(f)
             self.esportsgames = config['esportsgames']
@@ -50,6 +51,7 @@ class TwitchScraper:
 
         self.apiclient = TwitchAPIClient(apihost, clientid, secret)
         self.mongo = MongoManager(dbhost, dbport, dbname, user, pwd, False)
+        self.mongo.check_indexes()
 
     def scrape_top_games(self):
         """
@@ -113,6 +115,34 @@ class TwitchScraper:
             time_to_sleep = self.update_interval - (time.time() - start_time)
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
+
+
+class TwitchChannelScraper(TwitchScraper):
+    """ Retrieves twitch channel information. """
+    def __init__(self, config_path, key_path):
+        super().__init__(config_path, key_path)
+        self.latest_checked = 0
+
+    def retrieve_channels(self):
+        """
+        Retrieves channel information.
+
+        Checks the twitch_streams table and retrieves channel information for
+        any channels that are referenced in the twitch_stream collection but do
+        not exist in the twitch_channel collection.  Streams are checked in
+        chronological order. The timestamp of the last checked stream is
+        remembered so that future calls are much faster.
+
+        :return:
+        """
+
+
+    def scrape(self):
+        """
+        Runs forever scraping channels.
+
+        :return:
+        """
 
 
 class YouTubeScraper:

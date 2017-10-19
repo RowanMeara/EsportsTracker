@@ -337,6 +337,8 @@ class PostgresManager:
             update for each row.
         :return:
         """
+        # TODO: complete method
+
 
     def set_twitch_affiliations(self, channels):
         """
@@ -377,7 +379,10 @@ class MongoManager:
                  password=None, ssl=True):
         self.user = user
         self.password = password
-        self.cols = ['twitch_top_games', 'twitch_streams', 'youtube_streams']
+        self.cols = ['twitch_top_games', 'twitch_streams', 'youtube_streams',
+                     'twitch_channels', 'youtube_channels']
+        self.timestamped_collections = self.cols[0:3]
+        self.channel_collections = self.cols[3:5]
         self.client = MongoClient(host, port, ssl=ssl)
         self.conn = self.client[db_name]
         if user:
@@ -389,20 +394,24 @@ class MongoManager:
 
         :return:
         """
-        for collname in self.cols:
+        for collname in self.timestamped_collections:
             coll = self.conn[collname]
             indexes = coll.index_information()
             if 'timestamp_1' not in indexes:
                 logging.info('Index not found for collection: ' + collname)
                 logging.info('Creating index on collection' + collname)
                 coll.create_index('timestamp')
-
+        for collname in self.channel_collections:
+            coll = self.conn[collname]
+            indexes = coll.index_information()
+            if 'channel_id_1' not in indexes:
+                logging.info('Index not found for collection: ' + collname)
+                logging.info('Creating index on collection' + collname)
+                coll.create_index('channel_id')
 
     def first_entry_after(self, start, collname):
         """
         Returns the timestamp of the first document after start.
-
-        The instance variable client must be initialized to a MongoClient.
 
         :param start: int, unix epoch.
         :param collname: str, name of the collection to search in.

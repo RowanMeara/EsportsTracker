@@ -139,6 +139,32 @@ class TwitchAPIClient:
             curbatch = []
         return res
 
+    def channelinfo(self, userids):
+        """
+        Gets the channel information of the given user(s).
+
+        If the number of user ids is greater than 100, it will take multiple api
+        calls to retrieve the necessary data.
+
+        :param userids: list(int), the twitch user ids.
+        :return: dict, keys are user_ids and values are display names.
+        """
+        res = {}
+        curbatch = []
+        url = self.apiv6host + '/users/'
+        params = {}
+        for userid in userids:
+            curbatch.append(userid)
+            if len(curbatch) < self.API_MAX_RESULTS:
+                continue
+            params['id'] = ','.join(curbatch)
+            res = self._request(url, params).text
+            users = json.loads(res)['data']
+            for user in users:
+                res[int(user['id'])] = user['display_name']
+            curbatch = []
+        return res
+
     def topstreams(self, gameid=None):
         """
         Gets the 100 most popular livestreams.
