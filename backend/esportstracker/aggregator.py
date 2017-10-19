@@ -78,7 +78,7 @@ class Aggregator:
         try:
             requests.get(url)
         except requests.exceptions.ConnectionError:
-            logging.warning('Cache refresh error.')
+            logging.warning('Cannot connect to webserver to refresh cache.')
             return
 
     def _agg_ts(self, man, mongo, table_name, collname):
@@ -169,7 +169,7 @@ class Aggregator:
             self.process(self.ytstreamscol, 'youtube_stream',
                          RowFactory.youtube_streams)
             end = time.time()
-            print("Total Time: {:.2f}".format(end - start))
+            logging.debug('Total Time: {:.2f}'.format(end - start))
             self.refreshwebcache()
             timesleep = 3660 - (int(end) % 3600)
             time.sleep(timesleep)

@@ -6,8 +6,6 @@ import math
 from .models.mongomodels import YTLivestream
 from .models.mongomodels import TwitchGamesAPIResponse, TwitchStreamsAPIResponse
 
-DEBUG = True
-
 
 class TwitchAPIClient:
     """
@@ -361,8 +359,7 @@ class YouTubeAPIClient:
                 break
             params['pageToken'] = json_result['nextPageToken']
 
-        if DEBUG:
-            print(f"API result: {api_result}")
+        logging.debug(f'API result: {api_result}')
 
         broadcasts = []
         vidids = [k['id']['videoId'] for k in raw_broadcasts]

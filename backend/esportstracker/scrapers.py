@@ -9,8 +9,6 @@ from .apiclients import YouTubeAPIClient, TwitchAPIClient
 from .dbinterface import MongoManager
 from .models.mongomodels import YTLivestreams
 
-DEBUG = True
-
 
 # noinspection PyTypeChecker
 class TwitchScraper:
@@ -64,9 +62,8 @@ class TwitchScraper:
         """
         apiresult = self.apiclient.gettopgames()
         m = self.mongo.store(apiresult, self.gamescol)
-        if DEBUG:
-            print(apiresult)
-            print(m)
+        logging.debug(apiresult)
+        logging.debug(m)
 
 
     def _scrape_streams(self, game):
@@ -85,9 +82,8 @@ class TwitchScraper:
         """
         apiresult = self.apiclient.topstreams(game['id'])
         m = self.mongo.store(apiresult, self.streamscol)
-        if DEBUG:
-            print(apiresult)
-            print(m)
+        logging.debug(apiresult)
+        logging.debug(m)
 
     def scrape_esports_games(self):
         for game in self.esportsgames:
@@ -104,9 +100,8 @@ class TwitchScraper:
             try:
                 self.scrape_top_games()
                 self.scrape_esports_games()
-                if DEBUG:
-                    print("Elapsed time: {:.2f}s".format(
-                        time.time() - start_time))
+                tot_time = time.time() - start_time
+                logging.debug('Elapsed time: {:.2f}s'.format(tot_time))
             except requests.exceptions.ConnectionError:
                 logging.warning("Twitch API Failed")
             except pymongo.errors.ServerSelectionTimeoutError:
@@ -190,9 +185,8 @@ class YouTubeScraper:
         res = self.apiclient.most_viewed_gaming_streams(100)
         doc = YTLivestreams(res, int(time.time()))
         mongores = self.db.store(doc, 'youtube_streams')
-        if DEBUG:
-            print(mongores)
-            print(doc)
+        logging.debug(mongores)
+        logging.debug(doc)
 
     def scrape(self):
         while True:
@@ -204,8 +198,8 @@ class YouTubeScraper:
             except pymongo.errors.ServerSelectionTimeoutError:
                 logging.warning("Database Error: {}. Time: {}".format(
                     sys.exc_info()[0], time.time()))
-            if DEBUG:
-                print("Elapsed time: {:.2f}s".format(time.time() - start_time))
+            total_time = time.time() - start_time
+            logging.debug('Elapsed time: {:.2f}s'.format(total_time))
             time_to_sleep = self.update_interval - (time.time() - start_time)
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
