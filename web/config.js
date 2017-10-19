@@ -10,6 +10,6 @@ config.site = {}
 config.site.title = 'EsportsTracker'
 
 config.api = {}
-config.api.days = [3, 7, 30, 60]
+config.api.days = [3, 7, 30, 90]
 
 module.exports = config
