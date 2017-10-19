@@ -215,10 +215,10 @@ class YoutubeStream(Row):
     The title and number of viewers of a stream for a given hour.
     """
     TABLE_NAME = 'youtube_stream'
-    __slots__ = ['video_id', 'epoch', 'channel_id', 'game_id', 'viewers', 'title',
-                 'language', 'tags']
+    __slots__ = ['video_id', 'epoch', 'channel_id', 'game_id', 'viewers',
+                 'title', 'language', 'tags']
 
-    def __init__(self, video_id, channel_id, epoch, game_id, viewers, title,
+    def __init__(self, video_id, epoch, channel_id, game_id, viewers, title,
                  language, tags):
         self.video_id = video_id
         self.epoch = epoch

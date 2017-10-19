@@ -1,5 +1,5 @@
 import $ from 'jquery'
-import {charts} from '../modules/loadcharts.js'
+import {charts} from '../modules/loadCharts.js'
 import {GoogleCharts} from '../modules/googleCharts.js'
 import '../modules/reqs.js'
 

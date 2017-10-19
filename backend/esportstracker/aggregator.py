@@ -292,5 +292,5 @@ class RowFactory:
         vcs = RowFactory.average_viewers(ls, start, end)
         streams = YoutubeStream.from_vcs(ls, vcs, start)
         for stream in streams:
-            yti.classify(stream)
+            yti.classify_game(stream)
         return [channels, streams]

@@ -18,6 +18,7 @@ def classifydb():
 
     Standalone classifier for testing purposes.
     """
+    print('Classifying YouTube Games')
     start = time.time()
     cfgpath = '../esportstracker/config/config.yml'
     keypath = '../keys.yml'
@@ -40,10 +41,12 @@ def classifydb():
     epoch = pgm.earliest_epoch('youtube_stream')
     while epoch < now:
         if epoch % 360000 == 0:
-            print(f'Total Scanned: {count} Total Updated: {updated}')
+            pgm.commit()
+            print(f'Total Scanned: {count}  Total Updated: {updated} ',
+                  '{:.1f} entries/s'.format(count/(time.time()-start)))
         yts = pgm.get_yts(epoch, limit)
         for stream in yts:
-            yti.classify(stream)
+            yti.classify_game(stream)
             if stream.game_id:
                 updated += 1
                 pgm.update_ytstream_game(stream)
@@ -55,6 +58,7 @@ def classifydb():
     print('Classification Complete: {:.02f}s'.format(end - start))
     print('Total scanned: ', count)
     print('Total updated: ', updated)
+    print('Percent Classified: {:.1f}%'.format(100*updated/count))
 
 
 if __name__ == '__main__':

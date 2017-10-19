@@ -1,4 +1,4 @@
-from esportstracker.models import *
+from esportstracker.models.postgresmodels import *
 import psycopg2
 import logging
 from psycopg2 import sql
@@ -6,7 +6,7 @@ from psycopg2 import extras
 import pymongo
 from pymongo import MongoClient
 from collections import OrderedDict
-import json
+
 
 class PostgresManager:
     """

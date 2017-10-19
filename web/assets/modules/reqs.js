@@ -1,5 +1,5 @@
 import 'jquery'
-import './loadcharts.js'
+import './loadCharts.js'
 import './googleCharts.js'
 import 'bootstrap/dist/js/bootstrap.js'
 import '../stylesheets/style.sass'

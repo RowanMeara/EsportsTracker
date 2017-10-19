@@ -42,9 +42,14 @@ class YoutubeIdentifier:
         fifa18 = ['FIFA 18', 'FIFA 2K18']
         nba17 = ['NBA 2K17', 'NBA 17']
         nba18 = ['NBA 2K18', 'NBA 18']
-        gtav = ['GTA V', 'GTA 5']
+        gtav = ['GTA V', 'GTA 5', 'Grand Theft Auto']
         shadowofmordor = ['Shadow of Mordor']
         shadowofwar = ['Shadow of War']
+        cuphead = ['Cuphead']
+        fortnite = ['Fortnite']
+        fracturedbutwhole = ['Fractured But Whole']
+        warframe = ['Warframe']
+        roblox = ['Roblox']
         # Youtube is infested with TV restreams pretending to be games
         # because YouTube Gaming appears to lack any kind of manual moderation.
         # Twitch has traditionally broadcast TV shows in the 'Creative' category
@@ -52,7 +57,7 @@ class YoutubeIdentifier:
         # restreams.
         tv = ['Family Guy', 'South Park', 'Rick and Morty', 'Full Episodes',
               'Futurama', 'SpongeBob SquarePants', 'The Simpsons', '24/7 Music',
-              'Dance Music']
+              'Dance Music', 'All Radio Stations']
         self.keywords = {
             493057: pubg,
             21779: lol,
@@ -75,16 +80,21 @@ class YoutubeIdentifier:
             493112: nba17,
             495056: nba18,
             32982: gtav,
-            488191: tv,
             458619: shadowofmordor,
-            496000: shadowofwar
+            496000: shadowofwar,
+            459064: cuphead,
+            33214: fortnite,
+            490378: fracturedbutwhole,
+            66170: warframe,
+
+            488191: tv
         }
 
-    def classify(self, yts):
+    def classify_game(self, yts):
         """
         Determines the game of a youtube stream.
 
-        Takes a YoutubeStream object and attempts to classify the game that
+        Takes a YoutubeStream object and attempts to classify_game the game that
         based on the stream's channel, title, and tags. If a high-confidence
         match is found, the stream's game_id instance variable is modified.
 
