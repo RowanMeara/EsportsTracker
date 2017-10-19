@@ -3,7 +3,7 @@ import time
 import logging
 import json
 import math
-from .models.mongomodels import YTLivestream
+from .models.mongomodels import YTLivestream, TwitchChannelDoc
 from .models.mongomodels import TwitchGamesAPIResponse, TwitchStreamsAPIResponse
 
 
@@ -121,13 +121,14 @@ class TwitchAPIClient:
         :param userids: list(int), the twitch user ids.
         :return: dict, keys are user_ids and values are display names.
         """
+        # TODO use channel_info method.
         res = {}
         curbatch = []
         url = self.apiv6host + '/users/'
         params = {}
         for userid in userids:
-            curbatch.append(userid)
-            if len(curbatch) < self.API_MAX_RESULTS:
+            curbatch.append(str(userid))
+            if userid != userids[-1] and len(curbatch) < self.API_MAX_RESULTS:
                 continue
             params['id'] = ','.join(curbatch)
             res = self._request(url, params).text
@@ -144,24 +145,27 @@ class TwitchAPIClient:
         If the number of user ids is greater than 100, it will take multiple api
         calls to retrieve the necessary data.
 
-        :param userids: list(int), the twitch user ids.
-        :return: dict, keys are user_ids and values are display names.
+        :param userids: int or str or list, the twitch user ids.
+        :return: dict, keys are channel_ids and values are TwitchChannelDoc.
         """
+        if type(userids) == int or type(userids) == str:
+            userids = [userids]
         res = {}
         curbatch = []
         url = self.apiv6host + '/users/'
         params = {}
+        users = []
         for userid in userids:
-            curbatch.append(userid)
-            if len(curbatch) < self.API_MAX_RESULTS:
+            curbatch.append(str(userid))
+            if userid != userids[-1] and len(curbatch) < self.API_MAX_RESULTS:
                 continue
             params['id'] = ','.join(curbatch)
-            res = self._request(url, params).text
-            users = json.loads(res)['data']
-            for user in users:
-                res[int(user['id'])] = user['display_name']
+            print(params)
+            res = self._request(url, params)
+            print(res.text)
+            users += TwitchChannelDoc.fromapiresponse(res)
             curbatch = []
-        return res
+        return {user.channel_id:user for user in users}
 
     def topstreams(self, gameid=None):
         """

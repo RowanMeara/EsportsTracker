@@ -30,6 +30,7 @@ class MongoDoc(ABC):
     """
     Abstract base clase for MongoDB Documents.
     """
+    @abstractmethod
     def todoc(self):
         """
         Method for creating the dict to insert into MongoDB.
@@ -202,8 +203,58 @@ class TwitchChannelDoc(MongoDoc):
     """
     Twitch User API response
     """
-    def __init__(self, channel_id, login, display_name, ):
-        pass
+    def __init__(self, broadcaster_type, description, display_name, channel_id,
+                 login, offline_image_url, profile_image_url, type, followers):
+        if type not in ['staff', 'admin', 'global_mod', '']:
+            raise ValueError
+        # TODO: raise better exception.
+        if broadcaster_type not in ['partner', 'affiliate', '']:
+            raise ValueError
+        self.broadcaster_type = broadcaster_type
+        self.description = description
+        self.display_name = display_name
+        self.channel_id = channel_id
+        self.login = login
+        self.offline_image_url = offline_image_url
+        self.profile_image_url = profile_image_url
+        self.followers = followers
+
+    @staticmethod
+    def fromapiresponse(resp):
+        data = json.loads(resp.text)['data']
+        users = []
+        for user in data:
+            params = {
+                'broadcaster_type': user['broadcaster_type'],
+                'description': user['description'],
+                'display_name': user['display_name'],
+                'channel_id': user['id'],
+                'login': user['login'],
+                'offline_image_url': user['offline_image_url'],
+                'profile_image_url': user['profile_image_url'],
+                'type': user['type'],
+                'followers': user['view_count']
+            }
+            users.append(TwitchChannelDoc(**params))
+        return users
+
+    @staticmethod
+    def fromdoc(doc):
+        params = {
+            'broadcaster_type': doc['broadcaster_type'],
+            'description': doc['description'],
+            'display_name': doc['display_name'],
+            'channel_id': doc['channel_id'],
+            'login': doc['login'],
+            'offline_image_url': doc['offline_image_url'],
+            'profile_image_url': doc['profile_image_url'],
+            'type': doc['type'],
+            'view_count': doc['view_count']
+        }
+        return TwitchChannelDoc(**params)
+
+    def todoc(self):
+        return vars(self)
 
 class YTLivestreams(Aggregatable, MongoDoc):
     """

@@ -116,9 +116,7 @@ class TwitchChannelScraper(TwitchScraper):
     """ Retrieves twitch channel information. """
     def __init__(self, config_path, key_path):
         super().__init__(config_path, key_path)
-        self.latest_checked = 0
-
-
+        self.time_last_checked = 0
 
     def retrieve_channels(self):
         """
@@ -132,7 +130,10 @@ class TwitchChannelScraper(TwitchScraper):
 
         :return:
         """
-
+        a = self.apiclient.channelinfo([65186382, 38865133])
+        print(a)
+        print('done')
+        exit()
 
     def scrape(self):
         """
