@@ -4,7 +4,7 @@ import time
 from ruamel import yaml
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('esportstracker/')])
+sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('scripts/')])
 
 from esportstracker.classifiers import YoutubeIdentifier
 from esportstracker.dbinterface import PostgresManager
