@@ -22,7 +22,6 @@ let options = {
 let cache = apicache.options(options).middleware
 
 const DAY = 60 * 60 * 24
-const NUM_CORES = os.cpus().length
 
 router.get('/twitchtopgames', cache(), async function (req, res) {
   try {
@@ -241,7 +240,7 @@ async function refreshCache () {
 
     let reqs = []
     for (let i = 0; i < urls.length; i++) {
-      if (i % NUM_CORES === 0) {
+      if (i % 200 === 0) {
         await Promise.all(reqs)
         reqs = []
       }

@@ -325,6 +325,19 @@ class PostgresManager:
         cursor = self.conn.cursor()
         cursor.execute(query, (yts.game_id, yts.channel_id, yts.epoch))
 
+    def update_rows(self, rows, fields_to_update):
+        """
+        Updates database rows.
+
+        Rows are matched using their primary key and then the selected fields
+        are then updated.
+
+        :param rows: Row or list(Row), the rows to update.
+        :param fields_to_update: str or list(str), the names of the fields to
+            update for each row.
+        :return:
+        """
+
     def set_twitch_affiliations(self, channels):
         """
         Upserts the twitch_channel affiliations.
