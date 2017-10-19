@@ -157,12 +157,11 @@ class TwitchAPIClient:
         users = []
         for userid in userids:
             curbatch.append(str(userid))
-            if userid != userids[-1] and len(curbatch) < self.API_MAX_RESULTS:
+            # The API does not match their documentation currently.
+            if userid != userids[-1] and len(curbatch) < 1:
                 continue
             params['id'] = ','.join(curbatch)
-            print(params)
             res = self._request(url, params)
-            print(res.text)
             users += TwitchChannelDoc.fromapiresponse(res)
             curbatch = []
         return {user.channel_id:user for user in users}
