@@ -14,6 +14,7 @@ from esportstracker.apiclients import YouTubeAPIClient, TwitchAPIClient
 Upserts organizer affiliations for twitch and youtube channels.
 """
 
+
 def getorgs():
     """
     Loads the esports org file.
@@ -25,7 +26,6 @@ def getorgs():
     """
     parent = DIR_PATH[0:len(DIR_PATH) - len('scripts/')]
     chanpath = parent + '/esportstracker/config/esports_channels.yml'
-    configpath = parent + '/esportstracker/config/config.yml'
     secretspath = parent + '/keys.yml'
     with open(chanpath, 'r') as f:
         cfg = yaml.safe_load(f)

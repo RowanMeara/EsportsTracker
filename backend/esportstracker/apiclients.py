@@ -14,6 +14,7 @@ class TwitchAPIClient:
     API_WINDOW_LENGTH = 60
     DEFAULT_REQUEST_LIMIT = 30
     API_MAX_RESULTS = 100
+
     def __init__(self, host, clientid, secret):
         """
         TwitchAPIClient Constructor.
@@ -150,7 +151,6 @@ class TwitchAPIClient:
         """
         if type(userids) == int or type(userids) == str:
             userids = [userids]
-        res = {}
         curbatch = []
         url = self.apiv6host + '/users/'
         params = {}
@@ -164,7 +164,7 @@ class TwitchAPIClient:
             res = self._request(url, params)
             users += TwitchChannelDoc.fromapiresponse(res)
             curbatch = []
-        return {user.channel_id:user for user in users}
+        return {user.channel_id: user for user in users}
 
     def topstreams(self, gameid=None):
         """
@@ -372,7 +372,7 @@ class YouTubeAPIClient:
             # providing the pageToken.  Check if the result is empty to avoid
             # unnecessary api calls.
             if (len(json_result['items']) < self.maxres or
-                'nextPageToken' not in json_result):
+                    'nextPageToken' not in json_result):
                 break
             params['pageToken'] = json_result['nextPageToken']
 
