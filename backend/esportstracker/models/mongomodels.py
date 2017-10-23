@@ -50,6 +50,8 @@ class TwitchGamesAPIResponse(Aggregatable, MongoDoc):
     """
     Model representing Twitch top games API response.
     """
+    COLLECTION = 'twitch_top_games'
+
     def __init__(self, timestamp, games):
         """
         Constructor.
@@ -123,6 +125,8 @@ class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
     """
     Model representing Twitch Streams API response.
     """
+    COLLECTION = 'twitch_streams'
+
     def __init__(self, timestamp, streams, game_id):
         self.timestamp = int(timestamp)
         self.streams = streams
@@ -203,6 +207,8 @@ class TwitchChannelDoc(MongoDoc):
     """
     Twitch User API response
     """
+    COLLECTION = 'twitch_channels'
+
     def __init__(self, broadcaster_type, description, display_name, channel_id,
                  login, offline_image_url, profile_image_url, type, followers):
         if type not in ['staff', 'admin', 'global_mod', '']:
@@ -260,6 +266,8 @@ class YTLivestreams(Aggregatable, MongoDoc):
     """
     Model representing document in youtube_top_streams Mongo collection.
     """
+    COLLECTION = 'youtube_streams'
+
     def __init__(self, streams, timestamp):
         """
         YTLivestreams constructor.

@@ -465,7 +465,7 @@ class MongoManager:
         ).sort('timestamp', pymongo.ASCENDING)
         return cursor
 
-    def store(self, doc, collection):
+    def store(self, doc, collection=None):
         """
         Stores a MongoDoc.
 
@@ -473,6 +473,8 @@ class MongoManager:
         :param collection: str, the name of the collection to store it in.
         :return: str, result of the insert operation.
         """
+        if not collection:
+            collection = doc.COLLECTION
         if collection not in self.cols:
             raise pymongo.errors.CollectionInvalid
         collection = self.conn[collection]

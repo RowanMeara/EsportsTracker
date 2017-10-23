@@ -61,7 +61,7 @@ class TwitchScraper:
         :return: requests.Response, The response to the API request.
         """
         apiresult = self.apiclient.gettopgames()
-        m = self.mongo.store(apiresult, self.gamescol)
+        m = self.mongo.store(apiresult)
         logging.debug(apiresult)
         logging.debug(m)
 
@@ -81,7 +81,7 @@ class TwitchScraper:
         :return:
         """
         apiresult = self.apiclient.topstreams(game['id'])
-        m = self.mongo.store(apiresult, self.streamscol)
+        m = self.mongo.store(apiresult)
         logging.debug(apiresult)
         logging.debug(m)
 
@@ -130,8 +130,9 @@ class TwitchChannelScraper(TwitchScraper):
 
         :return:
         """
+        # Need to get a batch of channels to retrieve
         a = self.apiclient.channelinfo([65186382, 38865133])
-        print(a)
+        self.mongo.store(a)
         print('ls'
               'lone')
         exit()
@@ -202,7 +203,7 @@ class YouTubeScraper:
         """
         res = self.apiclient.most_viewed_gaming_streams(100)
         doc = YTLivestreams(res, int(time.time()))
-        mongores = self.db.store(doc, 'youtube_streams')
+        mongores = self.db.store(doc)
         logging.debug(mongores)
         logging.debug(doc)
 
