@@ -265,7 +265,7 @@ class RowFactory:
             vcs.update(vc)
         channels = TwitchChannel.from_api_resp(apiresp)
         streams = TwitchStream.from_vcs(apiresp, vcs, start)
-        return channels + streams
+        return streams + channels
 
     @staticmethod
     def youtube_streams(docs, start, end):

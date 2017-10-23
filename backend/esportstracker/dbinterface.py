@@ -30,9 +30,9 @@ class PostgresManager:
 
         self.conn = psycopg2.connect(host=host, port=port, user=user,
                                      password=password, dbname=dbname)
-        self.tablenames = {'game', 'twitch_game_vc', 'twitch_stream',
-                           'twitch_channel', 'tournament_organizer',
-                           'youtube_channel', 'youtube_stream'}
+        self.tablenames = ['game', 'twitch_game_vc', 'tournament_organizer',
+                           'twitch_channel', 'twitch_stream',
+                           'youtube_channel', 'youtube_stream']
         self.index_names = {'game_name_idx'}
         self.esports_games = esports_games.copy()
         self.gamename_cache = {}
@@ -246,15 +246,10 @@ class PostgresManager:
         :param rows: list(Row), list of rows to store.
         :return: dict, keys are table names and values are lists of Row objects.
         """
-        # TODO: implement dependency list so rows are always stored in the
-        # correct order.
-        res = {}
+        res = {tn: [] for tn in self.tablenames}
         for row in rows:
-            if row.TABLE_NAME in res:
-                res[row.TABLE_NAME].append(row)
-            else:
-                res[row.TABLE_NAME] = [row]
-        return res
+            res[row.TABLE_NAME].append(row)
+        return {tn: rows for tn, rows in res.items() if rows}
 
     def store_rows(self, rows, commit=False):
         """
@@ -274,7 +269,10 @@ class PostgresManager:
             return False
         groups = self._group_rows(rows)
         with self.conn.cursor() as curs:
-            for tablename, group in groups.items():
+            for tablename in self.tablenames:
+                if tablename not in groups:
+                    continue
+                group = groups[tablename]
                 query = (f'INSERT INTO {tablename} '
                          'VALUES %s '
                          'ON CONFLICT DO NOTHING ')
