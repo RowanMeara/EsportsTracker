@@ -219,7 +219,7 @@ class TwitchChannelDoc(MongoDoc):
         self.broadcaster_type = broadcaster_type
         self.description = description
         self.display_name = display_name
-        self.channel_id = channel_id
+        self.channel_id = int(channel_id)
         self.login = login
         self.offline_image_url = offline_image_url
         self.profile_image_url = profile_image_url

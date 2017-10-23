@@ -6,7 +6,7 @@ from psycopg2 import extras
 import pymongo
 from pymongo import MongoClient
 from collections import OrderedDict
-
+import collections
 
 class PostgresManager:
     """
@@ -447,6 +447,27 @@ class MongoManager:
         else:
             return (1 << 31) - 1
 
+    def findall(self, collname):
+        """
+        Returns an iterator to all documents in the collection.
+
+        :param collname: str, name of the collection.
+        :return:
+        """
+        if collname not in self.cols:
+            raise KeyError('Collection not found ', collname)
+        col = self.conn[collname]
+        return col.find()
+
+    def contains_channel(self, channel_id):
+        """
+        Checks if twitch_channels contains the given channel.
+
+        :param channel_id: int, the twitch channel's user_id.
+        :return: bool, True if the collection contains the channel.
+        """
+        return self.conn.twitch_channels.count({'channel_id': channel_id})
+
     def docsbetween(self, start, end, collname):
         """
         Returns cursor to entries with timestamps between start and end.
@@ -465,17 +486,20 @@ class MongoManager:
         ).sort('timestamp', pymongo.ASCENDING)
         return cursor
 
-    def store(self, doc, collection=None):
+    def store(self, docs):
         """
         Stores a MongoDoc.
 
-        :param doc: mongomodels.MongoDoc, the document to be stored.
+        :param docs: mongomodels.MongoDoc or iterable, the document(s) to be
+            stored.
         :param collection: str, the name of the collection to store it in.
         :return: str, result of the insert operation.
         """
-        if not collection:
-            collection = doc.COLLECTION
-        if collection not in self.cols:
-            raise pymongo.errors.CollectionInvalid
-        collection = self.conn[collection]
-        return collection.insert_one(doc.todoc())
+        if not isinstance(docs, collections.Iterable):
+            docs = [docs]
+        for doc in docs:
+            if doc.COLLECTION not in self.cols:
+                raise pymongo.errors.CollectionInvalid
+            collection = self.conn[doc.COLLECTION]
+            lastid = collection.insert_one(doc.todoc())
+        return lastid

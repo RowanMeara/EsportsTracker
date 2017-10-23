@@ -37,7 +37,7 @@ class TwitchAPIClient:
 
         self.req_remaining = self.DEFAULT_REQUEST_LIMIT
         self.rate_reset = None
-
+        self.first_request = True
         self.gameidcache = {}
 
     def _request(self, url, params):
@@ -62,6 +62,16 @@ class TwitchAPIClient:
             # of the time the utf-8 header is missing.
             api_result.encoding = 'utf8'
             if api_result.status_code == requests.codes.okay:
+                # Sometimes we will start with no api requests left and
+                # the Twitch API will return an okay status code but nothing
+                # in the response.  Other times, the Twitch API will just return
+                # nothing with on okay status code instead of failing.
+                if self.first_request and api_result.text == '':
+                    time.sleep(self.API_WINDOW_LENGTH)
+                    self.first_request = False
+                    continue
+
+                self.first_request = False
                 # The Twitch API capitalization is inconsistent.
                 headers = {**api_result.headers}
                 headers = {str(k).lower(): v for k, v in headers.items()}

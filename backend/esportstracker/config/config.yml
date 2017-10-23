@@ -18,6 +18,15 @@ twitch:
     host: 'localhost'
     port: 27017
   update_interval: 600
+twitch_channel_scraper:
+  api:
+    host: https://api.twitch.tv/
+  mongodb:
+    host: mongo.esportstracker.net
+    db_name: esports_stats
+    port: 27017
+    ssl: True
+  update_interval: 600
 youtube:
   api:
     base_url: https://www.googleapis.com/youtube/v3

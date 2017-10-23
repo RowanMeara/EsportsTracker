@@ -7,7 +7,7 @@ import pymongo.errors
 
 from .apiclients import YouTubeAPIClient, TwitchAPIClient
 from .dbinterface import MongoManager
-from .models.mongomodels import YTLivestreams
+from .models.mongomodels import YTLivestreams, TwitchStreamsAPIResponse
 
 
 # noinspection PyTypeChecker
@@ -25,9 +25,6 @@ class TwitchScraper:
             field and a 'twitchclientsecret' field.
         """
         self.config_path = config_path
-        self.gamescol = 'twitch_top_games'
-        self.streamscol = 'twitch_streams'
-        self.channelscol = 'twitch_channels'
         with open(config_path) as f:
             config = yaml.safe_load(f)
             self.esportsgames = config['esportsgames']
@@ -112,11 +109,50 @@ class TwitchScraper:
                 time.sleep(time_to_sleep)
 
 
-class TwitchChannelScraper(TwitchScraper):
+class TwitchChannelScraper:
     """ Retrieves twitch channel information. """
     def __init__(self, config_path, key_path):
-        super().__init__(config_path, key_path)
-        self.time_last_checked = 0
+        self.config_path = config_path
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+            config = config['twitch_channel_scraper']
+            self.update_interval = config['update_interval']
+            dbname = config['mongodb']['db_name']
+            dbport = config['mongodb']['port']
+            dbhost = config['mongodb']['host']
+            ssl = config['mongodb']['ssl']
+            apihost = config['api']['host']
+        with open(key_path) as f:
+            keys = yaml.safe_load(f)
+            clientid = keys['twitchclientid']
+            secret = keys['twitchsecret']
+            user, pwd = None, None
+            if 'mongodb' in keys:
+                user = keys['mongodb']['write']['user']
+                pwd = keys['mongodb']['write']['pwd']
+
+        self.apiclient = TwitchAPIClient(apihost, clientid, secret)
+        self.mongo = MongoManager(dbhost, dbport, dbname, user, pwd, ssl)
+        self.mongo.check_indexes()
+
+    def retrieve_and_store(self, channel_ids):
+        """
+        Checks the channel_ids against the database and stores any that are
+        missing.
+
+        :param channel_ids: list(channel_ids), list of channel_ids.
+        :return: int, the number of channels that were new.
+        """
+        channel_ids = list(filter(lambda x: not self.mongo.contains_channel(x),
+                                  channel_ids))
+        # TODO: Handle banned channels.
+        if channel_ids:
+            docs = self.apiclient.channelinfo(channel_ids)
+            if not docs:
+                return
+            res = self.mongo.store(docs.values())
+            logging.debug(res)
+            return len(docs)
 
     def retrieve_channels(self):
         """
@@ -130,16 +166,24 @@ class TwitchChannelScraper(TwitchScraper):
 
         :return:
         """
-        # Need to get a batch of channels to retrieve
-        a = self.apiclient.channelinfo([65186382, 38865133])
-        self.mongo.store(a)
-        print('ls'
-              'lone')
-        exit()
+        # TODO: Don't iterate through the entire database every time the
+        # TODO: channel scraper runs.
+        it = self.mongo.findall('twitch_streams')
+        for doc in it:
+            start = time.time()
+            res = TwitchStreamsAPIResponse.fromdoc(doc)
+            channel_ids = [s.broadcaster_id for s in res.streams.values()]
+            num = self.retrieve_and_store(channel_ids)
+            end = time.time()
+            logging.debug('Time: {:.02f}s New Docs: {}'.format(
+                end-start, num))
 
     def scrape(self):
         """
         Runs forever scraping channels.
+
+        This should not be run on a server that also uses the Twitch API for
+        something else because this will use all of the IP address's API quota.
 
         :return:
         """

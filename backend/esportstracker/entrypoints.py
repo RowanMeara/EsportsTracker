@@ -18,6 +18,8 @@ def config_logger(fname=None, level=logging.WARNING):
     fmt = '%(asctime)s %(levelname)s:%(message)s'
     if fname:
         logging.basicConfig(format=fmt, filename=fname, level=level)
+    elif level == logging.DEBUG:
+        logging.basicConfig(level=level)
     else:
         logging.basicConfig(format=fmt, level=level)
     logging.getLogger('requests').setLevel(logging.WARNING)
