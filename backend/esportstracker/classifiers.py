@@ -49,12 +49,14 @@ class YoutubeIdentifier:
         fortnite = ['Fortnite']
         fracturedbutwhole = ['Fractured But Whole']
         warframe = ['Warframe']
+        # TODO: handle twitch not having a game like in the case of Roblox.
         roblox = ['Roblox']
+        clashroyale = ['Clash Royale']
         # Youtube is infested with TV restreams pretending to be games
         # because YouTube Gaming appears to lack any kind of manual moderation.
-        # Twitch has traditionally broadcast TV shows in the 'Creative' category
-        # so it is used as the 'game' for all of YouTube Gaming's illegal
-        # restreams.
+        # Twitch has traditionally broadcast TV shows in the 'Twitch Presents'
+        # category so it is used as the 'game' for all of YouTube Gaming's
+        # unauthorized restreams.
         tv = ['Family Guy', 'South Park', 'Rick and Morty', 'Full Episodes',
               'Futurama', 'SpongeBob SquarePants', 'The Simpsons', '24/7 Music',
               'Dance Music', 'All Radio Stations']
@@ -86,8 +88,9 @@ class YoutubeIdentifier:
             33214: fortnite,
             490378: fracturedbutwhole,
             66170: warframe,
+            491168: clashroyale,
 
-            488191: tv
+            498860: tv
         }
 
     def classify_game(self, yts):

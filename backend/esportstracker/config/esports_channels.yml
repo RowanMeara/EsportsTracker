@@ -10,10 +10,13 @@ twitch:
   - {id: 42508152, name: StarCraft}
   - {id: 22212874, name: MLG}
   - {id: 48866350, name: mlgbravo}
+  - {id: 156567621, name: OverwatchContenders}
   Bluehole:
   - {id: 127506955, name: playBATTLEGROUNDS}
   CyberPower:
   - {id: 49946840, name: CyberPowerGaming}
+  Daybreak Game Company:
+  - {id: 114029128, name: H1Z1}
   DreamLeague:
   - {id: 50160915, name: DreamLeague}
   Dreamhack:
@@ -62,6 +65,8 @@ twitch:
   Hi-Rez Studios:
   - {id: 31542318, name: smitegame}
   - {id: 31500812, name: HiRezTV}
+  Northern Arena:
+  - {id: 106829863, name: NorthernArena}
   OGN:
   - {id: 32179353, name: OGNGlobal}
   Other:

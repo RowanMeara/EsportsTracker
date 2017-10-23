@@ -197,6 +197,20 @@ class TwitchAPIClient:
             rawstreams += res['data']
         return TwitchStreamsAPIResponse.fromapiresponse(rawstreams)
 
+    def getuserid(self, username):
+        """
+        Converts one username to a userid.
+
+        :param username: str, user's login name.
+        :return: int, the user's id.
+        """
+        url = self.apiv5host + '/users/'
+        params = {'login': username}
+        res = self._request(url, params).text
+        res = json.loads(res)
+        uid = res['users'][0]['_id']
+        return uid
+
 
 class YouTubeAPIClient:
     """
