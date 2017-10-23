@@ -236,6 +236,26 @@ class PostgresManager:
         cursor.execute(query)
         return cursor.fetchone()[0]
 
+    def _group_rows(self, rows):
+        """
+        Groups the rows by table.
+
+        Implemented so that the store_rows method can take rows from multiple
+        different tables and store them all.
+
+        :param rows: list(Row), list of rows to store.
+        :return: dict, keys are table names and values are lists of Row objects.
+        """
+        # TODO: implement dependency list so rows are always stored in the
+        # correct order.
+        res = {}
+        for row in rows:
+            if row.TABLE_NAME in res:
+                res[row.TABLE_NAME].append(row)
+            else:
+                res[row.TABLE_NAME] = [row]
+        return res
+
     def store_rows(self, rows, commit=False):
         """
         Stores the rows in the specified table.
@@ -252,15 +272,17 @@ class PostgresManager:
         """
         if not rows or rows[0].TABLE_NAME not in self.tablenames:
             return False
-        tablename = rows[0].TABLE_NAME
-        query = (f'INSERT INTO {tablename} '
-                 'VALUES %s '
-                 'ON CONFLICT DO NOTHING ')
+        groups = self._group_rows(rows)
+        with self.conn.cursor() as curs:
+            for tablename, group in groups.items():
+                query = (f'INSERT INTO {tablename} '
+                         'VALUES %s '
+                         'ON CONFLICT DO NOTHING ')
 
-        rows = [x.to_row() for x in rows]
-        template = '({})'.format(','.join(['%s' for _ in range(len(rows[0]))]))
-        curs = self.conn.cursor()
-        extras.execute_values(curs, query, rows, template, 1000)
+                rowtups = [x.to_row() for x in group]
+                values = ','.join(['%s' for _ in range(len(rowtups[0]))])
+                template = '({})'.format(values)
+                extras.execute_values(curs, query, rowtups, template, 1000)
         if commit:
             self.conn.commit()
         return True

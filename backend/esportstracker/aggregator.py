@@ -139,8 +139,7 @@ class Aggregator:
             docs = mongo.docsbetween(curhrstart, curhrend,
                                      collection)
             rows = fun(docs, curhrstart, curhrend)
-            for onetype in rows:
-                man.store_rows(onetype, True)
+            man.store_rows(rows, True)
             curhrstart += 3600
             curhrend += 3600
             if curhrstart % 36000 == 0:
@@ -232,7 +231,7 @@ class RowFactory:
         games = Game.from_docs(apiresp)
         vcs = RowFactory.average_viewers(apiresp, start, end)
         vcs = TwitchGameVC.from_vcs(vcs, start)
-        return [games, vcs]
+        return games + vcs
 
     @staticmethod
     def twitch_streams(docs, start, end):
@@ -266,7 +265,7 @@ class RowFactory:
             vcs.update(vc)
         channels = TwitchChannel.from_api_resp(apiresp)
         streams = TwitchStream.from_vcs(apiresp, vcs, start)
-        return [channels, streams]
+        return channels + streams
 
     @staticmethod
     def youtube_streams(docs, start, end):
@@ -293,4 +292,4 @@ class RowFactory:
         streams = YoutubeStream.from_vcs(ls, vcs, start)
         for stream in streams:
             yti.classify_game(stream)
-        return [channels, streams]
+        return channels + streams
