@@ -132,7 +132,8 @@ class TwitchChannelScraper(TwitchScraper):
         """
         a = self.apiclient.channelinfo([65186382, 38865133])
         print(a)
-        print('done')
+        print('ls'
+              'lone')
         exit()
 
     def scrape(self):
