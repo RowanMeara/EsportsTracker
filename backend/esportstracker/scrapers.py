@@ -154,7 +154,7 @@ class TwitchChannelScraper:
             logging.debug(res)
             return len(docs)
 
-    def retrieve_channels(self):
+    def scan_entire_db(self):
         """
         Retrieves channel information.
 
@@ -178,6 +178,17 @@ class TwitchChannelScraper:
             logging.debug('Time: {:.02f}s New Docs: {}'.format(
                 end-start, num))
 
+    def retrieve_missing_postgres(self):
+        """
+        Retrieves Twitch channels whose login is null.
+
+        Channels that are banned are ignored and are denoted by having a
+        description of 'BANNED'.
+
+        :return:
+        """
+
+
     def scrape(self):
         """
         Runs forever scraping channels.
@@ -190,7 +201,7 @@ class TwitchChannelScraper:
         while True:
             start_time = time.time()
             try:
-                self.retrieve_channels()
+                self.scan_entire_db()
                 tot_time = time.time() - start_time
                 logging.debug('Elapsed time: {:.2f}s'.format(tot_time))
             except requests.exceptions.ConnectionError:

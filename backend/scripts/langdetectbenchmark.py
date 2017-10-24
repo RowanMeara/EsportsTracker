@@ -63,7 +63,7 @@ def main():
     total = end - start
     num_detected = iterations * len(titles)
     entries_per_second = num_detected/total
-    print(f'Using YoutubeStream: {entries_per_second} e/s')
+    print(f'Using YouTubeStream: {entries_per_second} e/s')
     print(languages)
 
 if __name__ == '__main__':

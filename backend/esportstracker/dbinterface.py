@@ -8,6 +8,7 @@ from pymongo import MongoClient
 from collections import OrderedDict
 import collections
 
+
 class PostgresManager:
     """
     Class for managing the Postgres instance.
@@ -284,6 +285,26 @@ class PostgresManager:
         if commit:
             self.conn.commit()
         return True
+
+    def null_twitch_channels(self, limit):
+        """
+        Retrieve TwitchChannels without a name or description.
+
+        :param limit: int, the maximum number of channels to return.
+        :return:
+        """
+        if type(limit) != int:
+            raise TypeError
+        sql = ('SELECT * '
+               'FROM twitch_channel '
+               'WHERE name IS NULL '
+               'AND description != "BANNED" '
+               'LIMIT %s;')
+        cursor = self.conn.cursor()
+        cursor.execute(sql, (limit,))
+        res = cursor.fetchall()
+        `
+
 
     def game_name_to_id(self, name):
         """

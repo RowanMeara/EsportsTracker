@@ -8,7 +8,7 @@ class YoutubeIdentifier:
     """
     def __init__(self):
         """
-        Predicts the game_id of YoutubeStream objects.
+        Predicts the game_id of YouTubeStream objects.
         """
         self.channels = {
             # Lol Esports
@@ -97,11 +97,11 @@ class YoutubeIdentifier:
         """
         Determines the game of a youtube stream.
 
-        Takes a YoutubeStream object and attempts to classify_game the game that
+        Takes a YouTubeStream object and attempts to classify_game the game that
         based on the stream's channel, title, and tags. If a high-confidence
         match is found, the stream's game_id instance variable is modified.
 
-        :param yts: YoutubeStream
+        :param yts: YouTubeStream
         :return: None
         """
         if yts.channel_id in self.channels.keys():

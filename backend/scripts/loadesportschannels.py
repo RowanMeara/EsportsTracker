@@ -6,7 +6,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('scripts/')])
 
 from esportstracker.models.postgresmodels import TournamentOrganizer
-from esportstracker.models.postgresmodels import TwitchChannel, YoutubeChannel
+from esportstracker.models.postgresmodels import TwitchChannel, YouTubeChannel
 from esportstracker import dbinterface
 from esportstracker.apiclients import YouTubeAPIClient, TwitchAPIClient
 
@@ -82,7 +82,7 @@ def main():
     for orgname in ytorgs.keys():
         orgrows.append(TournamentOrganizer(orgname))
         for channel in ytorgs[orgname]:
-            yc = YoutubeChannel(channel['id'], channel['name'], 'en', None, orgname)
+            yc = YouTubeChannel(channel['id'], channel['name'], 'en', None, orgname)
             ychans.append(yc)
 
     db.store_rows(orgrows, 'tournament_organizer')
