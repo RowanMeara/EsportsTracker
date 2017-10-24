@@ -303,7 +303,6 @@ class PostgresManager:
         cursor = self.conn.cursor()
         cursor.execute(sql, (limit,))
         res = cursor.fetchall()
-        `
 
 
     def game_name_to_id(self, name):
