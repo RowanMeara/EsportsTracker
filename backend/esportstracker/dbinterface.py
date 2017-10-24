@@ -457,7 +457,7 @@ class MongoManager:
         if collname not in self.cols:
             raise KeyError('Collection not found ', collname)
         col = self.conn[collname]
-        return col.find()
+        return col.find().batch_size(1)
 
     def contains_channel(self, channel_id):
         """
