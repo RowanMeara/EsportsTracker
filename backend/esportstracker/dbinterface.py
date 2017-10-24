@@ -8,6 +8,7 @@ from pymongo import MongoClient
 from collections import OrderedDict
 import collections
 
+
 class PostgresManager:
     """
     Class for managing the Postgres instance.
@@ -313,14 +314,14 @@ class PostgresManager:
 
     def get_yts(self, epoch, limit):
         """
-        Gets YoutubeStream objects with the given epoch.
+        Gets YouTubeStream objects with the given epoch.
 
-        Retrieves the first limit number of YoutubeStream objects with epochs
+        Retrieves the first limit number of YouTubeStream objects with epochs
         equal to the epoch param.
 
         :param epoch: int, epoch of entries.
         :param limit: int, the maximum number of streams to return.
-        :return: list[YoutubeStream]
+        :return: list[YouTubeStream]
         """
         query = ('SELECT * '
                  'FROM youtube_stream '
@@ -330,13 +331,13 @@ class PostgresManager:
         cursor = self.conn.cursor()
         cursor.execute(query, (epoch, limit))
         rows = cursor.fetchall()
-        return list(map(lambda x: YoutubeStream.from_row(x), rows))
+        return list(map(lambda x: YouTubeStream.from_row(x), rows))
 
     def update_ytstream_game(self, yts):
         """
-        Updates the game_id of a YoutubeStream row.
+        Updates the game_id of a YouTubeStream row.
 
-        :param yts: YoutubeStream, the stream to be updated.
+        :param yts: YouTubeStream, the stream to be updated.
         :return: None
         """
         query = ('UPDATE youtube_stream '
@@ -427,7 +428,7 @@ class MongoManager:
             if 'channel_id_1' not in indexes:
                 logging.info('Index not found for collection: ' + collname)
                 logging.info('Creating index on collection' + collname)
-                coll.create_index('channel_id')
+                coll.create_index('channel_id', unique=True)
 
     def first_entry_after(self, start, collname):
         """

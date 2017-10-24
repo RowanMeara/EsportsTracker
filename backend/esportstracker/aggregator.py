@@ -287,9 +287,9 @@ class RowFactory:
         if not ls:
             return []
         allstreams = [s for streams in ls for s in streams.streams]
-        channels = YoutubeChannel.fromstreams(allstreams)
+        channels = YouTubeChannel.fromstreams(allstreams)
         vcs = RowFactory.average_viewers(ls, start, end)
-        streams = YoutubeStream.from_vcs(ls, vcs, start)
+        streams = YouTubeStream.from_vcs(ls, vcs, start)
         for stream in streams:
             yti.classify_game(stream)
         return channels + streams

@@ -80,17 +80,28 @@ class TwitchChannel(Row):
     A mapping between a Twitch channel name and its id.
     """
     TABLE_NAME = 'twitch_channel'
-    __slots__ = ['channel_id', 'name', 'affiliation']
 
-    def __init__(self, channel_id, name=None, affiliation=None):
+    def __init__(self, channel_id, display_name=None, description=None,
+                 followers=None, login=None, broadcaster_type=None, type=None,
+                 offline_image_url=None, profile_image_url=None,
+                 affiliation=None):
         self.channel_id = channel_id
-        self.name = name
+        self.display_name = display_name
+        self.description = description
+        self.followers = followers
+        self.login = login
+        self.broadcaster_type = broadcaster_type
+        self.type = type
+        self.offline_image_url = offline_image_url
+        self.profile_image_url = profile_image_url
         self.affiliation = affiliation
 
     @staticmethod
     def from_api_resp(resps):
         """
         Creates TwitchChannel objects for each unique game.
+
+        Notice that returned objects only contain the channel's id.
 
         :param resps: list[TwitchStreamsAPIResponse],
         :return: list[Game]
@@ -104,7 +115,9 @@ class TwitchChannel(Row):
         return list(streams.values())
 
     def to_row(self):
-        return self.channel_id, self.name, self.affiliation
+        return self.channel_id, self.display_name, self.description,\
+               self.followers, self.login, self.broadcaster_type, self.type,\
+               self.offline_image_url, self.profile_image_url, self.affiliation
 
 
 class TwitchStream(Row):
@@ -168,9 +181,9 @@ class TwitchStream(Row):
                 self.title, self.language, self.stream_id, self.stream_type)
 
 
-class YoutubeChannel(Row):
+class YouTubeChannel(Row):
     """
-    A mapping between a Youtube channel name and its id.
+    A mapping between a YouTube channel name and its id.
     """
     TABLE_NAME = 'youtube_channel'
     __slots__ = ['channel_id', 'name', 'main_language', 'description',
@@ -187,7 +200,7 @@ class YoutubeChannel(Row):
     @staticmethod
     def fromstreams(streams):
         """
-        Creates YoutubeChannel objects for each unique channel.
+        Creates YouTubeChannel objects for each unique channel.
 
         :param streams: list[YTLivestream], list of livestream objects
         :return: list[YouTubeChannel]
@@ -195,10 +208,21 @@ class YoutubeChannel(Row):
         channels = {}
         for stream in streams:
                 if stream.chanid not in channels:
-                    channel = YoutubeChannel(stream.chanid, stream.channame,
+                    channel = YouTubeChannel(stream.chanid, stream.channame,
                                              stream.language)
                     channels[channel.channel_id] = channel
         return list(channels.values())
+
+    @staticmethod
+    def fromdoc(doc):
+        """
+
+        :param doc: TwitchChannelDoc, the mongodb document.
+        :return: YouTubeChannel
+        """
+        # TODO: Test.
+        return YouTubeChannel(**doc.to_doc())
+
 
     def to_row(self):
         return (self.channel_id, self.name, self.main_language,
@@ -208,7 +232,7 @@ class YoutubeChannel(Row):
 LANGUAGE_DETECTION = True
 
 
-class YoutubeStream(Row):
+class YouTubeStream(Row):
     """
     A row in the youtube_stream table.
 
@@ -259,12 +283,12 @@ class YoutubeStream(Row):
                 'language': stream.language,
                 'tags': stream.tags
             }
-            ys.append(YoutubeStream(**params))
+            ys.append(YouTubeStream(**params))
         return ys
 
     @staticmethod
     def from_row(row):
-        return YoutubeStream(row[0], row[1], row[2], row[3], row[4], row[5],
+        return YouTubeStream(row[0], row[1], row[2], row[3], row[4], row[5],
                              row[6], row[7])
 
     def to_row(self):
@@ -283,9 +307,9 @@ class TournamentOrganizer(Row):
     A row in the esports_org table.
     """
     TABLE_NAME = 'tournament_organizer'
+
     def __init__(self, name):
         self.name = name
 
     def to_row(self):
         return self.name,
-
