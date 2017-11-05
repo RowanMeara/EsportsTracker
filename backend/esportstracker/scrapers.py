@@ -6,7 +6,7 @@ import sys
 import pymongo.errors
 
 from .apiclients import YouTubeAPIClient, TwitchAPIClient
-from .dbinterface import MongoManager
+from .dbinterface import MongoManager, PostgresManager
 from .models.mongomodels import YTLivestreams, TwitchStreamsAPIResponse
 
 
@@ -118,6 +118,7 @@ class TwitchChannelScraper:
         self.config_path = config_path
         with open(config_path) as f:
             config = yaml.safe_load(f)
+            cfg = config
             config = config['twitch_channel_scraper']
             self.update_interval = config['update_interval']
             dbname = config['mongodb']['db_name']
@@ -137,60 +138,55 @@ class TwitchChannelScraper:
         self.apiclient = TwitchAPIClient(apihost, clientid, secret)
         self.mongo = MongoManager(dbhost, dbport, dbname, user, pwd, ssl)
         self.mongo.check_indexes()
+        self.postgres = cfg['postgres']
+        self.esportsgames = set([g['name'] for g in cfg['esportsgames']])
+        self.postgres['user'] = keys['postgres']['user']
+        self.postgres['password'] = keys['postgres']['passwd']
 
     def retrieve_and_store(self, channel_ids):
         """
-        Checks the channel_ids against the database and stores any that are
-        missing.
+        Checks the channel_ids against the Mongo database and gets any missing
+        channels from the Twitch API.
 
         :param channel_ids: list(channel_ids), list of channel_ids.
         :return: int, the number of channels that were new.
         """
-        channel_ids = list(filter(lambda x: not self.mongo.contains_channel(x),
-                                  channel_ids))
-        # TODO: Handle banned channels.
-        if channel_ids:
-            docs = self.apiclient.channelinfo(channel_ids)
+        new_channel_count = 0
+        start = time.time()
+        # TODO: Find a better way than checking the whole database.
+        channel_ids = channel_ids[::-1]
+        for channel_id in channel_ids:
+            print(self.mongo.contains_channel(channel_id))
+            if self.mongo.contains_channel(channel_id):
+                continue
+            new_channel_count += 1
+            # TODO: Handle banned channels.
+            docs = self.apiclient.channelinfo(channel_id)
             if not docs:
-                return
+                logging.debug(f'Channel {channel_id} banned')
+                continue
             res = self.mongo.store(docs.values())
-            logging.debug(res)
-            return len(docs)
+            if new_channel_count % 30 == 0:
+                tot = time.time() - start
+                logging.debug(res)
+                logging.debug('Retrieved {} channels in {}s -- {}c/s'.format(
+                    new_channel_count, tot, new_channel_count/tot
+                ))
+        return new_channel_count
 
-    def scan_entire_db(self):
+    def postgres_route(self):
         """
-        Retrieves channel information.
-
-        Checks the twitch_streams table and retrieves channel information for
-        any channels that are referenced in the twitch_stream collection but do
-        not exist in the twitch_channel collection.  Streams are checked in
-        chronological order. The timestamp of the last checked stream is
-        remembered so that future calls are much faster.
-
-        :return:
-        """
-        # TODO: Don't iterate through the entire database every time the
-        # TODO: channel scraper runs.
-        it = self.mongo.findall('twitch_streams')
-        for doc in it:
-            start = time.time()
-            res = TwitchStreamsAPIResponse.fromdoc(doc)
-            channel_ids = [s.broadcaster_id for s in res.streams.values()]
-            num = self.retrieve_and_store(channel_ids)
-            end = time.time()
-            logging.debug('Time: {:.02f}s New Docs: {}'.format(
-                end-start, num))
-
-    def retrieve_missing_postgres(self):
-        """
-        Retrieves Twitch channels whose login is null.
+        Retrieves and stores missing twitch channel information.
 
         Channels that are banned are ignored and are denoted by having a
         description of 'BANNED'.
 
         :return:
         """
-
+        man = PostgresManager.from_config(self.postgres, self.esportsgames)
+        channel_ids = man.null_twitch_channels(500000)
+        self.retrieve_and_store(channel_ids)
+        print("DONTEOHUSNTOHEU")
 
     def scrape(self):
         """
@@ -204,7 +200,7 @@ class TwitchChannelScraper:
         while True:
             start_time = time.time()
             try:
-                self.scan_entire_db()
+                self.postgres_route()
                 tot_time = time.time() - start_time
                 logging.debug('Elapsed time: {:.2f}s'.format(tot_time))
             except requests.exceptions.ConnectionError:

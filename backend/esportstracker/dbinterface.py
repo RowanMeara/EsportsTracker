@@ -295,21 +295,22 @@ class PostgresManager:
 
     def null_twitch_channels(self, limit):
         """
-        Retrieve TwitchChannels without a name or description.
+        Retrieve TwitchChannel ids without a name or description.
 
         :param limit: int, the maximum number of channels to return.
-        :return:
+        :return: list(int), The Twitch Channel ids.
         """
         if type(limit) != int:
             raise TypeError
-        sql = ('SELECT * '
+        sql = ('SELECT channel_id '
                'FROM twitch_channel '
-               'WHERE name IS NULL '
-               'AND description != "BANNED" '
+               'WHERE offline_image_url IS NULL '
+               "AND (description != 'BANNED' OR description IS NULL) "
                'LIMIT %s;')
         cursor = self.conn.cursor()
         cursor.execute(sql, (limit,))
         res = cursor.fetchall()
+        return [int(chan_id[0]) for chan_id in res]
 
 
     def game_name_to_id(self, name):
