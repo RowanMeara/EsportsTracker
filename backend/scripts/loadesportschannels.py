@@ -77,7 +77,9 @@ def main():
     for orgname in torgs.keys():
         orgrows.append(TournamentOrganizer(orgname))
         for channel in torgs[orgname]:
-            tc = TwitchChannel(channel['id'], channel['name'], orgname)
+            tc = TwitchChannel(channel_id=channel['id'],
+                               display_name=channel['name'],
+                               affiliation=orgname)
             tchans.append(tc)
     for orgname in ytorgs.keys():
         orgrows.append(TournamentOrganizer(orgname))
