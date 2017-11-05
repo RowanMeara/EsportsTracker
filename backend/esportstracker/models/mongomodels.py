@@ -130,7 +130,7 @@ class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
     def __init__(self, timestamp, streams, game_id):
         self.timestamp = int(timestamp)
         self.streams = streams
-        self.game_id =int(game_id)
+        self.game_id = int(game_id)
 
     @staticmethod
     def fromdoc(doc):
