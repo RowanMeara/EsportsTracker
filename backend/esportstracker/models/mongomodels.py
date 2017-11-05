@@ -150,24 +150,28 @@ class TwitchStreamsAPIResponse(Aggregatable, MongoDoc):
     @staticmethod
     def fromapiresponse(rawstreams, minviewers=10):
         """
-        Constructor for api response
+        Constructor for api response.
+
+        Returns None if no streams are entered.
 
         :param response: requests.Response, the api response.
         :param minviewers: int, does not include streams with fewer viewers.
         :return: TwitchStreamsAPIResponse
         """
         timestamp = int(time.time())
+        if not rawstreams:
+            return None
         streams = {}
         gameid = None
         for stream in rawstreams:
+            gameid = int(stream['game_id'])
             if stream['viewer_count'] < minviewers:
                 continue
-            gameid = int(stream['game_id'])
             params = {
                 'viewers':          int(stream['viewer_count']),
                 'game_id':          gameid,
                 'language':         stream['language'],
-                'stream_type':           stream['type'],
+                'stream_type':      stream['type'],
                 'title':            stream['title'],
                 'stream_id':        int(stream['id']),
                 'broadcaster_id':   int(stream['user_id']),

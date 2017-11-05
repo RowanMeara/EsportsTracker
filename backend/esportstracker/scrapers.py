@@ -78,9 +78,12 @@ class TwitchScraper:
         :return:
         """
         apiresult = self.apiclient.topstreams(game['id'])
-        m = self.mongo.store(apiresult)
-        logging.debug(apiresult)
-        logging.debug(m)
+        if apiresult:
+            m = self.mongo.store(apiresult)
+            logging.debug(apiresult)
+            logging.debug(m)
+        else:
+            logging.warning(f'No API result for game {game}')
 
     def scrape_esports_games(self):
         for game in self.esportsgames:
