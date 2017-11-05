@@ -103,7 +103,14 @@ class PostgresManager:
         tables['twitch_channel'] = (
             'CREATE TABLE twitch_channel( '
             '    channel_id integer PRIMARY KEY, ' 
-            '    name text UNIQUE, ' 
+            '    display_name text UNIQUE,'
+            '    description text, '
+            '    followers integer, '
+            '    login text, '
+            '    broadcaster_type text, '
+            '    type text, '
+            '    offline_image_url text, '
+            '    profile_image_url text, ' 
             '    affiliation text REFERENCES tournament_organizer(org_name) ' 
             ');'
         )
