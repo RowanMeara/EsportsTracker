@@ -242,7 +242,7 @@ async function refreshCache () {
 
     let reqs = []
     for (let i = 0; i < paths.length; i++) {
-      if (i % 200 === 0) {
+      if (i % 2 === 0) {
         await Promise.all(reqs)
         reqs = []
       }
