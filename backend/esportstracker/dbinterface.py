@@ -409,22 +409,6 @@ class PostgresManager:
             cursor.execute(query, tuple(values))
         return True
 
-    def update_twitch_channel(self, row):
-        # TODO: finish generic update method
-        query = ('UPDATE twitch_channel '
-                 'SET display_name = %s, '
-                 '    description = %s, '
-                 '    followers = %s, '
-                 '    login = %s, '
-                 '    broadcaster_type = %s, '
-                 '    type = %s, '
-                 '    offline_image_url = %s, '
-                 '    profile_image_url = %s '
-                 'WHERE channel_id = %s')
-        cursor = self.conn.cursor()
-        cursor.execeute(query, (row.display_name, row))
-
-
     def set_twitch_affiliations(self, channels):
         """
         Upserts the twitch_channel affiliations.
