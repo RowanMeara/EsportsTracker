@@ -145,6 +145,7 @@ class Aggregator:
             if curhrstart % 36000 == 0:
                 man.commit()
         man.commit()
+        man.close()
         mongo.client.close()
 
     def run(self):
