@@ -228,6 +228,7 @@ class TwitchChannelDoc(MongoDoc):
         self.offline_image_url = offline_image_url
         self.profile_image_url = profile_image_url
         self.followers = followers
+        self.type = type
 
     @staticmethod
     def fromapiresponse(resp):
@@ -259,7 +260,7 @@ class TwitchChannelDoc(MongoDoc):
             'offline_image_url': doc['offline_image_url'],
             'profile_image_url': doc['profile_image_url'],
             'type': doc['type'],
-            'view_count': doc['view_count']
+            'followers': doc['followers']
         }
         return TwitchChannelDoc(**params)
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from esportstracker.classifiers import classify_language
+from ..classifiers import classify_language
 
 
 class Row(ABC):
@@ -80,6 +80,7 @@ class TwitchChannel(Row):
     A mapping between a Twitch channel name and its id.
     """
     TABLE_NAME = 'twitch_channel'
+    PRIMARY_KEY = 'channel_id'
 
     def __init__(self, channel_id, display_name=None, description=None,
                  followers=None, login=None, broadcaster_type=None, type=None,

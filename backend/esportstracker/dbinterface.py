@@ -1,4 +1,3 @@
-from esportstracker.models.postgresmodels import *
 import psycopg2
 import logging
 from psycopg2 import sql
@@ -7,6 +6,9 @@ import pymongo
 from pymongo import MongoClient
 from collections import OrderedDict
 import collections
+
+from .models.postgresmodels import *
+from .models.mongomodels import TwitchChannelDoc
 
 
 class PostgresManager:
@@ -380,12 +382,47 @@ class PostgresManager:
         Rows are matched using their primary key and then the selected fields
         are then updated.
 
-        :param rows: Row or list(Row), the rows to update.
+        :param rows: Row or generator, the rows to update.
         :param fields_to_update: str or list(str), the names of the fields to
             update for each row.
         :return:
         """
-        # TODO: complete method
+        # TODO: Currently injectable
+        if not isinstance(rows, collections.Iterable):
+            rows = [rows]
+        cursor = self.conn.cursor()
+        for row in rows:
+            if not row or row.TABLE_NAME not in self.tablenames:
+                return False
+            pk = row.PRIMARY_KEY
+            if type(pk) == str:
+                pk = [pk]
+            if type(fields_to_update) == str:
+                fields_to_update = [fields_to_update]
+            update = ','.join(('{} = %s'.format(f) for f in fields_to_update))
+            values = [getattr(row, f) for f in fields_to_update]
+            condition = ','.join(('{} = %s'.format(field) for field in pk))
+            values += [getattr(row, field) for field in pk]
+            query = ('UPDATE {} '
+                     'SET {} '
+                     'WHERE {};'.format(row.TABLE_NAME, update, condition))
+            cursor.execute(query, tuple(values))
+        return True
+
+    def update_twitch_channel(self, row):
+        # TODO: finish generic update method
+        query = ('UPDATE twitch_channel '
+                 'SET display_name = %s, '
+                 '    description = %s, '
+                 '    followers = %s, '
+                 '    login = %s, '
+                 '    broadcaster_type = %s, '
+                 '    type = %s, '
+                 '    offline_image_url = %s, '
+                 '    profile_image_url = %s '
+                 'WHERE channel_id = %s')
+        cursor = self.conn.cursor()
+        cursor.execeute(query, (row.display_name, row))
 
 
     def set_twitch_affiliations(self, channels):
@@ -495,6 +532,16 @@ class MongoManager:
         :return: bool, True if the collection contains the channel.
         """
         return self.conn.twitch_channels.count({'channel_id': channel_id})
+
+    def get_twitch_channel(self, channel_id):
+        """
+        Retrieves a Twitch channel from the datatabase.
+
+        :param channel_id: int, Twitch channel id.
+        :return: TwitchChannelDoc
+        """
+        cursor = self.conn.twitch_channels.find({'channel_id': channel_id})
+        return TwitchChannelDoc.fromdoc(cursor[0])
 
     def docsbetween(self, start, end, collname):
         """

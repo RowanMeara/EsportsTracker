@@ -8,6 +8,7 @@ import pymongo.errors
 from .apiclients import YouTubeAPIClient, TwitchAPIClient
 from .dbinterface import MongoManager, PostgresManager
 from .models.mongomodels import YTLivestreams, TwitchStreamsAPIResponse
+from .models.postgresmodels import TwitchChannel
 
 
 # noinspection PyTypeChecker
@@ -142,8 +143,23 @@ class TwitchChannelScraper:
         self.esportsgames = set([g['name'] for g in cfg['esportsgames']])
         self.postgres['user'] = keys['postgres']['user']
         self.postgres['password'] = keys['postgres']['passwd']
+        self.pg = PostgresManager.from_config(self.postgres, self.esportsgames)
 
-    def retrieve_and_store(self, channel_ids):
+    def store_channel_info(self, channel_id):
+        """
+        Gets channel from MongoDB and stores info in Postgres.
+
+        :param channel_id: int, Twitch channel id.
+        :return:
+        """
+        doc = self.mongo.get_twitch_channel(channel_id)
+        row = TwitchChannel(**doc.todoc())
+        update_fields = ['display_name', 'description', 'followers', 'login',
+                         'broadcaster_type', 'type', 'offline_image_url',
+                         'profile_image_url']
+        self.pg.update_rows(row, update_fields)
+
+    def get_missing_channels(self, channel_ids):
         """
         Checks the channel_ids against the Mongo database and gets any missing
         channels from the Twitch API.
@@ -153,12 +169,10 @@ class TwitchChannelScraper:
         """
         new_channel_count = 0
         start = time.time()
-        # TODO: Find a better way than checking the whole database.
         channel_ids = channel_ids[::-1]
         for channel_id in channel_ids:
-            print(self.mongo.contains_channel(channel_id))
             if self.mongo.contains_channel(channel_id):
-                continue
+                self.store_channel_info(channel_id)
             new_channel_count += 1
             # TODO: Handle banned channels.
             docs = self.apiclient.channelinfo(channel_id)
@@ -172,6 +186,9 @@ class TwitchChannelScraper:
                 logging.debug('Retrieved {} channels in {}s -- {}c/s'.format(
                     new_channel_count, tot, new_channel_count/tot
                 ))
+                self.pg.commit()
+            self.store_channel_info(channel_id)
+        self.pg.commit()
         return new_channel_count
 
     def postgres_route(self):
@@ -183,9 +200,8 @@ class TwitchChannelScraper:
 
         :return:
         """
-        man = PostgresManager.from_config(self.postgres, self.esportsgames)
-        channel_ids = man.null_twitch_channels(500000)
-        self.retrieve_and_store(channel_ids)
+        channel_ids = self.pg.null_twitch_channels(500000)
+        self.get_missing_channels(channel_ids)
         print("DONTEOHUSNTOHEU")
 
     def scrape(self):
