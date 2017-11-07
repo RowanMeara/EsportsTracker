@@ -178,6 +178,8 @@ class TwitchChannelScraper:
             docs = self.apiclient.channelinfo(channel_id)
             if not docs:
                 logging.debug(f'Channel {channel_id} no longer exists')
+                # Mark channels that no longer exist so that we only attempt
+                # to retrieve them once.
                 channel = TwitchChannel(channel_id, description='BANNED')
                 self.pg.update_rows(channel, 'description')
                 continue
