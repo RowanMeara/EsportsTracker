@@ -185,7 +185,7 @@ class TwitchChannelScraper:
                 tot = time.time() - start
                 logging.debug(res)
                 logging.debug(
-                    'Retrieved {:.2f} channels in {:.2f}s -- {:.2f}c/s'.format(
+                    'Retrieved {} channels in {:.2f}s -- {:.2f}c/s'.format(
                         new_channel_count, tot, new_channel_count/tot
                 ))
                 self.pg.commit()
