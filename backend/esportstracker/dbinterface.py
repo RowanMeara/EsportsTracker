@@ -55,6 +55,13 @@ class PostgresManager:
         """
         self.conn.commit()
 
+    def close(self):
+        """
+        Wrapper for psycopg2 close
+        :return:
+        """
+        self.conn.close()
+
     def initdb(self):
         """
         Initializes the database for use.
