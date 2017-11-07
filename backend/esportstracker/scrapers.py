@@ -176,6 +176,7 @@ class TwitchChannelScraper:
             new_channel_count += 1
             docs = self.apiclient.channelinfo(channel_id)
             if not docs:
+                # TODO: Consider storing banned status in the Mongo Database.
                 logging.debug(f'Channel {channel_id} no longer exists')
                 # Mark channels that no longer exist so that we only attempt
                 # to retrieve them once.
