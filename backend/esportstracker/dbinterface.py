@@ -401,7 +401,7 @@ class PostgresManager:
                 fields_to_update = [fields_to_update]
             update = ','.join(('{} = %s'.format(f) for f in fields_to_update))
             values = [getattr(row, f) for f in fields_to_update]
-            condition = ','.join(('{} = %s'.format(field) for field in pk))
+            condition = ' AND '.join(('{} = %s'.format(field) for field in pk))
             values += [getattr(row, field) for field in pk]
             query = ('UPDATE {} '
                      'SET {} '
