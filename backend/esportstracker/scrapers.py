@@ -169,13 +169,11 @@ class TwitchChannelScraper:
         """
         new_channel_count = 0
         start = time.time()
-        channel_ids = channel_ids[::-1]
         for channel_id in channel_ids:
             if self.mongo.contains_channel(channel_id):
                 self.store_channel_info(channel_id)
                 continue
             new_channel_count += 1
-            # TODO: Handle banned channels.
             docs = self.apiclient.channelinfo(channel_id)
             if not docs:
                 logging.debug(f'Channel {channel_id} banned')
