@@ -176,7 +176,7 @@ class TwitchChannelScraper:
             new_channel_count += 1
             docs = self.apiclient.channelinfo(channel_id)
             if not docs:
-                logging.debug(f'Channel {channel_id} banned')
+                logging.debug(f'Channel {channel_id} no longer exists')
                 continue
             res = self.mongo.store(docs.values())
             if new_channel_count % 30 == 0:
