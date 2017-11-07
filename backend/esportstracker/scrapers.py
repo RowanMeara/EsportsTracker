@@ -169,6 +169,7 @@ class TwitchChannelScraper:
         """
         new_channel_count = 0
         start = time.time()
+        # TODO: Handle banned channels
         for channel_id in channel_ids:
             if self.mongo.contains_channel(channel_id):
                 self.store_channel_info(channel_id)
@@ -177,6 +178,8 @@ class TwitchChannelScraper:
             docs = self.apiclient.channelinfo(channel_id)
             if not docs:
                 logging.debug(f'Channel {channel_id} no longer exists')
+                channel = TwitchChannel(channel_id, description='BANNED')
+                self.pg.update_rows(channel, 'description')
                 continue
             res = self.mongo.store(docs.values())
             if new_channel_count % 30 == 0:
@@ -191,19 +194,6 @@ class TwitchChannelScraper:
         self.pg.commit()
         return new_channel_count
 
-    def postgres_route(self):
-        """
-        Retrieves and stores missing twitch channel information.
-
-        Channels that are banned are ignored and are denoted by having a
-        description of 'BANNED'.
-
-        :return:
-        """
-        channel_ids = self.pg.null_twitch_channels(500000)
-        self.get_missing_channels(channel_ids)
-        print("DONTEOHUSNTOHEU")
-
     def scrape(self):
         """
         Runs forever scraping channels.
@@ -216,7 +206,8 @@ class TwitchChannelScraper:
         while True:
             start_time = time.time()
             try:
-                self.postgres_route()
+                channel_ids = self.pg.null_twitch_channels(50000)
+                self.get_missing_channels(channel_ids)
                 tot_time = time.time() - start_time
                 logging.debug('Elapsed time: {:.2f}s'.format(tot_time))
             except requests.exceptions.ConnectionError:

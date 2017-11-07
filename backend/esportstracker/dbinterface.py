@@ -306,8 +306,8 @@ class PostgresManager:
             raise TypeError
         sql = ('SELECT channel_id '
                'FROM twitch_channel '
-               'WHERE offline_image_url IS NULL '
-               "AND (description != 'BANNED' OR description IS NULL) "
+               'WHERE login IS NULL '
+               "AND description != 'BANNED' "
                'LIMIT %s;')
         cursor = self.conn.cursor()
         cursor.execute(sql, (limit,))
