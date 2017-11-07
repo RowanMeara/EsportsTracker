@@ -307,7 +307,7 @@ class PostgresManager:
         sql = ('SELECT channel_id '
                'FROM twitch_channel '
                'WHERE login IS NULL '
-               "AND description != 'BANNED' "
+               "AND description IS DISTINCT FROM 'BANNED' "
                'LIMIT %s;')
         cursor = self.conn.cursor()
         cursor.execute(sql, (limit,))
