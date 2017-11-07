@@ -158,6 +158,7 @@ class TwitchChannelScraper:
                          'broadcaster_type', 'type', 'offline_image_url',
                          'profile_image_url']
         self.pg.update_rows(row, update_fields)
+        self.pg.commit()
 
     def get_missing_channels(self, channel_ids):
         """
@@ -191,9 +192,7 @@ class TwitchChannelScraper:
                     'Retrieved {} channels in {:.2f}s -- {:.2f}c/s'.format(
                         new_channel_count, tot, new_channel_count/tot
                 ))
-                self.pg.commit()
             self.store_channel_info(channel_id)
-        self.pg.commit()
         return new_channel_count
 
     def scrape(self):
