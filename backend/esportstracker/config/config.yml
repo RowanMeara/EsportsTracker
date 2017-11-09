@@ -22,10 +22,12 @@ twitch_channel_scraper:
   api:
     host: https://api.twitch.tv/
   mongodb:
+    #host: localhost
+    #ssl: False
     host: mongo.esportstracker.net
+    ssl: True
     db_name: esports_stats
     port: 27017
-    ssl: True
   update_interval: 600
 youtube:
   api:
