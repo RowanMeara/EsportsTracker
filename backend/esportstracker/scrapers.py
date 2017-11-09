@@ -236,23 +236,21 @@ class YouTubeScraper(Scraper):
             keys = yaml.load(f)
         with open(config_path) as f:
             config = yaml.load(f)['youtube']
+        self.update_interval = config['update_interval']
 
-        dbport = config['db']['port']
-        dbhost = config['db']['host']
-        dbname = config['db']['db_name']
         user, pwd = None, None
         if 'mongodb' in keys:
             user = keys['mongodb']['write']['user']
             pwd = keys['mongodb']['write']['pwd']
-        self.db = MongoManager(dbhost, dbport, dbname, user, pwd, False)
+        self.db = MongoManager(config['db']['host'],
+                               config['db']['port'],
+                               config['db']['db_name'],
+                               user, pwd, False)
         self.db.check_indexes()
 
-        clientid = keys['youtubeclientid']
-        secret = keys['youtubesecret']
-        apihost = config['api']['base_url']
-        self.apiclient = YouTubeAPIClient(apihost, clientid, secret)
-
-        self.update_interval = config['update_interval']
+        self.apiclient = YouTubeAPIClient(config['api']['base_url'],
+                                          keys['youtubeclientid'],
+                                          keys['youtubesecret'])
 
     def run(self):
         """
