@@ -2,14 +2,13 @@ doctype html
 html(class='mdc-typography')
   head
     meta(charset='utf-8')
-    meta(name='viewport' content='width=device-width, initial-scale=1')
+    //meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
     meta(name='description' content='Esports analytics and statistics drawn from Twitch and YouTube.')
     meta(name='keywords' content='esports,analytics,market research,twitch,youtube')
     link(rel='stylesheet' href='/webpack/style.css')
     title= title
   body
     include navbar
-    include sidenav
     script(src='/webpack/commons.js')
     main
       block content
