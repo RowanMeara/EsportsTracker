@@ -69,12 +69,8 @@ class TwitchScraper(Scraper):
         with open(config_path) as f:
             config = yaml.safe_load(f)
             self.esportsgames = config['esportsgames']
-
             config = config['twitch']
             self.update_interval = config['update_interval']
-            dbname = config['db']['db_name']
-            dbport = config['db']['port']
-            dbhost = config['db']['host']
         with open(key_path) as f:
             keys = yaml.safe_load(f)
             user, pwd = None, None
@@ -85,7 +81,10 @@ class TwitchScraper(Scraper):
         self.apiclient = TwitchAPIClient(config['api']['host'],
                                          keys['twitchclientid'],
                                          keys['twitchsecret'])
-        self.mongo = MongoManager(dbhost, dbport, dbname, user, pwd, False)
+        self.mongo = MongoManager(config['db']['host'],
+                                  config['db']['port'],
+                                  config['db']['db_name'],
+                                  user, pwd, False)
         self.mongo.check_indexes()
 
     def scrape_top_games(self):
@@ -176,8 +175,8 @@ class TwitchChannelScraper(Scraper):
 
     def get_missing_channels(self, channel_ids):
         """
-        Checks the channel_ids against the Mongo database and gets any missing
-        channels from the Twitch API.
+        Checks the channel_ids against the Mongo database and retrieves any
+        missing channels using the Twitch API.
 
         :param channel_ids: list(channel_ids), list of channel_ids.
         :return: int, the number of channels that were new.
