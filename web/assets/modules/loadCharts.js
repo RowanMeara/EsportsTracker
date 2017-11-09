@@ -191,14 +191,10 @@ class HourlyGameViewership {
         this.options.height = LINE_CHART_HEIGHT * width
         this.options.legend.position = 'bottom'
         this.options.titleTextStyle.fontSize = CHART_TITLE_SIZE
-        delete this.options.hAxis.textPosition
-        delete this.options.vAxis.textPosition
       } else {
         this.options.legend.position = 'none'
         this.options.titleTextStyle.fontSize = CHART_TITLE_MOBLE_SIZE
         this.options.height = LINE_CHART_HEIGHT_MOBILE * width
-        this.options.hAxis.textPosition = 'none'
-        this.options.vAxis.textPosition = 'none'
       }
       let opt = GoogleCharts.api.charts.Line.convertOptions(this.options)
       this.chart.draw(this.data, opt)
