@@ -50,6 +50,7 @@ class Scraper(ABC):
             if time_to_sleep > 0:
                 time.sleep(time_to_sleep)
 
+
 # noinspection PyTypeChecker
 class TwitchScraper(Scraper):
     """
@@ -74,17 +75,16 @@ class TwitchScraper(Scraper):
             dbname = config['db']['db_name']
             dbport = config['db']['port']
             dbhost = config['db']['host']
-            apihost = config['api']['host']
         with open(key_path) as f:
             keys = yaml.safe_load(f)
-            clientid = keys['twitchclientid']
-            secret = keys['twitchsecret']
             user, pwd = None, None
             if 'mongodb' in keys:
                 user = keys['mongodb']['write']['user']
                 pwd = keys['mongodb']['write']['pwd']
 
-        self.apiclient = TwitchAPIClient(apihost, clientid, secret)
+        self.apiclient = TwitchAPIClient(config['api']['host'],
+                                         keys['twitchclientid'],
+                                         keys['twitchsecret'])
         self.mongo = MongoManager(dbhost, dbport, dbname, user, pwd, False)
         self.mongo.check_indexes()
 
@@ -102,20 +102,16 @@ class TwitchScraper(Scraper):
         logging.debug(apiresult)
         logging.debug(m)
 
-
     def _scrape_streams(self, game):
         """
         Retrieves stream data for one game.
 
-        Scrapes viewership data from all of the twitch channels that are
-        designated as esports channels for that game. If a channel is not
-        live or playing a different game, api results are not stored for that
-        channel. Requests are issued synchronously due to twitch's rate limit.
-        Assume that if an esports channel is live, it is among the current 100
-        most popular channels for its respective game.
+        Scrapes viewership data from all esports titles defined in the config
+        file.
 
-        :param game: dict: id of the desired game, must match config file.
-        :return:
+        :param game: dict: name and id of the game in the format
+            {id: int, name: str}.
+        :return: None
         """
         apiresult = self.apiclient.topstreams(game['id'])
         if apiresult:
@@ -140,31 +136,28 @@ class TwitchChannelScraper(Scraper):
         self.config_path = config_path
         with open(config_path) as f:
             config = yaml.safe_load(f)
-            cfg = config
+            esg = set([game['name'] for game in config['esportsgames']])
+            postgres = config['postgres']
             config = config['twitch_channel_scraper']
             self.update_interval = config['update_interval']
-            dbname = config['mongodb']['db_name']
-            dbport = config['mongodb']['port']
-            dbhost = config['mongodb']['host']
-            ssl = config['mongodb']['ssl']
-            apihost = config['api']['host']
+            mongo = config['mongodb']
         with open(key_path) as f:
             keys = yaml.safe_load(f)
-            clientid = keys['twitchclientid']
-            secret = keys['twitchsecret']
+            postgres['user'] = keys['postgres']['user']
+            postgres['password'] = keys['postgres']['passwd']
             user, pwd = None, None
             if 'mongodb' in keys:
                 user = keys['mongodb']['write']['user']
                 pwd = keys['mongodb']['write']['pwd']
 
-        self.apiclient = TwitchAPIClient(apihost, clientid, secret)
-        self.mongo = MongoManager(dbhost, dbport, dbname, user, pwd, ssl)
+        self.apiclient = TwitchAPIClient(config['api']['host'],
+                                         keys['twitchclientid'],
+                                         keys['twitchsecret'])
+        self.mongo = MongoManager(mongo['host'], mongo['port'],
+                                  mongo['db_name'], user, pwd, mongo['ssl'])
         self.mongo.check_indexes()
-        self.postgres = cfg['postgres']
-        self.esportsgames = set([g['name'] for g in cfg['esportsgames']])
-        self.postgres['user'] = keys['postgres']['user']
-        self.postgres['password'] = keys['postgres']['passwd']
-        self.pg = PostgresManager.from_config(self.postgres, self.esportsgames)
+
+        self.pg = PostgresManager.from_config(postgres, esg)
 
     def store_channel_info(self, channel_id):
         """
