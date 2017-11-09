@@ -11,7 +11,7 @@
     "base64-inline-loader": "^1.1.0",
     "bluebird": "^3.5.1",
     "body-parser": "~1.17.1",
-    "bootstrap": "^4.0.0-beta",
+    "bootstrap": "^4.0.0-beta.2",
     "cookie-parser": "^1.4.3",
     "css-loader": "^0.28.7",
     "datatables.net": "^1.10.16",
@@ -19,27 +19,27 @@
     "dateformat": "^3.0.2",
     "debug": "^2.6.9",
     "express": "^4.16.2",
-    "extract-text-webpack-plugin": "^3.0.1",
+    "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^0.11.2",
     "font-awesome": "^4.7.0",
     "fs": "0.0.1-security",
     "jquery": "^3.2.1",
     "material-components-web": "^0.17.0",
     "morgan": "~1.8.1",
-    "node-sass": "^4.5.3",
+    "node-sass": "^4.6.0",
     "pg-promise": "^6.10.3",
-    "plotly.js": "^1.31.0",
-    "popper.js": "^1.12.5",
+    "plotly.js": "^1.31.2",
+    "popper.js": "^1.12.6",
     "pug": "^2.0.0-rc.4",
     "sass-loader": "^6.0.6",
     "serve-favicon": "^2.4.5",
     "style-loader": "^0.18.2",
-    "uglifyjs-webpack-plugin": "^1.0.0-beta.3",
+    "uglifyjs-webpack-plugin": "^1.0.1",
     "url-loader": "^0.5.9",
-    "webpack": "^3.7.1"
+    "webpack": "^3.8.1"
   },
   "devDependencies": {
     "standard": "^10.0.3",
-    "webpack-dev-server": "^2.9.1"
+    "webpack-dev-server": "^2.9.4"
   }
 }
