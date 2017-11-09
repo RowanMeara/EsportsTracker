@@ -231,10 +231,10 @@ function formatTooltip (apiResponse) {
   sum /= 1000000
   apiResponse.forEach((resp) => {
     resp[1] = resp[1] / 1000000
-    let millions = resp[1].toFixed(1)
+    let millions = resp[1].toFixed(2)
     let gamename = resp[0] + '\n '
     let time = fmt.splitMille(millions) + ' million hours'
-    let percent = '(' + (millions / sum * 100).toFixed(1) + '%)'
+    let percent = '(' + (millions / sum * 100).toFixed(2) + '%)'
     let tooltip = gamename + time + percent
     resp.push(tooltip)
   })
@@ -256,8 +256,8 @@ class EsportsGamesList {
       this.data = []
       msg.forEach((m) => {
         let game = m[0]
-        let esh = ((m[2] + m[3])/1000000).toFixed(1)
-        let allh = ((m[4] + m[5])/1000000).toFixed(1)
+        let esh = ((m[2] + m[3])/1000000).toFixed(2)
+        let allh = ((m[4] + m[5])/1000000).toFixed(2)
         let per = fmt.formatPercent((m[2] + m[3]) / (m[4] + m[5]))
         this.data.push([game, esh, allh, per])
       })

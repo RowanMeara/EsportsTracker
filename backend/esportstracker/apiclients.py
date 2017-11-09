@@ -82,7 +82,7 @@ class TwitchAPIClient:
                     self.rate_reset = int(headers['ratelimit-reset'])
                 return api_result
             elif i == 2:
-                logging.WARNING("Twitch API request failed: {}".format(
+                logging.WARNING('Twitch API request failed: {}'.format(
                     api_result.status_code))
                 raise ConnectionError
             time.sleep(self.API_WINDOW_LENGTH)
