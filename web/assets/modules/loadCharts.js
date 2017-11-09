@@ -6,9 +6,11 @@ import 'datatables.net-bs4'
 const fmt = require('./format')
 
 const LINE_CHART_HEIGHT = 0.55
-const LINE_CHART_HEIGHT_MOBILE = 0.7
+const LINE_CHART_HEIGHT_MOBILE = 0.8
 const PI_CHART_HEIGHT = 0.7
 const MOBILE_WIDTH = 767
+const CHART_TITLE_SIZE = 16
+const CHART_TITLE_MOBLE_SIZE = 12
 
 class TwitchGameViewership {
   constructor (divID, days) {
@@ -188,9 +190,15 @@ class HourlyGameViewership {
       if (window.innerWidth > MOBILE_WIDTH) {
         this.options.height = LINE_CHART_HEIGHT * width
         this.options.legend.position = 'bottom'
+        this.options.titleTextStyle.fontSize = CHART_TITLE_SIZE
+        delete this.options.hAxis.textPosition
+        delete this.options.vAxis.textPosition
       } else {
         this.options.legend.position = 'none'
+        this.options.titleTextStyle.fontSize = CHART_TITLE_MOBLE_SIZE
         this.options.height = LINE_CHART_HEIGHT_MOBILE * width
+        this.options.hAxis.textPosition = 'none'
+        this.options.vAxis.textPosition = 'none'
       }
       let opt = GoogleCharts.api.charts.Line.convertOptions(this.options)
       this.chart.draw(this.data, opt)
@@ -203,7 +211,7 @@ class HourlyGameViewership {
       msg.data.forEach((ts) => {
         ts[0] = new Date(ts[0] * 1000)
       })
-      this.data.addColumn('date', 'Date')
+      this.data.addColumn('date', '')
       this.data.addColumn('number', 'Twitch')
       this.data.addColumn('number', 'Youtube')
       this.data.addRows(msg.data)
