@@ -4,6 +4,7 @@ import time
 import logging
 import sys
 import pymongo.errors
+from abc import ABC, abstractmethod
 
 from .apiclients import YouTubeAPIClient, TwitchAPIClient
 from .dbinterface import MongoManager, PostgresManager
@@ -11,8 +12,46 @@ from .models.mongomodels import YTLivestreams, TwitchStreamsAPIResponse
 from .models.postgresmodels import TwitchChannel
 
 
+class Scraper(ABC):
+    """
+    ABC for Scraper instances.
+
+    Scrapers should retrieve some information using the API
+    """
+    @abstractmethod
+    def run(self):
+        """
+        Performs one set of scraping actions (ie pull current viewer counts from
+        Twitch).
+
+        Called at regular intervals from the scrape function.
+        :return:
+        """
+
+    def scrape(self):
+        """
+        Calls the run function at regular intervals and sleeps in between.
+
+        run() is called every update_interval minutes.
+        :return:
+        """
+        while True:
+            start_time = time.time()
+            try:
+                self.run()
+                tot_time = time.time() - start_time
+                logging.debug('Elapsed time: {:.2f}s'.format(tot_time))
+            except requests.exceptions.ConnectionError:
+                logging.warning('Twitch API Failed')
+            except pymongo.errors.ServerSelectionTimeoutError:
+                logging.warning(
+                    'Database Error: {}'.format(sys.exc_info()[0]))
+            time_to_sleep = self.update_interval - (time.time() - start_time)
+            if time_to_sleep > 0:
+                time.sleep(time_to_sleep)
+
 # noinspection PyTypeChecker
-class TwitchScraper:
+class TwitchScraper(Scraper):
     """
     Scrapes and stores Twitch viewership information.
     """
@@ -90,30 +129,12 @@ class TwitchScraper:
         for game in self.esportsgames:
             self._scrape_streams(game)
 
-    def scrape(self):
-        """
-        Runs forever scraping and storing Twitch data.
-
-        :return:
-        """
-        while True:
-            start_time = time.time()
-            try:
-                self.scrape_top_games()
-                self.scrape_esports_games()
-                tot_time = time.time() - start_time
-                logging.debug('Elapsed time: {:.2f}s'.format(tot_time))
-            except requests.exceptions.ConnectionError:
-                logging.warning('Twitch API Failed')
-            except pymongo.errors.ServerSelectionTimeoutError:
-                logging.warning(
-                    'Database Error: {}'.format(sys.exc_info()[0]))
-            time_to_sleep = self.update_interval - (time.time() - start_time)
-            if time_to_sleep > 0:
-                time.sleep(time_to_sleep)
+    def run(self):
+        self.scrape_top_games()
+        self.scrape_esports_games()
 
 
-class TwitchChannelScraper:
+class TwitchChannelScraper(Scraper):
     """ Retrieves twitch channel information. """
     def __init__(self, config_path, key_path):
         self.config_path = config_path
@@ -195,33 +216,12 @@ class TwitchChannelScraper:
             self.store_channel_info(channel_id)
         return new_channel_count
 
-    def scrape(self):
-        """
-        Runs forever scraping channels.
-
-        This should not be run on a server that also uses the Twitch API for
-        something else because this will use all of the IP address's API quota.
-
-        :return:
-        """
-        while True:
-            start_time = time.time()
-            try:
-                channel_ids = self.pg.null_twitch_channels(50000)
-                self.get_missing_channels(channel_ids)
-                tot_time = time.time() - start_time
-                logging.debug('Elapsed time: {:.2f}s'.format(tot_time))
-            except requests.exceptions.ConnectionError:
-                logging.warning('Twitch API Failed')
-            except pymongo.errors.ServerSelectionTimeoutError:
-                logging.warning(
-                    'Database Error: {}'.format(sys.exc_info()[0]))
-            time_to_sleep = self.update_interval - (time.time() - start_time)
-            if time_to_sleep > 0:
-                time.sleep(time_to_sleep)
+    def run(self):
+        channel_ids = self.pg.null_twitch_channels(50000)
+        self.get_missing_channels(channel_ids)
 
 
-class YouTubeScraper:
+class YouTubeScraper(Scraper):
     """
     Class for scraping and storing YouTube livestream data.
     """
@@ -254,9 +254,9 @@ class YouTubeScraper:
 
         self.update_interval = config['update_interval']
 
-    def scrapelivestreams(self):
+    def run(self):
         """
-        Retrieves and store livestream information.
+        Retrieves and stores YouTube livestream information.
 
         Retrieves the top 100 livestreams from YouTube Gaming and stores
         information about them in the MongoDB database.
@@ -268,19 +268,3 @@ class YouTubeScraper:
         mongores = self.db.store(doc)
         logging.debug(mongores)
         logging.debug(doc)
-
-    def scrape(self):
-        while True:
-            start_time = time.time()
-            try:
-                self.scrapelivestreams()
-            except requests.exceptions.ConnectionError:
-                logging.warning('Youtube API Failed')
-            except pymongo.errors.ServerSelectionTimeoutError:
-                logging.warning('Database Error: {}. Time: {}'.format(
-                    sys.exc_info()[0], time.time()))
-            total_time = time.time() - start_time
-            logging.debug('Elapsed time: {:.2f}s'.format(total_time))
-            time_to_sleep = self.update_interval - (time.time() - start_time)
-            if time_to_sleep > 0:
-                time.sleep(time_to_sleep)
