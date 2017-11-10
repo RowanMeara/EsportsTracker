@@ -2,7 +2,7 @@ import langid
 import pycld2 as cld2
 
 
-class YoutubeIdentifier:
+class YouTubeGameClassifier:
     """
     Identifies the game that a Youtuber is broadcasting.
     """
@@ -34,7 +34,8 @@ class YoutubeIdentifier:
         smite = ['Smite']
         streetfighter = ['Street Fighter V', 'Street Fighter 5']
         codbo = ['Black Ops']
-        codiw = ['COD', 'Call of Duty', 'IW']
+        codww2 = ['WW2', 'WWII']
+        codiw = ['Infinite Warfare', 'IW']
         melee = ['smash']
         destiny2 = ['destiny 2']
         minecraft = ['Minecraft', 'BEDWARS']
@@ -73,6 +74,7 @@ class YoutubeIdentifier:
             32507: smite,
             488615: streetfighter,
             489401: codbo,
+            496712: codww2,
             16282: melee,
             497057: destiny2,
             27471: minecraft,

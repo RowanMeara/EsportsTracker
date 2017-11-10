@@ -24,6 +24,7 @@ class Game(Row):
     See schema.png.
     """
     TABLE_NAME = 'game'
+    PRIMARY_KEY = 'game_id'
     __slots__ = ['game_id', 'name', 'giantbomb_id']
 
     def __init__(self, game_id, name, giantbomb_id):
@@ -57,6 +58,7 @@ class TwitchGameVC(Row):
     The average viewer count of a game in a given hour.
     """
     TABLE_NAME = 'twitch_game_vc'
+    PRIMARY_KEY = ['game_id', 'epoch']
     __slots__ = ['game_id', 'epoch', 'viewers']
 
     def __init__(self, game_id, epoch, viewers):
@@ -142,6 +144,7 @@ class TwitchStream(Row):
     The title and number of viewers of a stream for a given hour.
     """
     TABLE_NAME = 'twitch_stream'
+    PRIMARY_KEY = ['channel_id', 'epoch']
     __slots__ = ['channel_id', 'epoch', 'game_id', 'viewers', 'title',
                  'language', 'stream_id', 'stream_type']
 
@@ -201,6 +204,7 @@ class YouTubeChannel(Row):
     A mapping between a YouTube channel name and its id.
     """
     TABLE_NAME = 'youtube_channel'
+    PRIMARY_KEY = 'channel_id'
     __slots__ = ['channel_id', 'name', 'main_language', 'description',
                  'affiliation']
 
@@ -253,6 +257,7 @@ class YouTubeStream(Row):
 
     The title and number of viewers of a stream for a given hour.
     """
+    PRIMARY_KEY = ['video_id', 'epoch']
     TABLE_NAME = 'youtube_stream'
     __slots__ = ['video_id', 'epoch', 'channel_id', 'game_id', 'viewers',
                  'title', 'language', 'tags']
@@ -322,7 +327,7 @@ class TournamentOrganizer(Row):
     A row in the esports_org table.
     """
     TABLE_NAME = 'tournament_organizer'
-
+    PRIMARY_KEY = 'org_name'
     def __init__(self, name):
         self.name = name
 

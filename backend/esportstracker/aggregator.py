@@ -8,7 +8,7 @@ import requests
 from .dbinterface import PostgresManager, MongoManager
 from .models.mongomodels import *
 from .models.postgresmodels import *
-from .classifiers import YoutubeIdentifier
+from .classifiers import YouTubeGameClassifier
 
 
 class Aggregator:
@@ -282,7 +282,7 @@ class RowFactory:
         :param end: int, unix epoch.
         :return: list(list(Row)), the rows to insert grouped by type.
         """
-        yti = YoutubeIdentifier()
+        yti = YouTubeGameClassifier()
         ls = [YTLivestreams.fromdoc(doc) for doc in docs]
         # Some hours empty due to server failure
         if not ls:

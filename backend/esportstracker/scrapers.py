@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 
 from .apiclients import YouTubeAPIClient, TwitchAPIClient
 from .dbinterface import MongoManager, PostgresManager
-from .models.mongomodels import YTLivestreams, TwitchStreamsAPIResponse
+from .models.mongomodels import YTLivestreams
 from .models.postgresmodels import TwitchChannel
 
 

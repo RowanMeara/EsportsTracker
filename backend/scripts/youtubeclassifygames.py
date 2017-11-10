@@ -6,7 +6,7 @@ from ruamel import yaml
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('scripts/')])
 
-from esportstracker.classifiers import YoutubeIdentifier
+from esportstracker.classifiers import YouTubeGameClassifier
 from esportstracker.dbinterface import PostgresManager
 from esportstracker.aggregator import Aggregator
 
@@ -20,8 +20,9 @@ def classifydb():
     """
     print('Classifying YouTube Games')
     start = time.time()
-    cfgpath = '../esportstracker/config/config.yml'
-    keypath = '../keys.yml'
+    parent = DIR_PATH[0:len(DIR_PATH) - len('scripts/')]
+    cfgpath = parent + '/esportstracker/config/config.yml'
+    keypath = parent + '/keys.yml'
     with open(cfgpath) as f:
         config = yaml.safe_load(f)
     with open(keypath) as f:
@@ -32,7 +33,7 @@ def classifydb():
     user = keys['postgres']['user']
     pwd = keys['postgres']['passwd']
     pgm = PostgresManager(host, port, user, pwd, dbn, {})
-    yti = YoutubeIdentifier()
+    yti = YouTubeGameClassifier()
     limit = 200000
 
     count = 0
@@ -49,7 +50,7 @@ def classifydb():
             yti.classify_game(stream)
             if stream.game_id:
                 updated += 1
-                pgm.update_ytstream_game(stream)
+                pgm.update_rows(stream, 'game_id')
         epoch += 3600
         count += len(yts)
 

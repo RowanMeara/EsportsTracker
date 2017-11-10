@@ -88,8 +88,8 @@ def main():
             ychans.append(yc)
 
     db.store_rows(orgrows, 'tournament_organizer')
-    db.set_twitch_affiliations(tchans)
-    db.set_youtube_affiliations(ychans)
+    db.update_rows(tchans, 'affiliation')
+    db.update_rows(ychans, 'affiliation')
     db.commit()
     print('Channels Stored')
 

@@ -369,25 +369,12 @@ class PostgresManager:
         rows = cursor.fetchall()
         return list(map(lambda x: YouTubeStream.from_row(x), rows))
 
-    def update_ytstream_game(self, yts):
-        """
-        Updates the game_id of a YouTubeStream row.
-
-        :param yts: YouTubeStream, the stream to be updated.
-        :return: None
-        """
-        query = ('UPDATE youtube_stream '
-                 'SET game_id = %s '
-                 'WHERE channel_id = %s AND epoch = %s ')
-        cursor = self.conn.cursor()
-        cursor.execute(query, (yts.game_id, yts.channel_id, yts.epoch))
-
     def update_rows(self, rows, fields_to_update):
         """
         Updates database rows.
 
         Rows are matched using their primary key and then the selected fields
-        are then updated.
+        are then updated.  Rows must all be of the same type.
 
         :param rows: Row or generator, the rows to update.
         :param fields_to_update: str or list(str), the names of the fields to
@@ -397,54 +384,27 @@ class PostgresManager:
         # TODO: Currently injectable
         if not isinstance(rows, collections.Iterable):
             rows = [rows]
-        cursor = self.conn.cursor()
+        if not rows or rows[0].TABLE_NAME not in self.tablenames:
+            return False
+        pk = rows[0].PRIMARY_KEY
+        if type(pk) == str:
+            pk = [pk]
+        if type(fields_to_update) == str:
+            fields_to_update = [fields_to_update]
+        update = ','.join(('{} = %s'.format(f) for f in fields_to_update))
+        condition = ' AND '.join(('{} = %s'.format(field) for field in pk))
+        args = []
         for row in rows:
-            if not row or row.TABLE_NAME not in self.tablenames:
-                return False
-            pk = row.PRIMARY_KEY
-            if type(pk) == str:
-                pk = [pk]
-            if type(fields_to_update) == str:
-                fields_to_update = [fields_to_update]
-            update = ','.join(('{} = %s'.format(f) for f in fields_to_update))
             values = [getattr(row, f) for f in fields_to_update]
-            condition = ' AND '.join(('{} = %s'.format(field) for field in pk))
             values += [getattr(row, field) for field in pk]
-            query = ('UPDATE {} '
-                     'SET {} '
-                     'WHERE {};'.format(row.TABLE_NAME, update, condition))
-            cursor.execute(query, tuple(values))
+            args.append(tuple(values))
+
+        query = ('UPDATE {} '
+                 'SET {} '
+                 'WHERE {}'.format(rows[0].TABLE_NAME, update, condition))
+        cursor = self.conn.cursor()
+        cursor.executemany(query, args)
         return True
-
-    def set_twitch_affiliations(self, channels):
-        """
-        Upserts the twitch_channel affiliations.
-
-        :param channels: [TwitchChannel], List of channels to upsert.
-        :return:
-        """
-        self.store_rows(channels, 'twitch_channel')
-        query = ('UPDATE twitch_channel '
-                 'SET affiliation = %s '
-                 'WHERE channel_id = %s ')
-        args = [(x.affiliation, x.channel_id) for x in channels]
-        cursor = self.conn.cursor()
-        cursor.executemany(query, args)
-
-    def set_youtube_affiliations(self, channels):
-        """
-        Upserts the youtube_channel affiliations.
-
-        :param channels: [TwitchChannel], List of channels to upsert.
-        :return:
-        """
-        self.store_rows(channels, 'youtube_channel')
-        query = ('UPDATE youtube_channel '
-                 'SET affiliation = %s '
-                 'WHERE channel_id = %s ')
-        args = [(x.affiliation, x.channel_id) for x in channels]
-        cursor = self.conn.cursor()
-        cursor.executemany(query, args)
 
 
 class MongoManager:
