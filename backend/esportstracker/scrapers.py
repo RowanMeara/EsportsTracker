@@ -185,7 +185,7 @@ class TwitchChannelScraper(Scraper):
         new_channel_count = 0
         start = time.time()
         # Shuffle so multiple instances don't duplicate API calls.
-        #random.shuffle(channel_ids)
+        random.shuffle(channel_ids)
         for channel_id in channel_ids:
             doc = self.mongo.get_twitch_channel(channel_id)
             if not doc:
