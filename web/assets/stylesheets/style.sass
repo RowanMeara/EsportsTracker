@@ -107,11 +107,17 @@ i
 
 table.display.table
   width: 100%
-  font-size: 13px
 
 #main
   padding: 0
 
+@media (max-width: 500px)
+  #datatable_wrapper
+    padding: 0px
+    .sorting, .sorting_desc, .sorting_asc
+      padding: 10px
+    td
+      padding: 6px
 @media (max-width: 767px)
   .navbar-default
     .navbar-brand
@@ -129,6 +135,8 @@ table.display.table
     padding-top: 80%
   .period-btn
       font-size: 14px
+  table.display.table
+    font-size: 12px
 @media (min-width: 767px)
   .navbar-default
     .navbar-brand
@@ -142,3 +150,6 @@ table.display.table
     padding-top: 55%
   .period-btn
     font-size: 1rem
+  table.display.table
+    font-size: 14px
+
