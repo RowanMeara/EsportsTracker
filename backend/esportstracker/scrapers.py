@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 
 from .apiclients import YouTubeAPIClient, TwitchAPIClient
 from .dbinterface import MongoManager, PostgresManager
-from .models.mongomodels import YTLivestreams
+from .models.mongomodels import YTLivestreams, YouTubeChannelDoc, TwitchChannelDoc
 from .models.postgresmodels import TwitchChannel, YouTubeChannel
 
 
@@ -194,10 +194,10 @@ class TwitchChannelScraper(Scraper):
             new_channel_count += 1
             docs = self.apiclient.channelinfo(channel_id)
             if not docs:
-                # TODO: Consider storing banned status in the Mongo Database.
                 logging.debug(f'Channel {channel_id} no longer exists')
-                # Mark channels that no longer exist so that we only attempt
-                # to retrieve them once.
+                self.mongo.store(TwitchChannelDoc(channel_id, None, 'BANNED',
+                                                  None, None, None, None, None,
+                                                  None))
                 channel = TwitchChannel(channel_id, description='BANNED')
                 self.pg.update_rows(channel, 'description')
                 continue
@@ -304,7 +304,7 @@ class YouTubeChannelScraper(Scraper):
         """
         doc = self.mongo.get_youtube_channel(channel_id)
         row = YouTubeChannel(**doc.todoc())
-        update_fields = ['display_name', 'affiliation', 'description',
+        update_fields = ['affiliation', 'description',
                          'keywords', 'published_at', 'thumbnail_url',
                          'default_language', 'country']
         self.pg.update_rows(row, update_fields)
@@ -329,6 +329,9 @@ class YouTubeChannelScraper(Scraper):
             new_channel_count += 1
             doc = self.apiclient.channelinfo(channel_id)
             if not doc:
+                self.mongo.store(YouTubeChannelDoc(channel_id, display_name='',
+                                  description='BANNED', published_at=None,
+                                  thumbnail_url=None))
                 logging.debug(f'Channel {channel_id} no longer exists')
                 channel = YouTubeChannel(channel_id, description='BANNED')
                 self.pg.update_rows(channel, 'description')

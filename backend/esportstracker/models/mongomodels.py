@@ -213,7 +213,7 @@ class TwitchChannelDoc(MongoDoc):
     """
     COLLECTION = 'twitch_channels'
 
-    def __init__(self, broadcaster_type, description, display_name, channel_id,
+    def __init__(self, channel_id, broadcaster_type, description, display_name,
                  login, offline_image_url, profile_image_url, type, followers):
         if type not in ['staff', 'admin', 'global_mod', '']:
             raise ValueError

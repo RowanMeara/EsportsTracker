@@ -76,6 +76,7 @@ class PostgresManager:
                 self.conn.commit()
                 logging.info('Postgres initialized.')
             self.init_indexes()
+            self.conn.commit()
             logging.debug('Postgres ready.')
         except psycopg2.DatabaseError as e:
             logging.warning('Failed to initialize database: {}'.format(e))
