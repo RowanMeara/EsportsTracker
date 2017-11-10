@@ -57,6 +57,54 @@ class TwitchGameViewership {
   }
 }
 
+class EsportsMarketshare {
+  constructor (divID, days) {
+    this.divID = divID
+    this.data = null
+    let div = document.getElementById(divID)
+    this.chart = new GoogleCharts.api.visualization.PieChart(div)
+    this.options = {
+      vAxis: {format: '# hours'},
+      width: '100%'
+    }
+  }
+
+  draw (days) {
+    if (this.data && days === this.days) {
+      let div = document.getElementById(this.divID)
+      let width = div.getBoundingClientRect().width
+      this.options.width = width - 1
+      this.options.height = PI_CHART_HEIGHT * width
+      this.chart.draw(this.data, this.options)
+      return
+    }
+    this.days = days
+    let render = (msg) => {
+      this.data = new GoogleCharts.api.visualization.DataTable()
+      this.data.addColumn('string', 'Game')
+      this.data.addColumn('number', 'Esports Hours')
+      this.data.addColumn({type: 'string', role: 'tooltip'})
+      let rows = []
+      msg.forEach((m) => {
+        rows.push([m[0], m[2] + m[3]])
+      })
+      formatTooltip(rows)
+      this.data.addRows(rows)
+      this.options.title = 'Esports Marketshare (' + days + ' Days)'
+      this.draw(days)
+    }
+    $.ajax({
+      url: '/api/esportshoursbygame',
+      data: {days: days},
+      dataType: 'json',
+      async: true,
+      success: function (msg) {
+        render(msg)
+      }
+    })
+  }
+}
+
 class OrganizerMarketshare {
   constructor (divID, days) {
     this.divID = divID
@@ -319,5 +367,6 @@ export let charts = {
   Marketshare: Marketshare,
   HourlyGameViewership: HourlyGameViewership,
   OrganizerMarketshare: OrganizerMarketshare,
-  EsportsGamesList: EsportsGamesList
+  EsportsGamesList: EsportsGamesList,
+  EsportsMarketshare: EsportsMarketshare
 }

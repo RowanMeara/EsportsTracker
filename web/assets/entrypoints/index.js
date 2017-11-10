@@ -9,7 +9,7 @@ function onLoad () {
   let active = $('div.btn.period-btn.active').text()
   days = parseInt(active.substring(0, active.length - ' Days'.length))
   tgv = new charts.TwitchGameViewership('twitchgamevh', days)
-  mks = new charts.Marketshare('marketshare', days)
+  mks = new charts.EsportsMarketshare('marketshare', days)
   tmk = new charts.OrganizerMarketshare('orgmarketshare', days)
   dt = new charts.EsportsGamesList('datatable', days)
   drawCharts(days)
