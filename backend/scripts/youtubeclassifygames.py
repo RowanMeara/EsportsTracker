@@ -47,8 +47,9 @@ def classifydb():
                   '{:.1f} entries/s'.format(count/(time.time()-start)))
         yts = pgm.get_yts(epoch, limit)
         for stream in yts:
+            old_game_id = stream.game_id
             yti.classify_game(stream)
-            if stream.game_id:
+            if old_game_id != stream.game_id:
                 updated += 1
                 pgm.update_rows(stream, 'game_id')
         epoch += 3600
@@ -59,7 +60,7 @@ def classifydb():
     print('Classification Complete: {:.02f}s'.format(end - start))
     print('Total scanned: ', count)
     print('Total updated: ', updated)
-    print('Percent Classified: {:.1f}%'.format(100*updated/count))
+    print('Percent Updated: {:.1f}%'.format(100*updated/count))
 
 
 if __name__ == '__main__':

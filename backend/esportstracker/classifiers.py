@@ -100,8 +100,8 @@ class YouTubeGameClassifier:
         Determines the game of a youtube stream.
 
         Takes a YouTubeStream object and attempts to classify_game the game that
-        based on the stream's channel, title, and tags. If a high-confidence
-        match is found, the stream's game_id instance variable is modified.
+        based on the stream's channel, title, and tags. The stream's game_id
+        variable is updated.
 
         :param yts: YouTubeStream
         :return: None
@@ -118,6 +118,7 @@ class YouTubeGameClassifier:
                 if kw.lower() in titletags.lower():
                     yts.game_id = gid
                     return
+        yts.game_id = None
 
 
 def classify_language(title):
