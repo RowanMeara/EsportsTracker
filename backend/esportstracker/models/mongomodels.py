@@ -255,7 +255,7 @@ class TwitchChannelDoc(MongoDoc):
         return TwitchChannelDoc(**doc)
 
     def todoc(self):
-        return vars(self)
+        return vars(self).copy()
 
 
 class YouTubeChannelDoc(MongoDoc):
@@ -304,7 +304,7 @@ class YouTubeChannelDoc(MongoDoc):
         return YouTubeChannelDoc(**doc)
 
     def todoc(self):
-        return vars(self)
+        return vars(self).copy()
 
 
 class YTLivestreams(Aggregatable, MongoDoc):

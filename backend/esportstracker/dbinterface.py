@@ -199,8 +199,23 @@ class PostgresManager:
             'ON youtube_channel(affiliation)'
         )
         curs = self.conn.cursor()
-        for query in indexes.values():
-            curs.execute(query)
+        for name, query in indexes.items():
+            if not self.index_exists(name):
+                curs.execute(query)
+
+    def index_exists(self, index_name):
+        """
+        Returns True if the index exists in the database.
+
+        :param table: str, name of the index.
+        :return: bool
+        """
+        exists = ('SELECT count(*) '
+                  '    FROM pg_indexes'
+                  '    WHERE indexname = %s;')
+        cursor = self.conn.cursor()
+        cursor.execute(exists, (index_name,))
+        return cursor.fetchone()[0] > 0
 
     def table_exists(self, table):
         """
@@ -502,12 +517,18 @@ class MongoManager:
         return self.conn.twitch_channels.count({'channel_id': channel_id})
 
     def get_twitch_channel(self, channel_id):
-        cursor = self.conn.twitch_channels.find({'channel_id': channel_id})
-        return TwitchChannelDoc.fromdoc(cursor[0])
+        cursor = self.conn.twitch_channels.find_one({'channel_id': channel_id})
+        if cursor:
+            return TwitchChannelDoc.fromdoc(cursor)
+        else:
+            return None
 
     def get_youtube_channel(self, channel_id):
-        cursor = self.conn.youtube_channels.find({'channel_id': channel_id})
-        return YouTubeChannelDoc.fromdoc(cursor[0])
+        cursor = self.conn.youtube_channels.find_one({'channel_id': channel_id})
+        if cursor:
+            return YouTubeChannelDoc.fromdoc(cursor)
+        else:
+            return None
 
     def contains_yt_channel(self, channel_id):
         return self.conn.youtube_channels.count({'channel_id': channel_id})

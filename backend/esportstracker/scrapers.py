@@ -160,14 +160,13 @@ class TwitchChannelScraper(Scraper):
 
         self.pg = PostgresManager.from_config(postgres, esg)
 
-    def store_channel_info(self, channel_id):
+    def store_channel_info(self, doc):
         """
-        Gets channel from MongoDB and stores info in Postgres.
+        Stores information from doc in Postgres.
 
-        :param channel_id: int, Twitch channel id.
+        :param doc: int, TwitchChannelDoc.
         :return:
         """
-        doc = self.mongo.get_twitch_channel(channel_id)
         row = TwitchChannel(**doc.todoc())
         update_fields = ['display_name', 'description', 'followers', 'login',
                          'broadcaster_type', 'type', 'offline_image_url',
@@ -186,30 +185,27 @@ class TwitchChannelScraper(Scraper):
         new_channel_count = 0
         start = time.time()
         # Shuffle so multiple instances don't duplicate API calls.
-        random.shuffle(channel_ids)
+        #random.shuffle(channel_ids)
         for channel_id in channel_ids:
-            if self.mongo.contains_channel(channel_id):
-                self.store_channel_info(channel_id)
-                continue
-            new_channel_count += 1
-            docs = self.apiclient.channelinfo(channel_id)
-            if not docs:
-                logging.debug(f'Channel {channel_id} no longer exists')
-                self.mongo.store(TwitchChannelDoc(channel_id, None, 'BANNED',
-                                                  None, None, None, None, None,
-                                                  None))
-                channel = TwitchChannel(channel_id, description='BANNED')
-                self.pg.update_rows(channel, 'description')
-                continue
-            res = self.mongo.store(docs.values())
-            if new_channel_count % 30 == 0:
+            doc = self.mongo.get_twitch_channel(channel_id)
+            if not doc:
+                new_channel_count += 1
+                doc = self.apiclient.channelinfo(channel_id)
+                if not doc:
+                    logging.debug(f'Channel {channel_id} no longer exists')
+                    doc = TwitchChannelDoc(channel_id, '', 'BANNED',
+                                                      None, None, None, None, '',
+                                                      None)
+                else:
+                    doc = doc[channel_id]
+                self.mongo.store(doc)
+            self.store_channel_info(doc)
+            if new_channel_count % 30 == 1:
                 tot = time.time() - start
-                logging.debug(res)
                 logging.debug(
                     'Retrieved {} channels in {:.2f}s -- {:.2f}c/s'.format(
                         new_channel_count, tot, new_channel_count/tot
                 ))
-            self.store_channel_info(channel_id)
         return new_channel_count
 
     def run(self):
@@ -295,14 +291,13 @@ class YouTubeChannelScraper(Scraper):
 
         self.pg = PostgresManager.from_config(postgres, esg)
 
-    def store_channel_info(self, channel_id):
+    def store_channel_info(self, doc):
         """
-        Gets channel from MongoDB and stores info in Postgres.
+        Stores information from doc in Postgres.
 
-        :param channel_id: int, Twitch channel id.
+        :param doc: YouTubeChannelDoc, the document to store.
         :return:
         """
-        doc = self.mongo.get_youtube_channel(channel_id)
         row = YouTubeChannel(**doc.todoc())
         update_fields = ['affiliation', 'description',
                          'keywords', 'published_at', 'thumbnail_url',
@@ -323,28 +318,25 @@ class YouTubeChannelScraper(Scraper):
         # Shuffle so multiple instances don't duplicate API calls.
         random.shuffle(channel_ids)
         for channel_id in channel_ids:
-            if self.mongo.contains_yt_channel(channel_id):
-                self.store_channel_info(channel_id)
-                continue
-            new_channel_count += 1
-            doc = self.apiclient.channelinfo(channel_id)
+            doc = self.mongo.get_youtube_channel(channel_id)
             if not doc:
-                self.mongo.store(YouTubeChannelDoc(channel_id, display_name='',
-                                  description='BANNED', published_at=None,
-                                  thumbnail_url=None))
-                logging.debug(f'Channel {channel_id} no longer exists')
-                channel = YouTubeChannel(channel_id, description='BANNED')
-                self.pg.update_rows(channel, 'description')
-                continue
-            res = self.mongo.store(doc.values())
+                new_channel_count += 1
+                doc = self.apiclient.channelinfo(channel_id)
+                if not doc:
+                    doc = YouTubeChannelDoc(channel_id, display_name='',
+                                      description='BANNED', published_at=None,
+                                      thumbnail_url=None)
+                    logging.debug(f'Channel {channel_id} no longer exists')
+                else:
+                    doc = doc[channel_id]
+                self.mongo.store(doc)
+            self.store_channel_info(doc)
             if new_channel_count % 30 == 0:
                 tot = time.time() - start
-                logging.debug(res)
                 logging.debug(
                     'Retrieved {} channels in {:.2f}s -- {:.2f}c/s'.format(
                         new_channel_count, tot, new_channel_count/tot
                 ))
-            self.store_channel_info(channel_id)
         return new_channel_count
 
     def run(self):
