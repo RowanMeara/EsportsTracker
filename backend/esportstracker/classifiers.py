@@ -39,14 +39,17 @@ class YouTubeGameClassifier:
         melee = ['smash']
         destiny2 = ['destiny 2']
         minecraft = ['Minecraft', 'BEDWARS']
-        fifa17 = ['FIFA 17', 'FIFA 2K17']
-        fifa18 = ['FIFA 18', 'FIFA 2K18']
-        nba17 = ['NBA 2K17', 'NBA 17']
-        nba18 = ['NBA 2K18', 'NBA 18']
-        gtav = ['GTA V', 'GTA 5', 'Grand Theft Auto']
+        fifa17 = ['FIFA 17', 'FIFA 2K17', 'FIFA2K17', 'FIFA17']
+        fifa18 = ['FIFA 18', 'FIFA 2K18', 'FIFA2K18', 'FIFA18']
+        nba17 = ['NBA 2K17', 'NBA 17', 'NBA2K17', 'NBA17']
+        nba18 = ['NBA 2K18', 'NBA 18', 'NBA2K18', 'NBA18']
+        madden17 = ['MADDEN 17', 'MADDEN NFL 17']
+        madden18 = ['MADDEN 18', 'MADDEN NFL 18']
+        gtav = ['GTA V', 'GTA 5', 'Grand Theft Auto', 'GTA']
         shadowofmordor = ['Shadow of Mordor']
         shadowofwar = ['Shadow of War']
         cuphead = ['Cuphead']
+        doom = ['Doom']
         fortnite = ['Fortnite']
         fracturedbutwhole = ['Fractured But Whole']
         warframe = ['Warframe']
@@ -91,6 +94,9 @@ class YouTubeGameClassifier:
             490378: fracturedbutwhole,
             66170: warframe,
             491168: clashroyale,
+            6715: doom,
+            1510279983: madden17,
+            496349: madden18,
 
             498860: tv
         }
