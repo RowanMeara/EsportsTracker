@@ -190,6 +190,12 @@ class TwitchChannelScraper(Scraper):
             doc = self.mongo.get_twitch_channel(channel_id)
             if not doc:
                 new_channel_count += 1
+                if new_channel_count % 30 == 0:
+                    tot = time.time() - start
+                    logging.debug(
+                        'Retrieved {} channels in {:.2f}s -- {:.2f}c/s'.format(
+                            new_channel_count, tot, new_channel_count / tot
+                        ))
                 doc = self.apiclient.channelinfo(channel_id)
                 if not doc:
                     logging.debug(f'Channel {channel_id} no longer exists')
@@ -200,12 +206,6 @@ class TwitchChannelScraper(Scraper):
                     doc = doc[channel_id]
                 self.mongo.store(doc)
             self.store_channel_info(doc)
-            if new_channel_count % 30 == 1:
-                tot = time.time() - start
-                logging.debug(
-                    'Retrieved {} channels in {:.2f}s -- {:.2f}c/s'.format(
-                        new_channel_count, tot, new_channel_count/tot
-                ))
         return new_channel_count
 
     def run(self):
@@ -321,6 +321,12 @@ class YouTubeChannelScraper(Scraper):
             doc = self.mongo.get_youtube_channel(channel_id)
             if not doc:
                 new_channel_count += 1
+                if new_channel_count % 30 == 0:
+                    tot = time.time() - start
+                    logging.debug(
+                        'Retrieved {} channels in {:.2f}s -- {:.2f}c/s'.format(
+                            new_channel_count, tot, new_channel_count / tot
+                        ))
                 doc = self.apiclient.channelinfo(channel_id)
                 if not doc:
                     doc = YouTubeChannelDoc(channel_id, display_name='',
@@ -331,12 +337,7 @@ class YouTubeChannelScraper(Scraper):
                     doc = doc[channel_id]
                 self.mongo.store(doc)
             self.store_channel_info(doc)
-            if new_channel_count % 30 == 0:
-                tot = time.time() - start
-                logging.debug(
-                    'Retrieved {} channels in {:.2f}s -- {:.2f}c/s'.format(
-                        new_channel_count, tot, new_channel_count/tot
-                ))
+
         return new_channel_count
 
     def run(self):
