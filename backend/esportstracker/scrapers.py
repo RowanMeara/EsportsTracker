@@ -4,12 +4,14 @@ import time
 import logging
 import sys
 import pymongo.errors
+import random
 from abc import ABC, abstractmethod
+
 
 from .apiclients import YouTubeAPIClient, TwitchAPIClient
 from .dbinterface import MongoManager, PostgresManager
 from .models.mongomodels import YTLivestreams
-from .models.postgresmodels import TwitchChannel
+from .models.postgresmodels import TwitchChannel, YouTubeChannel
 
 
 class Scraper(ABC):
@@ -183,6 +185,8 @@ class TwitchChannelScraper(Scraper):
         """
         new_channel_count = 0
         start = time.time()
+        # Shuffle so multiple instances don't duplicate API calls.
+        random.shuffle(channel_ids)
         for channel_id in channel_ids:
             if self.mongo.contains_channel(channel_id):
                 self.store_channel_info(channel_id)
@@ -258,3 +262,88 @@ class YouTubeScraper(Scraper):
         mongores = self.db.store(doc)
         logging.debug(mongores)
         logging.debug(doc)
+
+
+class YouTubeChannelScraper(Scraper):
+    """
+    Retrieves missing YouTube channel information.
+    """
+    def __init__(self, config_path, key_path):
+        self.config_path = config_path
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+            esg = set([game['name'] for game in config['esportsgames']])
+            postgres = config['postgres']
+            config = config['youtube_channel_scraper']
+            self.update_interval = config['update_interval']
+            mongo = config['mongodb']
+        with open(key_path) as f:
+            keys = yaml.safe_load(f)
+            postgres['user'] = keys['postgres']['user']
+            postgres['password'] = keys['postgres']['passwd']
+            user, pwd = None, None
+            if 'mongodb' in keys:
+                user = keys['mongodb']['write']['user']
+                pwd = keys['mongodb']['write']['pwd']
+
+        self.apiclient = YouTubeAPIClient(config['api']['host'],
+                                         keys['youtubeclientid'],
+                                         keys['youtubesecret'])
+        self.mongo = MongoManager(mongo['host'], mongo['port'],
+                                  mongo['db_name'], user, pwd, mongo['ssl'])
+        self.mongo.check_indexes()
+
+        self.pg = PostgresManager.from_config(postgres, esg)
+
+    def store_channel_info(self, channel_id):
+        """
+        Gets channel from MongoDB and stores info in Postgres.
+
+        :param channel_id: int, Twitch channel id.
+        :return:
+        """
+        doc = self.mongo.get_youtube_channel(channel_id)
+        row = YouTubeChannel(**doc.todoc())
+        update_fields = ['display_name', 'affiliation', 'description',
+                         'keywords', 'published_at', 'thumbnail_url',
+                         'default_language', 'country']
+        self.pg.update_rows(row, update_fields)
+        self.pg.commit()
+
+    def get_missing_channels(self, channel_ids):
+        """
+        Checks the channel_ids against the Mongo database and retrieves any
+        missing channels using the Twitch API.
+
+        :param channel_ids: list(channel_ids), list of channel_ids.
+        :return: int, the number of channels that were new.
+        """
+        new_channel_count = 0
+        start = time.time()
+        # Shuffle so multiple instances don't duplicate API calls.
+        random.shuffle(channel_ids)
+        for channel_id in channel_ids:
+            if self.mongo.contains_yt_channel(channel_id):
+                self.store_channel_info(channel_id)
+                continue
+            new_channel_count += 1
+            doc = self.apiclient.channelinfo(channel_id)
+            if not doc:
+                logging.debug(f'Channel {channel_id} no longer exists')
+                channel = YouTubeChannel(channel_id, description='BANNED')
+                self.pg.update_rows(channel, 'description')
+                continue
+            res = self.mongo.store(doc.values())
+            if new_channel_count % 30 == 0:
+                tot = time.time() - start
+                logging.debug(res)
+                logging.debug(
+                    'Retrieved {} channels in {:.2f}s -- {:.2f}c/s'.format(
+                        new_channel_count, tot, new_channel_count/tot
+                ))
+            self.store_channel_info(channel_id)
+        return new_channel_count
+
+    def run(self):
+        channel_ids = self.pg.null_youtube_channels(50000)
+        self.get_missing_channels(channel_ids)

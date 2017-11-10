@@ -8,7 +8,7 @@ from collections import OrderedDict
 import collections
 
 from .models.postgresmodels import *
-from .models.mongomodels import TwitchChannelDoc
+from .models.mongomodels import TwitchChannelDoc, YouTubeChannelDoc
 
 
 class PostgresManager:
@@ -139,10 +139,14 @@ class PostgresManager:
         tables['youtube_channel'] = (
             'CREATE TABLE youtube_channel( '
             '    channel_id text PRIMARY KEY, ' 
-            '    name text NOT NULL, '
-            '    main_language text, '
-            '    description text, '
-            '    affiliation text REFERENCES tournament_organizer(org_name) ' 
+            '    display_name text, '
+            '    affiliation text REFERENCES tournament_organizer(org_name),'
+            '    description text,'
+            '    keywords text, '
+            '    published_at TIMESTAMP WITH TIME ZONE, '
+            '    thumbnail_url text, '
+            '    default_language text, '
+            '    country text '
             ');'
         )
         tables['youtube_stream'] = (
@@ -321,6 +325,24 @@ class PostgresManager:
         res = cursor.fetchall()
         return [int(chan_id[0]) for chan_id in res]
 
+    def null_youtube_channels(self, limit):
+        """
+        Retrieve YouTubeChannel ids without a thumbnail.
+
+        :param limit: int, the maximum number of channels to return.
+        :return: list(str), The YouTube Channel ids.
+        """
+        if type(limit) !=  int:
+            raise TypeError
+        sql = ('SELECT channel_id '
+               'FROM youtube_channel '
+               'WHERE thumbnail_url IS NULL '
+               "AND description IS DISTINCT FROM 'BANNED' "
+               'LIMIT %s;')
+        cursor = self.conn.cursor()
+        cursor.execute(sql, (limit,))
+        res = cursor.fetchall()
+        return [chan_id[0] for chan_id in res]
 
     def game_name_to_id(self, name):
         """
@@ -476,23 +498,18 @@ class MongoManager:
         return col.find().batch_size(1)
 
     def contains_channel(self, channel_id):
-        """
-        Checks if twitch_channels contains the given channel.
-
-        :param channel_id: int, the twitch channel's user_id.
-        :return: bool, True if the collection contains the channel.
-        """
         return self.conn.twitch_channels.count({'channel_id': channel_id})
 
     def get_twitch_channel(self, channel_id):
-        """
-        Retrieves a Twitch channel from the datatabase.
-
-        :param channel_id: int, Twitch channel id.
-        :return: TwitchChannelDoc
-        """
         cursor = self.conn.twitch_channels.find({'channel_id': channel_id})
         return TwitchChannelDoc.fromdoc(cursor[0])
+
+    def get_youtube_channel(self, channel_id):
+        cursor = self.conn.youtube_channels.find({'channel_id': channel_id})
+        return YouTubeChannelDoc.fromdoc(cursor[0])
+
+    def contains_yt_channel(self, channel_id):
+        return self.conn.youtube_channels.count({'channel_id': channel_id})
 
     def docsbetween(self, start, end, collname):
         """

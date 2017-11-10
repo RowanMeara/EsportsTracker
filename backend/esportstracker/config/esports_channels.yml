@@ -131,6 +131,8 @@ youtube:
   - {id: UC3GriadTkHBnfgd2UFETGOA, name: blizzard}
   - {id: UClOf1XXinvZsy4wKPAkro2A, name: PlayOverwatch}
   - {id: UCVia_crjzJylRmGq7SHTiaw, name: PlayHearthstone}
+  Bluehole:
+  - {id: UCnXDQbqIdp-HQuDyM4p12ng, name: PLAYERUNKNOWN'S BATTLEGROUNDS}
   ESL:
   - {id: UCPq2ETz4aAGo2Z-8JisDPIA, name: ESL Counter-Strike}
   FACEIT:
@@ -139,5 +141,8 @@ youtube:
   - {id: UC5jpxDZx4yoBo324pMQ91Ww, name: PGLeSport}
   Riot Games:
   - {id: UCvqRdlKsE5Q8mf8YXbdIJLw, name: LolChampSeries}
+  - {id: UCJEGvSZnQ1pkVfHO8s5G8hA, name: Riot Games}
+  - {id: UC2t5bjwHdUX4vM2g8TRDq5g, name: League of Legends}
+  - {id: UC8RToqB1bw_aaon_70bdDqg, name: University League of Legends}
   Valve Corporation:
   - {id: UCTQKT5QqO3h7y32G8VzuySQ, name: dota2}

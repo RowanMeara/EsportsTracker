@@ -5,6 +5,7 @@ import json
 import math
 from .models.mongomodels import YTLivestream, TwitchChannelDoc
 from .models.mongomodels import TwitchGamesAPIResponse, TwitchStreamsAPIResponse
+from .models.mongomodels import YouTubeChannelDoc
 
 
 class TwitchAPIClient:
@@ -108,7 +109,7 @@ class TwitchAPIClient:
                 return int(game['_id'])
 
         # TODO: Raise a better exception
-        print(gamename)
+        logging.warning('Game id not found for: ', gamename)
         raise Exception
 
     def gettopgames(self, limit=100):
@@ -409,3 +410,27 @@ class YouTubeAPIClient:
             }
             broadcasts.append(YTLivestream(**params))
         return broadcasts
+
+    def channelinfo(self, userids):
+        """
+        Gets the channel information of the given user(s).
+
+        Large requests will be split up into multiple API ones.
+
+        :param userids: str or list, the youtube user ids.
+        :return: dict, keys are channel_ids and values are YouTubeChannelDoc.
+        """
+        if type(userids) == str:
+            userids = [userids]
+        url = self.host + '/channels/'
+        users = []
+        for userid in userids:
+            # The snippet and brandingSettings both have an API cost of 2.
+            # Request Cost: 2
+            params = {
+                'part': 'snippet,brandingSettings',
+                'id': userid
+            }
+            res = self._request(url, params)
+            users += YouTubeChannelDoc.fromapiresponse(res)
+        return {user.channel_id: user for user in users}

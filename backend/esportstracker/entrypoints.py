@@ -10,7 +10,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, DIR_PATH[0:len(DIR_PATH)-len('esportstracker/')])
 
 from esportstracker.scrapers import TwitchScraper, TwitchChannelScraper
-from esportstracker.scrapers import YouTubeScraper
+from esportstracker.scrapers import YouTubeScraper, YouTubeChannelScraper
 from esportstracker.aggregator import Aggregator
 
 
@@ -68,6 +68,10 @@ def run_twitch_channel_scraper(cfgpath, keypath):
     scraper.scrape()
 
 
+def run_youtube_channel_scraper(cfgpath, keypath):
+    scraper = YouTubeChannelScraper(cfgpath, keypath)
+    scraper.scrape()
+
 def run_youtubescraper(cfgpath, keypath):
     scraper = YouTubeScraper(cfgpath, keypath)
     scraper.scrape()
@@ -83,21 +87,25 @@ if __name__ == '__main__':
     parser.add_argument('--twitch', action='store_true', default=False)
     parser.add_argument('--twitchchannel', action='store_true', default=False)
     parser.add_argument('--youtube', action='store_true', default=False)
+    parser.add_argument('--youtubechannel', action='store_true', default=False)
     parser.add_argument('--aggregator', action='store_true', default=False)
     parser.add_argument('--debug', action='store_true', default=False)
     args = parser.parse_args()
 
-    production = False if args.debug else True
+    env = False if args.debug else True
     if args.twitch:
         setproctitle('TwitchScraper')
-        run(run_twitchscraper, 'twitch.log', production)
+        run(run_twitchscraper, 'twitch.log', env)
     if args.twitchchannel:
         setproctitle('TwitchChannelScraper')
-        run(run_twitch_channel_scraper, 'twitch_channel.log', production)
+        run(run_twitch_channel_scraper, 'twitch_channel.log', env)
     elif args.aggregator:
         setproctitle('AggregatorScraper')
-        run(run_aggregator, 'aggregator.log', production)
+        run(run_aggregator, 'aggregator.log', env)
     elif args.youtube:
-        setproctitle('YoutubeScraper')
-        run(run_youtubescraper, 'youtube.log', production)
+        setproctitle('YouTubeScraper')
+        run(run_youtubescraper, 'youtube.log', env)
+    elif args.youtubechannel:
+        setproctitle('YouTubeChannelScraper')
+        run(run_youtube_channel_scraper, 'youtube_channel.log', env)
     print("No arguments provided.")

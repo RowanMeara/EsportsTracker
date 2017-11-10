@@ -251,21 +251,61 @@ class TwitchChannelDoc(MongoDoc):
 
     @staticmethod
     def fromdoc(doc):
-        params = {
-            'broadcaster_type': doc['broadcaster_type'],
-            'description': doc['description'],
-            'display_name': doc['display_name'],
-            'channel_id': doc['channel_id'],
-            'login': doc['login'],
-            'offline_image_url': doc['offline_image_url'],
-            'profile_image_url': doc['profile_image_url'],
-            'type': doc['type'],
-            'followers': doc['followers']
-        }
-        return TwitchChannelDoc(**params)
+        del doc['_id']
+        return TwitchChannelDoc(**doc)
 
     def todoc(self):
         return vars(self)
+
+
+class YouTubeChannelDoc(MongoDoc):
+    """
+    YouTube channels API response
+    """
+    COLLECTION = 'youtube_channels'
+
+    def __init__(self, channel_id, display_name, description, published_at,
+                 thumbnail_url, keywords=None, default_language=None, country=None):
+        self.channel_id = channel_id
+        self.display_name = display_name
+        self.description = description
+        self.published_at  = published_at
+        self.keywords = keywords
+        self.thumbnail_url = thumbnail_url
+        self.default_language = default_language
+        self.country = country
+
+    @staticmethod
+    def fromapiresponse(resp):
+        data = json.loads(resp.text)['items']
+        channels = []
+        for channel in data:
+            bsc = channel['brandingSettings']['channel']
+            snip = channel['snippet']
+            params = {
+                'channel_id': channel['id'],
+                'description': snip['description'],
+                'display_name': snip['title'],
+                'published_at': snip['publishedAt'],
+                'thumbnail_url': snip['thumbnails']['default']['url']
+            }
+            if 'keywords' in bsc:
+                params['keywords'] = bsc['keywords']
+            if 'defaultLanguage' in bsc:
+                params['default_language'] = bsc['defaultLanguage']
+            if 'country' in bsc:
+                params['country'] = bsc['country']
+            channels.append(YouTubeChannelDoc(**params))
+        return channels
+
+    @staticmethod
+    def fromdoc(doc):
+        del doc['_id']
+        return YouTubeChannelDoc(**doc)
+
+    def todoc(self):
+        return vars(self)
+
 
 class YTLivestreams(Aggregatable, MongoDoc):
     """

@@ -29,11 +29,20 @@ twitch_channel_scraper:
     db_name: esports_stats
     port: 27017
   update_interval: 600
+youtube_channel_scraper:
+  api:
+    host: https://www.googleapis.com/youtube/v3
+  mongodb:
+    #host: localhost
+    #ssl: False
+    host: mongo.esportstracker.net
+    ssl: True
+    db_name: esports_stats
+    port: 27017
+  update_interval: 600
 youtube:
   api:
     base_url: https://www.googleapis.com/youtube/v3
-    num_results_per_request: 50
-    top_3_videos_channel: https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={CHANNEL_ID}&maxResults=10&order=date&type=video&key={YOUR_API_KEY}
   db:
     db_name: esports_stats
     host: 'localhost'

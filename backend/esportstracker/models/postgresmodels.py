@@ -205,16 +205,22 @@ class YouTubeChannel(Row):
     """
     TABLE_NAME = 'youtube_channel'
     PRIMARY_KEY = 'channel_id'
-    __slots__ = ['channel_id', 'name', 'main_language', 'description',
-                 'affiliation']
+    __slots__ = ['channel_id', 'display_name', 'affiliation', 'description',
+                 'keywords', 'published_at', 'thumbnail_url',
+                 'default_language', 'country']
 
-    def __init__(self, channel_id, name, main_language='unknown',
-                 description=None, aff=None):
+    def __init__(self, channel_id, display_name=None, affiliation=None,
+                 description=None, keywords=None, published_at=None,
+                 thumbnail_url=None, default_language=None, country=None):
         self.channel_id = channel_id
-        self.name = name
-        self.main_language = main_language
+        self.display_name = display_name
+        self.affiliation = affiliation
         self.description = description
-        self.affiliation = aff
+        self.keywords = keywords
+        self.published_at = published_at
+        self.thumbnail_url = thumbnail_url
+        self.default_language = default_language
+        self.country = country
 
     @staticmethod
     def fromstreams(streams):
@@ -227,8 +233,8 @@ class YouTubeChannel(Row):
         channels = {}
         for stream in streams:
                 if stream.chanid not in channels:
-                    channel = YouTubeChannel(stream.chanid, stream.channame,
-                                             stream.language)
+                    channel = YouTubeChannel(stream.chanid,
+                                             display_name=stream.channame)
                     channels[channel.channel_id] = channel
         return list(channels.values())
 
@@ -242,10 +248,10 @@ class YouTubeChannel(Row):
         # TODO: Test.
         return YouTubeChannel(**doc.to_doc())
 
-
     def to_row(self):
-        return (self.channel_id, self.name, self.main_language,
-                self.description, self.affiliation)
+        return (self.channel_id, self.display_name, self.affiliation,
+                self.description, self.keywords, self.published_at,
+                self.thumbnail_url, self.default_language, self.country)
 
 
 LANGUAGE_DETECTION = True
