@@ -323,7 +323,7 @@ class YouTubeStream(Row):
                 info = self.title + ' '.join(self.tags)
             else:
                 info = self.title + self.tags
-            self.language = 'd_' + classify_language(info)
+            self.language = classify_language(info) + '_d'
         return (self.video_id, self.epoch, self.channel_id, self.game_id,
                 self.viewers, self.title, self.language, str(self.tags))
 

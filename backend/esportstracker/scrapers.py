@@ -209,7 +209,7 @@ class TwitchChannelScraper(Scraper):
         return new_channel_count
 
     def run(self):
-        channel_ids = self.pg.null_twitch_channels(50000)
+        channel_ids = self.pg.null_twitch_channels(10000)
         self.get_missing_channels(channel_ids)
 
 
@@ -341,5 +341,5 @@ class YouTubeChannelScraper(Scraper):
         return new_channel_count
 
     def run(self):
-        channel_ids = self.pg.null_youtube_channels(50000)
+        channel_ids = self.pg.null_youtube_channels(10000)
         self.get_missing_channels(channel_ids)
