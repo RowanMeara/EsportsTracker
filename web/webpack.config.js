@@ -1,6 +1,5 @@
 let path = require('path')
 let webpack = require('webpack')
-const Uglify = require('uglifyjs-webpack-plugin')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 
 const extractSass = new ExtractTextPlugin({
@@ -47,7 +46,6 @@ module.exports = {
     new webpack.optimize.CommonsChunkPlugin({
       filename: 'commons.js',
       name: 'commons'
-    }),
-    //new Uglify()
+    })
   ]
 }
