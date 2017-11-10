@@ -38,10 +38,11 @@ def classifydb():
 
     count = 0
     updated = 0
+    classified = 0
     now = Aggregator.epoch_to_hour(time.time())
     epoch = pgm.earliest_epoch('youtube_stream')
     while epoch < now:
-        if epoch % 360000 == 0:
+        if epoch % 900000 == 0:
             pgm.commit()
             print(f'Total Scanned: {count}  Total Updated: {updated} ',
                   '{:.1f} entries/s'.format(count/(time.time()-start)))
@@ -52,6 +53,7 @@ def classifydb():
             if old_game_id != stream.game_id:
                 updated += 1
                 pgm.update_rows(stream, 'game_id')
+            classified += 1 if stream.game_id else 0
         epoch += 3600
         count += len(yts)
 
@@ -59,8 +61,9 @@ def classifydb():
     end = time.time()
     print('Classification Complete: {:.02f}s'.format(end - start))
     print('Total scanned: ', count)
-    print('Total updated: ', updated)
-    print('Percent Updated: {:.1f}%'.format(100*updated/count))
+    print('Total classified: ', classified)
+    print('Updated: {:.1f}%'.format(100 * updated / count))
+    print('Classified: {:.1f}%'.format(100 * classified / count))
 
 
 if __name__ == '__main__':
