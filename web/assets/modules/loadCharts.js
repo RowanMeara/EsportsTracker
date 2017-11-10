@@ -287,11 +287,11 @@ class EsportsGamesList {
               },
               {
                 width: '20%',
-                title: 'Esports Hours\n (in millions)'
+                title: 'Esports Hours\n (millions)'
               },
               {
                 width: '20%',
-                title: 'Total Hours\n (in millions)'
+                title: 'Total Hours\n (millions)'
               },
               {
                 width: '20%',
