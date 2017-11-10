@@ -1,6 +1,7 @@
 @import '~bootstrap/dist/css/bootstrap.min.css'
 @import '~font-awesome/css/font-awesome.min.css'
 @import '~datatables.net-bs4/css/dataTables.bootstrap4.css'
+@import url(https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700)
 
 $menu-color: #536DFE
 $menu-color-active: #F06292
@@ -12,7 +13,7 @@ $sidebar-width: 340px
 
 
 body
-  font: 20px "Lucida Grande", Helvetica, Arial, sans-serif
+  font: 20px "Roboto"
   background: $background-grey
   margin: 0px
   padding: 0px
@@ -80,6 +81,7 @@ i
   border-radius: 0
   top: 0
   border: 0
+  color: $white
   a.navbar-brand
     height: 100%
     color: $white
@@ -89,35 +91,49 @@ i
     color: $white
   a.navbar-brand:focus
     color: $white
-
-.container-fluid
-  max-width: 1600px
-
-#topnav
-  color: $menu-color
-  li.nav-item
-    color: $white
-    margin-right: 20px
-    vertical-align: middle
+  .navbar-collapse
+    color: $black !important
+    width: 100%
+    margin-right: -16px
+    padding-left: 16px
+    padding-right: 16px
+    margin-left: -16px
+    a
+      color: $black
   a.nav-link
-    color: $white
     display: inline
   .fa-bars
     color: $white
+  li.nav-item
+    padding-top: 5px
+    padding-left: 0
+    padding-right: 10px
+    padding-bottom: 5px
+    vertical-align: middle
+
+.container-fluid
+  max-width: 1600px
 
 table.display.table
   width: 100%
   font-size: 13px
 
 #main
-  padding: 10px
+  padding: 0
 
 @media (max-width: 767px)
   .navbar-default
     .navbar-brand
-      text-align: left !important
-      padding-left: 20px
       font-size: 22px
+    .navbar-collapse
+      font-size: 14px
+      color: $black
+      background-color: $white
+      padding-top: 10px
+      padding-bottom: 10px
+    li.nav-item
+      padding-top: 10px
+      padding-bottom: 10px
   .line-graph
     padding-top: 80%
   #time_period_btn
@@ -127,6 +143,10 @@ table.display.table
     .navbar-brand
       text-align: left !important
       font-size: 30px
+    a.nav-link
+      color: $white !important
+    a.dropdown-toggle
+      color: $white
   .line-graph
     padding-top: 55%
   #time_period_btn
