@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import time
 import json
-
+import re
 
 class Aggregatable(ABC):
     """
@@ -268,7 +268,8 @@ class YouTubeChannelDoc(MongoDoc):
                  thumbnail_url, keywords=None, default_language=None, country=None):
         self.channel_id = channel_id
         self.display_name = display_name
-        self.description = description
+        # Apparently you can put NUL characters in your YouTube description
+        self.description = re.sub(r'[\x00]', '', description)
         self.published_at  = published_at
         self.keywords = keywords
         self.thumbnail_url = thumbnail_url
