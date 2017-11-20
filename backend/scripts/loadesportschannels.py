@@ -84,7 +84,7 @@ def main():
     for orgname in ytorgs.keys():
         orgrows.append(TournamentOrganizer(orgname))
         for channel in ytorgs[orgname]:
-            yc = YouTubeChannel(channel['id'], channel['name'], 'en', None, orgname)
+            yc = YouTubeChannel(channel_id=channel['id'], affiliation=orgname)
             ychans.append(yc)
 
     db.store_rows(orgrows, 'tournament_organizer')

@@ -15,6 +15,12 @@ twitch:
   - {id: 37516578, name: Warcraft}
   Bluehole:
   - {id: 127506955, name: playBATTLEGROUNDS}
+  CD PROJEKT RED:
+  - {id: 62938127, name: cdprojektred}
+  CompeteLeague:
+  - {id: 45793430, name: CompeteLeague}
+  Curse:
+  - {id: 27945625, name: Curse}
   CyberPower:
   - {id: 49946840, name: CyberPowerGaming}
   Daybreak Game Company:
@@ -67,6 +73,8 @@ twitch:
   Hi-Rez Studios:
   - {id: 31542318, name: smitegame}
   - {id: 31500812, name: HiRezTV}
+  Moonduck:
+  - {id: 99890311, name: moonduckTV}
   Northern Arena:
   - {id: 106829863, name: NorthernArena}
   OGN:
@@ -133,6 +141,8 @@ youtube:
   - {id: UCVia_crjzJylRmGq7SHTiaw, name: PlayHearthstone}
   Bluehole:
   - {id: UCnXDQbqIdp-HQuDyM4p12ng, name: PLAYERUNKNOWN'S BATTLEGROUNDS}
+  CompeteLeague:
+  - {id: UCnbUGt4NlcHD-IzaFQIzQ9w, name: CompeteLeague}
   ESL:
   - {id: UCPq2ETz4aAGo2Z-8JisDPIA, name: ESL Counter-Strike}
   FACEIT:
