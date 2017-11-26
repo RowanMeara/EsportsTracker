@@ -85,6 +85,8 @@ twitch:
   - {id: 21681549, name: PGL}
   - {id: 107953058, name: pgl_csgo}
   - {id: 106460795, name: DotaMajor}
+  - {id: 163299585, name: BLASTProSeries}
+  - {id: 182144693, name: BLASTProSeries_B}
   PUBGOnline:
   - {id: 150368923, name: PUBGOnline}
   Psyonix:
