@@ -49,6 +49,9 @@ twitch:
   - {id: 82312665, name: joinDOTARed}
   - {id: 23660075, name: ESL_Overwatch}
   - {id: 30220059, name: ESL_SC2}
+  - {id: 166438195, name: ESL_PUBG}
+  - {id: 32638197, name: ESL_SC2b}
+  - {id: 196168669, name: ESL_SC2c}
   EVO:
   - {id: 30917811, name: SRKEvo1}
   - {id: 30918314, name: SRKEvo2}
@@ -82,6 +85,14 @@ twitch:
   - {id: 32179353, name: OGNGlobal}
   Other:
   - {id: 93141680, name: NVIDIAGeForcePL}
+  - {id: 133022795, name: WESG_SC2}
+  - {id: 171219430, name: WESG_CSGO}
+  - {id: 71852806, name: OgamingSC2}
+  - {id: 133022643, name: wesg_hs}
+  - {id: 146032492, name: efragtv}
+  - {id: 38539112, name: fpsthailand}
+  - {id: 27101452, name: mpkbk}
+  - {id: 174126302, name: GESChampionship}
   PGL:
   - {id: 21681549, name: PGL}
   - {id: 107953058, name: pgl_csgo}
@@ -116,6 +127,7 @@ twitch:
   - {id: 28633177, name: Starladder1}
   - {id: 28633201, name: Starladder2}
   - {id: 28633266, name: Starladder3}
+  - {id: 28633374, name: Starladder5}
   - {id: 28633298, name: Starladder4}
   - {id: 28633500, name: starladder7}
   - {id: 28633563, name: starladder8}
