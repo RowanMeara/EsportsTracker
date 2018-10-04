@@ -93,7 +93,7 @@ class PostgresManager:
         tables['game'] = (
             'CREATE TABLE game( '
             '    game_id integer PRIMARY KEY, '
-            '    name text NOT NULL UNIQUE, '
+            '    name text NOT NULL, '
             '    giantbomb_id integer '
             ');'
         )
